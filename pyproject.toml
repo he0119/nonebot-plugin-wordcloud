@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "nonebot-plugin-wordcloud"
-version = "0.0.2"
+version = "0.0.3"
 description = "适用于 Nonebot2 的词云插件"
 authors = ["hemengyang <hmy0119@gmail.com>"]
 license = "MIT"
