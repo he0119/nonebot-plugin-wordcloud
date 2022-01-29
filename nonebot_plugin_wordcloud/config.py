@@ -8,7 +8,7 @@ class Config(BaseModel, extra=Extra.ignore):
     wordcloud_width: int = 1920
     wordcloud_height: int = 1200
     wordcloud_background_color: str = "black"
-    wordcloud_font_path: str = str(Path(__file__).parent / "SimHei.ttf")
+    wordcloud_font_path: str = str(Path(__file__).parent / "SourceHanSans.otf")
     wordcloud_stopwords_path: Path = Path(__file__).parent / "stopwords.txt"
 
 

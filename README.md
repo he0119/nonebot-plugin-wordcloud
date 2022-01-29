@@ -57,7 +57,7 @@ DATASTORE_ENABLE_DATABASE=true
 ### wordcloud_font_path
 
 - 类型: `str`
-- 默认: 自带的字体
+- 默认: 自带的字体（思源黑体）
 - 说明: 生成图片的字体文件位置
 
 ### wordcloud_stopwords_path
