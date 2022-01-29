@@ -2,7 +2,7 @@
 """
 from datetime import datetime, timedelta
 from io import BytesIO
-from typing import List
+from typing import List, Tuple
 
 try:
     from zoneinfo import ZoneInfo
@@ -57,7 +57,7 @@ today_cmd.__doc__ = """
 async def today_handle(
     event: GroupMessageEvent,
     session: AsyncSession = Depends(get_session),
-    commands: tuple[str, ...] = Command(),
+    commands: Tuple[str, ...] = Command(),
 ):
     # 获取中国本地时间
     now = datetime.now(ZoneInfo("Asia/Shanghai"))
