@@ -7,11 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 ## [Unreleased]
 
+## [0.0.2] - 2022-01-29
+
+### Fixed
+
+- 修复 Python 3.9 以下版本无法运行的问题
+
 ## [0.0.1] - 2022-01-29
 
 ### Added
 
 - 可以使用的版本。
 
-[Unreleased]: https://github.com/he0119/nonebot-plugin-datastore/compare/v0.0.1...HEAD
+[Unreleased]: https://github.com/he0119/nonebot-plugin-datastore/compare/v0.0.2...HEAD
+[0.0.2]: https://github.com/he0119/nonebot-plugin-datastore/compare/v0.0.1...v0.0.2
 [0.0.1]: https://github.com/he0119/nonebot-plugin-datastore/releases/tag/v0.0.1

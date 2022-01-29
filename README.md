@@ -24,7 +24,7 @@ _✨ NoneBot 词云插件 ✨_
 
 ## 使用方式
 
-插件需要依赖数据库，所以需要在配置文件中添加
+因为插件依赖数据库，所以需要在配置文件中添加
 
 ```env
 DATASTORE_ENABLE_DATABASE=true
