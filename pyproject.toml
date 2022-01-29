@@ -1,0 +1,45 @@
+[tool.poetry]
+name = "nonebot-plugin-wordcloud"
+version = "0.0.1"
+description = "适用于 Nonebot2 的词云插件"
+authors = ["hemengyang <hmy0119@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+homepage = "https://github.com/he0119/nonebot-plugin-wordcloud"
+repository = "https://github.com/he0119/nonebot-plugin-wordcloud"
+documentation = "https://github.com/he0119/nonebot-plugin-wordcloud#readme"
+
+[tool.poetry.dependencies]
+python = "^3.7.3"
+nonebot2 = {extras = ["httpx"], version = "^2.0.0-beta.1^2.0.0-beta.1"}
+nonebot-adapter-onebot = "^2.0.0-beta.1"
+nonebot-plugin-datastore = "^0.2.0"
+wordcloud = "^1.8.1"
+jieba = "^0.42.1"
+
+[tool.poetry.dev-dependencies]
+black = "^21.12b0"
+isort = "^5.10.1"
+nonebug = "^0.2.1"
+pytest-cov = "^3.0.0"
+pytest-xdist = "^2.5.0"
+
+# [[tool.poetry.source]]
+# default = true
+# name = "tencent"
+# url = "https://mirrors.cloud.tencent.com/pypi/simple/"
+
+# [tool.pytest.ini_options]
+# addopts = "--cov=nonebot_plugin_wordcloud --cov-report=term-missing"
+
+[tool.black]
+line-length = 88
+
+[tool.isort]
+profile = "black"
+line_length = 88
+skip_gitignore = true
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
