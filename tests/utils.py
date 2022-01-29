@@ -1,4 +1,6 @@
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING
+
+from typing_extensions import Literal
 
 if TYPE_CHECKING:
     from nonebot.adapters.onebot.v11 import GroupMessageEvent, PrivateMessageEvent
