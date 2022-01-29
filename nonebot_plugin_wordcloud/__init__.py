@@ -2,7 +2,11 @@
 """
 from datetime import datetime, timedelta
 from io import BytesIO
-from zoneinfo import ZoneInfo
+
+try:
+    from zoneinfo import ZoneInfo
+except ImportError:
+    from backports.zoneinfo import ZoneInfo
 
 from nonebot import on_command, on_message
 from nonebot.adapters.onebot.v11 import MessageSegment

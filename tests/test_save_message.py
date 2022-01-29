@@ -1,7 +1,6 @@
 import pytest
 from nonebug import App
 from sqlmodel import select
-from sqlmodel.ext.asyncio.session import AsyncSession
 
 from .utils import fake_group_message_event
 

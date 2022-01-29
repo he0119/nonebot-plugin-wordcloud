@@ -1,12 +1,15 @@
 from datetime import datetime, timedelta
 from io import BytesIO
-from zoneinfo import ZoneInfo
+
+try:
+    from zoneinfo import ZoneInfo
+except ImportError:
+    from backports.zoneinfo import ZoneInfo
 
 import pytest
 from nonebug import App
 from pytest_mock import MockerFixture
 from sqlmodel import select
-from sqlmodel.ext.asyncio.session import AsyncSession
 
 from .utils import fake_group_message_event
 

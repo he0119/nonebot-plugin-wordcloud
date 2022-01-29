@@ -11,12 +11,12 @@ documentation = "https://github.com/he0119/nonebot-plugin-wordcloud#readme"
 
 [tool.poetry.dependencies]
 python = "^3.7.3"
-nonebot2 = {extras = ["httpx"], version = "^2.0.0-beta.1^2.0.0-beta.1"}
+nonebot2 = {extras = ["httpx"], version = "^2.0.0-beta.1"}
 nonebot-adapter-onebot = "^2.0.0-beta.1"
 nonebot-plugin-datastore = "^0.2.0"
 wordcloud = "^1.8.1"
 jieba = "^0.42.1"
-tzdata = "^2021.5"
+"backports.zoneinfo" = {extras = ["tzdata"], version = "^0.2.1"}
 
 [tool.poetry.dev-dependencies]
 black = "^21.12b0"
@@ -24,14 +24,6 @@ isort = "^5.10.1"
 nonebug = "^0.2.1"
 pytest-cov = "^3.0.0"
 pytest-xdist = "^2.5.0"
-
-# [[tool.poetry.source]]
-# default = true
-# name = "tencent"
-# url = "https://mirrors.cloud.tencent.com/pypi/simple/"
-
-# [tool.pytest.ini_options]
-# addopts = "--cov=nonebot_plugin_wordcloud --cov-report=term-missing"
 pytest-mock = "^3.7.0"
 
 [tool.black]
