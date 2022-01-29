@@ -2,6 +2,7 @@
 """
 from datetime import datetime, timedelta
 from io import BytesIO
+from typing import List
 
 try:
     from zoneinfo import ZoneInfo
@@ -71,7 +72,7 @@ async def today_handle(
         GroupMessage.time >= now.astimezone(ZoneInfo("UTC")),
         GroupMessage.time <= (now + timedelta(days=1)).astimezone(ZoneInfo("UTC")),
     )
-    messages: list[GroupMessage] = (await session.exec(statement)).all()  # type: ignore
+    messages: List[GroupMessage] = (await session.exec(statement)).all()  # type: ignore
 
     image = await get_wordcloud(messages)
     if image:

@@ -1,5 +1,5 @@
 from collections import Counter
-from typing import Optional
+from typing import List, Optional
 
 import jieba
 from nonebot.log import logger
@@ -10,7 +10,7 @@ from .config import global_config, plugin_config
 from .model import GroupMessage
 
 
-def count_words(words: list[str]) -> Counter:
+def count_words(words: List[str]) -> Counter:
     """统计词频"""
     with plugin_config.wordcloud_stopwords_path.open("r", encoding="utf8") as f:
         stopwords = [word.strip() for word in f.readlines()]
@@ -23,7 +23,7 @@ def count_words(words: list[str]) -> Counter:
     return cnt
 
 
-async def get_wordcloud(messages: list[GroupMessage]) -> Optional[Image]:
+async def get_wordcloud(messages: List[GroupMessage]) -> Optional[Image]:
     words = []
     # 过滤掉命令
     command_start = tuple([i for i in global_config.command_start if i])

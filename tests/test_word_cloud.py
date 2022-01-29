@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from io import BytesIO
+from typing import List
 
 try:
     from zoneinfo import ZoneInfo
@@ -42,7 +43,7 @@ async def test_word_cloud(app: App, mocker: MockerFixture):
             GroupMessage.time >= now - timedelta(days=1),
             GroupMessage.time <= now,
         )
-        messages: list[GroupMessage] = (await session.exec(statement)).all()  # type: ignore
+        messages: List[GroupMessage] = (await session.exec(statement)).all()  # type: ignore
 
     image = await get_wordcloud(messages)
 

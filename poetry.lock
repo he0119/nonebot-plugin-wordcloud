@@ -83,9 +83,6 @@ category = "main"
 optional = false
 python-versions = ">=3.6"
 
-[package.dependencies]
-tzdata = {version = "*", optional = true, markers = "extra == \"tzdata\""}
-
 [package.extras]
 tzdata = ["tzdata"]
 
@@ -1048,7 +1045,7 @@ testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytest-
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7.3"
-content-hash = "91c520d9a3bd94ee53b2787ca38ee16fa40d62e68f1337f228d0568060dfe58c"
+content-hash = "7fa87b35a8ec780eba72a052b3f8f60c6c27bb18b94aa718acf374aef620b435"
 
 [metadata.files]
 aiosqlite = [
