@@ -45,7 +45,7 @@ async def test_word_cloud(app: App, mocker: MockerFixture):
         )
         messages: List[GroupMessage] = (await session.exec(statement)).all()  # type: ignore
 
-    image = await get_wordcloud(messages)
+    image = get_wordcloud(messages)
 
     assert image is not None
     assert image.size == (1920, 1200)

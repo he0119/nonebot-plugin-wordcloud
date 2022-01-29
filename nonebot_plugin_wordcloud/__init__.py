@@ -74,7 +74,7 @@ async def today_handle(
     )
     messages: List[GroupMessage] = (await session.exec(statement)).all()  # type: ignore
 
-    image = await get_wordcloud(messages)
+    image = get_wordcloud(messages)
     if image:
         image_bytes = BytesIO()
         image.save(image_bytes, format="PNG")

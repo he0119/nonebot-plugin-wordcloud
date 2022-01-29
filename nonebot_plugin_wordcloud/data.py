@@ -23,7 +23,7 @@ def count_words(words: List[str]) -> Counter:
     return cnt
 
 
-async def get_wordcloud(messages: List[GroupMessage]) -> Optional[Image]:
+def get_wordcloud(messages: List[GroupMessage]) -> Optional[Image]:
     words = []
     # 过滤掉命令
     command_start = tuple([i for i in global_config.command_start if i])
