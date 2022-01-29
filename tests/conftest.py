@@ -5,7 +5,7 @@ from nonebug.app import App
 
 
 @pytest.fixture
-def app(
+async def app(
     nonebug_init: None,
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -19,7 +19,12 @@ def app(
     config.datastore_data_dir = tmp_path / "data"
     config.datastore_enable_database = True
 
+    from nonebot_plugin_datastore.db import init_db
+
     # 加载插件
+    nonebot.load_plugin("nonebot_plugin_wordcloud")
     nonebot.load_plugin("nonebot_plugin_datastore")
+
+    await init_db()
 
     return App(monkeypatch)
