@@ -1,3 +1,4 @@
+import re
 from collections import Counter
 from typing import List, Optional
 
@@ -8,6 +9,30 @@ from wordcloud import WordCloud
 
 from .config import global_config, plugin_config
 from .model import GroupMessage
+
+
+def pre_precess(msg: str) -> str:
+    """对消息进行预处理"""
+    # 去除网址
+    msg = re.sub(r"https?://[\w/:%#\$&\?\(\)~\.=\+\-]+", "", msg)
+
+    # 去除 \u200b
+    msg = re.sub(r"\u200b", "", msg)
+
+    # 去除 emoji
+    # https://stackoverflow.com/questions/33404752/removing-emojis-from-a-string-in-python
+    emoji_pattern = re.compile(
+        "["
+        u"\U0001F600-\U0001F64F"  # emoticons
+        u"\U0001F300-\U0001F5FF"  # symbols & pictographs
+        u"\U0001F680-\U0001F6FF"  # transport & map symbols
+        u"\U0001F1E0-\U0001F1FF"  # flags (iOS)
+        "]+",
+        flags=re.UNICODE,
+    )
+    msg = emoji_pattern.sub(r"", msg)  # no emoji
+
+    return msg
 
 
 def count_words(words: List[str]) -> Counter:
@@ -31,6 +56,7 @@ def get_wordcloud(messages: List[GroupMessage]) -> Optional[Image]:
         [m.message for m in messages if not m.message.startswith(command_start)]
     )
     # 分词
+    msgs = pre_precess(msgs)
     words = jieba.lcut(msgs, cut_all=True)
     # 统计词频
     frequency = count_words(words)

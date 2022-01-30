@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 ## [Unreleased]
 
+### Changed
+
+- 去除网址与特殊字符（不可见字符与 emoji）
+
 ## [0.0.3] - 2022-01-30
 
 ### Changed
