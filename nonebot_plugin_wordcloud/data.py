@@ -35,29 +35,36 @@ def pre_precess(msg: str) -> str:
     return msg
 
 
-def count_words(words: List[str]) -> Counter:
-    """统计词频"""
+def cut_message(msg: str) -> List[str]:
+    """分词"""
     with plugin_config.wordcloud_stopwords_path.open("r", encoding="utf8") as f:
         stopwords = [word.strip() for word in f.readlines()]
+    # 加载用户词典
+    if plugin_config.wordcloud_userdict_path:
+        jieba.load_userdict(str(plugin_config.wordcloud_userdict_path))
+    words = jieba.lcut(msg)
+    return [word.strip() for word in words if word.strip() not in stopwords]
 
+
+def count_words(words: List[str]) -> Counter:
+    """统计词频"""
     cnt = Counter()
     for word in words:
-        word = word.strip()
-        if word and word not in stopwords:
+        if word:
             cnt[word] += 1
     return cnt
 
 
 def get_wordcloud(messages: List[GroupMessage]) -> Optional[Image]:
-    words = []
     # 过滤掉命令
     command_start = tuple([i for i in global_config.command_start if i])
-    msgs = " ".join(
+    message = " ".join(
         [m.message for m in messages if not m.message.startswith(command_start)]
     )
+    # 预处理
+    message = pre_precess(message)
     # 分词
-    msgs = pre_precess(msgs)
-    words = jieba.lcut(msgs, cut_all=True)
+    words = cut_message(message)
     # 统计词频
     frequency = count_words(words)
     try:

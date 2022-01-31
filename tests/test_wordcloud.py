@@ -5,7 +5,7 @@ from typing import List
 try:
     from zoneinfo import ZoneInfo
 except ImportError:
-    from backports.zoneinfo import ZoneInfo
+    from backports.zoneinfo import ZoneInfo  # type: ignore
 
 import pytest
 from nonebug import App
@@ -16,7 +16,7 @@ from .utils import fake_group_message_event
 
 
 @pytest.mark.asyncio
-async def test_word_cloud(app: App, mocker: MockerFixture):
+async def test_wordcloud(app: App, mocker: MockerFixture):
     """测试词云"""
     from nonebot.adapters.onebot.v11 import Message, MessageSegment
     from nonebot_plugin_datastore import create_session
@@ -70,7 +70,7 @@ async def test_word_cloud(app: App, mocker: MockerFixture):
 
 
 @pytest.mark.asyncio
-async def test_word_cloud_empty(app: App):
+async def test_wordcloud_empty(app: App):
     """测试词云，消息为空的情况"""
     from nonebot.adapters.onebot.v11 import Message
 
@@ -86,7 +86,7 @@ async def test_word_cloud_empty(app: App):
 
 
 @pytest.mark.asyncio
-async def test_word_cloud_empty_msg(
+async def test_wordcloud_empty_msg(
     app: App,
     mocker: MockerFixture,
 ):

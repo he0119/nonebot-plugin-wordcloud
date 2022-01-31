@@ -66,6 +66,12 @@ DATASTORE_ENABLE_DATABASE=true
 - 默认: 自带的停用词表
 - 说明: 生成图片的停用词表位置
 
+### wordcloud_userdict_path
+
+- 类型: `str`
+- 默认: `None`
+- 说明: 结巴分词的 [自定义词典](https://github.com/fxsjy/jieba#%E8%BD%BD%E5%85%A5%E8%AF%8D%E5%85%B8) 位置
+
 ## 计划
 
 - [ ] 获取任意一天的词云

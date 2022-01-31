@@ -7,7 +7,7 @@ from typing import List, Tuple
 try:
     from zoneinfo import ZoneInfo
 except ImportError:
-    from backports.zoneinfo import ZoneInfo
+    from backports.zoneinfo import ZoneInfo  # type: ignore
 
 from nonebot import on_command, on_message
 from nonebot.adapters.onebot.v11 import MessageSegment
