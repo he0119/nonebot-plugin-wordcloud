@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 ### Added
 
 - 支持添加用户词典
+- 新增历史词云功能
 
 ## [0.0.4] - 2022-01-30
 

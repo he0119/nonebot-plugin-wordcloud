@@ -74,4 +74,4 @@ DATASTORE_ENABLE_DATABASE=true
 
 ## 计划
 
-- [ ] 获取任意一天的词云
+- [x] 获取任意一天的词云
