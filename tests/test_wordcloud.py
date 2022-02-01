@@ -151,7 +151,7 @@ async def test_wordcloud_empty(app: App):
         event = fake_group_message_event(message=Message("/今日词云"))
 
         ctx.receive_event(bot, event)
-        ctx.should_call_send(event, "没有足够的数据生成词云", "")
+        ctx.should_call_send(event, "没有足够的数据生成词云", True)
         ctx.should_finished()
 
 
@@ -161,8 +161,8 @@ async def test_wordcloud_empty_msg(
     mocker: MockerFixture,
 ):
     """测试词云，消息均是 stopwords 的情况"""
-    from nonebot.adapters.onebot.v11 import Message, MessageSegment
-    from nonebot_plugin_chatrecorder import get_message_records, serialize_message
+    from nonebot.adapters.onebot.v11 import Message
+    from nonebot_plugin_chatrecorder import serialize_message
     from nonebot_plugin_chatrecorder.model import MessageRecord
     from nonebot_plugin_datastore import create_session
 
@@ -204,3 +204,23 @@ async def test_wordcloud_empty_msg(
     mocked_datetime.assert_called_once_with(
         2022, 1, 2, tzinfo=ZoneInfo("Asia/Shanghai")
     )
+
+
+@pytest.mark.asyncio
+async def test_wordcloud_help(app: App):
+    """测试输出帮助信息"""
+    from nonebot.adapters.onebot.v11 import Message
+
+    from nonebot_plugin_wordcloud import wordcloud_cmd
+
+    async with app.test_matcher(wordcloud_cmd) as ctx:
+        bot = ctx.create_bot()
+        event = fake_group_message_event(message=Message("/词云"))
+
+        ctx.receive_event(bot, event)
+        ctx.should_call_send(
+            event,
+            "词云\n\n获取今天的词云\n/今日词云\n获取昨天的词云\n/昨日词云\n获取历史词云\n/历史词云\n/历史词云 2022-01-01",
+            True,
+        )
+        ctx.should_finished()

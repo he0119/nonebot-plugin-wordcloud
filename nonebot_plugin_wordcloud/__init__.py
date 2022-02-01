@@ -2,6 +2,7 @@
 """
 import re
 from datetime import datetime, timedelta
+from inspect import cleandoc
 from io import BytesIO
 from typing import Tuple, Union
 
@@ -85,6 +86,9 @@ async def handle_first_receive(
                 state["month"] = int(month)
             if day:
                 state["day"] = int(day)
+    else:
+        help_msg = cleandoc(wordcloud_cmd.__doc__) if wordcloud_cmd.__doc__ else ""
+        await wordcloud_cmd.finish(help_msg)
 
 
 @wordcloud_cmd.got(
