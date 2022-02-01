@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 ### Changed
 
+- 结巴分词使用精确模式替代之前的全模式
 - 使用 nonebot-plugin-chatrecorder 作为数据源
 
 ## [0.0.4] - 2022-01-30

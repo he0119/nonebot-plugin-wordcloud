@@ -24,13 +24,9 @@ _✨ NoneBot 词云插件 ✨_
 
 ## 使用方式
 
-因为插件依赖数据库，所以需要在配置文件中添加
+插件依赖 [nonebot-plugin-chatrecorder](https://github.com/MeetWq/nonebot-plugin-chatrecorder) 提供消息存储。
 
-```env
-DATASTORE_ENABLE_DATABASE=true
-```
-
-插件启动完成后，发送 `/今日词云` 或 `/昨日词云` 获取词云。
+待插件启动完成后，发送 `/今日词云`、`/昨日词云` 或 `/历史词云` 即可获取词云。
 
 ## 配置项
 
@@ -71,7 +67,3 @@ DATASTORE_ENABLE_DATABASE=true
 - 类型: `str`
 - 默认: `None`
 - 说明: 结巴分词的 [自定义词典](https://github.com/fxsjy/jieba#%E8%BD%BD%E5%85%A5%E8%AF%8D%E5%85%B8) 位置
-
-## 计划
-
-- [x] 获取任意一天的词云
