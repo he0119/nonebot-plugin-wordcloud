@@ -8,7 +8,6 @@ from PIL.Image import Image
 from wordcloud import WordCloud
 
 from .config import global_config, plugin_config
-from .model import GroupMessage
 
 
 def pre_precess(msg: str) -> str:
@@ -55,12 +54,10 @@ def count_words(words: List[str]) -> Counter:
     return cnt
 
 
-def get_wordcloud(messages: List[GroupMessage]) -> Optional[Image]:
+def get_wordcloud(messages: List[str]) -> Optional[Image]:
     # 过滤掉命令
     command_start = tuple([i for i in global_config.command_start if i])
-    message = " ".join(
-        [m.message for m in messages if not m.message.startswith(command_start)]
-    )
+    message = " ".join([m for m in messages if not m.startswith(command_start)])
     # 预处理
     message = pre_precess(message)
     # 分词

@@ -1,6 +1,5 @@
 from datetime import datetime, timedelta
 from io import BytesIO
-from typing import List
 
 try:
     from zoneinfo import ZoneInfo
@@ -10,7 +9,6 @@ except ImportError:
 import pytest
 from nonebug import App
 from pytest_mock import MockerFixture
-from sqlmodel import select
 
 from .utils import fake_group_message_event
 
@@ -19,32 +17,36 @@ from .utils import fake_group_message_event
 async def test_wordcloud(app: App, mocker: MockerFixture):
     """测试词云"""
     from nonebot.adapters.onebot.v11 import Message, MessageSegment
+    from nonebot_plugin_chatrecorder import get_message_records, serialize_message
+    from nonebot_plugin_chatrecorder.model import MessageRecord
     from nonebot_plugin_datastore import create_session
 
-    from nonebot_plugin_wordcloud import GroupMessage, get_wordcloud, wordcloud_cmd
+    from nonebot_plugin_wordcloud import get_wordcloud, wordcloud_cmd
 
     now = datetime(2022, 1, 2, 12, 0, 0, tzinfo=ZoneInfo("Asia/Shanghai"))
 
     async with create_session() as session:
         for word in ["你", "我", "他", "这是一句完整的话", "你知道吗？今天的天气真好呀！", "/今日词云"]:
-            message = GroupMessage(
+            message = MessageRecord(
+                type="message",
                 user_id="10",
-                group_id="10000",
-                message=word,
                 time=datetime(2022, 1, 2, 4, 0, 0),
                 platform="qq",
+                message_id="test",
+                message=serialize_message(Message(word)),
+                alt_message=word,
+                detail_type="group",
+                group_id="10000",
             )
             session.add(message)
         await session.commit()
 
-        # 中国时区差了 8 小时
-        statement = select(GroupMessage).where(
-            GroupMessage.group_id == "10000",
-            GroupMessage.time >= now - timedelta(days=1),
-            GroupMessage.time <= now,
-        )
-        messages: List[GroupMessage] = (await session.exec(statement)).all()  # type: ignore
-
+    messages = await get_message_records(
+        group_ids=["10000"],
+        time_start=now - timedelta(days=1),
+        time_stop=now,
+        plain_text=True,
+    )
     image = get_wordcloud(messages)
 
     assert image is not None
@@ -79,31 +81,36 @@ async def test_wordcloud(app: App, mocker: MockerFixture):
 async def test_history_wordcloud(app: App, mocker: MockerFixture):
     """测试历史词云"""
     from nonebot.adapters.onebot.v11 import Message, MessageSegment
+    from nonebot_plugin_chatrecorder import get_message_records, serialize_message
+    from nonebot_plugin_chatrecorder.model import MessageRecord
     from nonebot_plugin_datastore import create_session
 
-    from nonebot_plugin_wordcloud import GroupMessage, get_wordcloud, wordcloud_cmd
+    from nonebot_plugin_wordcloud import get_wordcloud, wordcloud_cmd
 
     history = datetime(2022, 1, 1, 12, 0, 0, tzinfo=ZoneInfo("Asia/Shanghai"))
 
     async with create_session() as session:
         for word in ["你", "我", "他", "这是一句完整的话", "你知道吗？今天的天气真好呀！", "/今日词云"]:
-            message = GroupMessage(
+            message = MessageRecord(
+                type="message",
                 user_id="10",
-                group_id="10000",
-                message=word,
                 time=datetime(2022, 1, 1, 4, 0, 0),
                 platform="qq",
+                message_id="test",
+                message=serialize_message(Message(word)),
+                alt_message=word,
+                detail_type="group",
+                group_id="10000",
             )
             session.add(message)
         await session.commit()
 
-        statement = select(GroupMessage).where(
-            GroupMessage.group_id == "10000",
-            GroupMessage.time >= history - timedelta(days=1),
-            GroupMessage.time <= history,
-        )
-        messages: List[GroupMessage] = (await session.exec(statement)).all()  # type: ignore
-
+    messages = await get_message_records(
+        group_ids=["10000"],
+        time_start=history - timedelta(days=1),
+        time_stop=history,
+        plain_text=True,
+    )
     image = get_wordcloud(messages)
 
     assert image is not None
@@ -154,21 +161,27 @@ async def test_wordcloud_empty_msg(
     mocker: MockerFixture,
 ):
     """测试词云，消息均是 stopwords 的情况"""
-    from nonebot.adapters.onebot.v11 import Message
+    from nonebot.adapters.onebot.v11 import Message, MessageSegment
+    from nonebot_plugin_chatrecorder import get_message_records, serialize_message
+    from nonebot_plugin_chatrecorder.model import MessageRecord
     from nonebot_plugin_datastore import create_session
 
-    from nonebot_plugin_wordcloud import GroupMessage, wordcloud_cmd
+    from nonebot_plugin_wordcloud import wordcloud_cmd
 
     now = datetime(2022, 1, 2, 12, 0, 0, tzinfo=ZoneInfo("Asia/Shanghai"))
 
     async with create_session() as session:
         for word in ["你", "我", "他"]:
-            message = GroupMessage(
+            message = MessageRecord(
+                type="message",
                 user_id="10",
-                group_id="10000",
-                message=word,
                 time=datetime(2022, 1, 2, 4, 0, 0),
                 platform="qq",
+                message_id="test",
+                message=serialize_message(Message(word)),
+                alt_message=word,
+                detail_type="group",
+                group_id="10000",
             )
             session.add(message)
         await session.commit()

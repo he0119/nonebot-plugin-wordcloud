@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 - 支持添加用户词典
 - 新增历史词云功能
 
+### Changed
+
+- 使用 nonebot-plugin-chatrecorder 作为数据源
+
 ## [0.0.4] - 2022-01-30
 
 ### Changed
