@@ -23,6 +23,7 @@ numpy = [
     {version = "^1.22.1", markers = "python_version >= '3.8'" },
     {version = "^1.21.1", markers = "python_version < '3.8'" }
 ]
+emoji = "^1.6.3"
 
 [tool.poetry.dev-dependencies]
 black = "^21.12b0"

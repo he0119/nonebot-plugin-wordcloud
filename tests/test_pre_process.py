@@ -8,9 +8,9 @@ async def test_remove_emoji(app: App):
 
     from nonebot_plugin_wordcloud.data import pre_precess
 
-    msg = "1😅2"
+    msg = "1😅🟨二"
     msg = pre_precess(msg)
-    assert msg == "12"
+    assert msg == "1二"
 
 
 @pytest.mark.asyncio
