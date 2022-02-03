@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 ## [Unreleased]
 
+### Added
+
+- 支持设置时区
+
 ### Fixed
 
 - 修复 emoji 去除不全的问题

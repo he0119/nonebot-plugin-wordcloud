@@ -20,6 +20,7 @@ from nonebot.params import Arg, Command, CommandArg, Depends, State
 from nonebot.typing import T_State
 from nonebot_plugin_chatrecorder import get_message_records
 
+from .config import plugin_config
 from .data import get_wordcloud
 from .migrate import migrate_database
 
@@ -65,12 +66,13 @@ async def handle_first_receive(
 ):
     command = commands[0]
     if command == "今日词云":
-        dt = datetime.now(ZoneInfo("Asia/Shanghai"))
+        dt = datetime.now(ZoneInfo(plugin_config.wordcloud_timezone))
         state["year"] = dt.year
         state["month"] = dt.month
         state["day"] = dt.day
     elif command == "昨日词云":
-        dt = datetime.now(ZoneInfo("Asia/Shanghai")) - timedelta(days=1)
+        dt = datetime.now(ZoneInfo(plugin_config.wordcloud_timezone))
+        dt -= timedelta(days=1)
         state["year"] = dt.year
         state["month"] = dt.month
         state["day"] = dt.day
@@ -109,7 +111,7 @@ async def handle_message(
     day: int = Arg(),
 ):
     # 获取中国本地时间
-    dt = datetime(year, month, day, tzinfo=ZoneInfo("Asia/Shanghai"))
+    dt = datetime(year, month, day, tzinfo=ZoneInfo(plugin_config.wordcloud_timezone))
 
     # 中国时区差了 8 小时
     # 并排除机器人自己发的消息
