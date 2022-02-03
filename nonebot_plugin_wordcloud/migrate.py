@@ -4,6 +4,7 @@ from nonebot.adapters.onebot.v11 import Message
 from nonebot_plugin_chatrecorder import MessageRecord, serialize_message
 from nonebot_plugin_datastore import create_session
 from pydantic import BaseModel
+from sqlalchemy.exc import OperationalError
 from sqlmodel import text
 
 
@@ -29,7 +30,7 @@ async def migrate_database() -> bool:
                 "SELECT time,user_id,group_id,message,platform FROM wordcloud_group_message"
             )
             data = await session.execute(statement)
-        except:
+        except OperationalError:
             return False
         messages = data.fetchall()
         messages = map(GroupMessage.parse_obj, messages)
@@ -47,6 +48,6 @@ async def migrate_database() -> bool:
             )
             session.add(record)
         await session.commit()
-        # 删除表格
+        # 删除旧表
         await session.execute(text("DROP TABLE wordcloud_group_message"))
         return True
