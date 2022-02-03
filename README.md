@@ -68,6 +68,12 @@ _✨ NoneBot 词云插件 ✨_
 - 默认: `None`
 - 说明: 结巴分词的 [自定义词典](https://github.com/fxsjy/jieba#%E8%BD%BD%E5%85%A5%E8%AF%8D%E5%85%B8) 位置
 
+### wordcloud_timezone
+
+- 类型: `str`
+- 默认: `Asia/Shanghai`
+- 说明: 用户所在时区
+
 ## 迁移数据
 
 从 `0.0.4` 及以下版本升级至 `0.0.5` 之后，可以通过发送 `/迁移词云` 迁移数据。
