@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 ### Fixed
 
 - 修复 emoji 去除不全的问题
+- 修复日期错误时报错的问题
 
 ## [0.0.5] - 2022-02-02
 

@@ -136,6 +136,22 @@ async def test_history_wordcloud(app: App, mocker: MockerFixture):
 
 
 @pytest.mark.asyncio
+async def test_history_wordcloud_invalid_date(app: App):
+    """测试历史词云，输入的日期无效"""
+    from nonebot.adapters.onebot.v11 import Message
+
+    from nonebot_plugin_wordcloud import wordcloud_cmd
+
+    async with app.test_matcher(wordcloud_cmd) as ctx:
+        bot = ctx.create_bot()
+        event = fake_group_message_event(message=Message("/历史词云 2022-13-01"))
+
+        ctx.receive_event(bot, event)
+        ctx.should_call_send(event, "日期错误，请输入正确的日期", True)
+        ctx.should_finished()
+
+
+@pytest.mark.asyncio
 async def test_wordcloud_empty(app: App):
     """测试词云，消息为空的情况"""
     from nonebot.adapters.onebot.v11 import Message
