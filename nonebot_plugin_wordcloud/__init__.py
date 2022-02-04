@@ -119,12 +119,15 @@ async def handle_message(
     day: int = Arg(),
 ):
     # 获取本地时间
-    if plugin_config.wordcloud_timezone:
-        dt = datetime(
-            year, month, day, tzinfo=ZoneInfo(plugin_config.wordcloud_timezone)
-        )
-    else:
-        dt = datetime(year, month, day).astimezone()
+    try:
+        if plugin_config.wordcloud_timezone:
+            dt = datetime(
+                year, month, day, tzinfo=ZoneInfo(plugin_config.wordcloud_timezone)
+            )
+        else:
+            dt = datetime(year, month, day).astimezone()
+    except ValueError:
+        await wordcloud_cmd.finish("日期错误，请输入正确的日期")
 
     # 排除机器人自己发的消息
     # 将时间转换到 UTC 时区
