@@ -55,6 +55,4 @@ async def test_stopwords(app: App, mocker: MockerFixture):
         ctx.should_finished()
 
     mocked_datetime.now.assert_called_once()
-    mocked_datetime.assert_called_once_with(
-        2022, 1, 2, tzinfo=ZoneInfo("Asia/Shanghai")
-    )
+    mocked_datetime.assert_called_once_with(2022, 1, 2)

@@ -24,7 +24,7 @@ from .config import plugin_config
 from .data import get_wordcloud
 from .migrate import migrate_database
 
-wordcloud_cmd = on_command("词云", aliases={"今日词云", "昨日词云", "历史词云"})
+wordcloud_cmd = on_command("wordcloud", aliases={"词云", "今日词云", "昨日词云", "历史词云"})
 wordcloud_cmd.__doc__ = """
 词云
 
@@ -57,6 +57,14 @@ def parse_int(key: str):
     return _key_parser
 
 
+def get_datetime_now_with_timezone() -> datetime:
+    """获取当前时间，并包含时区信息"""
+    if plugin_config.wordcloud_timezone:
+        return datetime.now(ZoneInfo(plugin_config.wordcloud_timezone))
+    else:
+        return datetime.now().astimezone()
+
+
 @wordcloud_cmd.handle()
 async def handle_first_receive(
     event: GroupMessageEvent,
@@ -66,12 +74,12 @@ async def handle_first_receive(
 ):
     command = commands[0]
     if command == "今日词云":
-        dt = datetime.now(ZoneInfo(plugin_config.wordcloud_timezone))
+        dt = get_datetime_now_with_timezone()
         state["year"] = dt.year
         state["month"] = dt.month
         state["day"] = dt.day
     elif command == "昨日词云":
-        dt = datetime.now(ZoneInfo(plugin_config.wordcloud_timezone))
+        dt = get_datetime_now_with_timezone()
         dt -= timedelta(days=1)
         state["year"] = dt.year
         state["month"] = dt.month
@@ -110,11 +118,16 @@ async def handle_message(
     month: int = Arg(),
     day: int = Arg(),
 ):
-    # 获取中国本地时间
-    dt = datetime(year, month, day, tzinfo=ZoneInfo(plugin_config.wordcloud_timezone))
+    # 获取本地时间
+    if plugin_config.wordcloud_timezone:
+        dt = datetime(
+            year, month, day, tzinfo=ZoneInfo(plugin_config.wordcloud_timezone)
+        )
+    else:
+        dt = datetime(year, month, day).astimezone()
 
-    # 中国时区差了 8 小时
-    # 并排除机器人自己发的消息
+    # 排除机器人自己发的消息
+    # 将时间转换到 UTC 时区
     messages = await get_message_records(
         group_ids=[str(event.group_id)],
         exclude_user_ids=[bot.self_id],

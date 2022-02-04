@@ -12,7 +12,7 @@ class Config(BaseModel, extra=Extra.ignore):
     wordcloud_font_path: str = str(Path(__file__).parent / "SourceHanSans.otf")
     wordcloud_stopwords_path: Path = Path(__file__).parent / "stopwords.txt"
     wordcloud_userdict_path: Optional[Path]
-    wordcloud_timezone: str = "Asia/Shanghai"
+    wordcloud_timezone: Optional[str]
 
 
 global_config = get_driver().config

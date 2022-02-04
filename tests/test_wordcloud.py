@@ -71,9 +71,7 @@ async def test_wordcloud(app: App, mocker: MockerFixture):
         ctx.should_finished()
 
     mocked_datetime.now.assert_called_once()
-    mocked_datetime.assert_called_once_with(
-        2022, 1, 2, tzinfo=ZoneInfo("Asia/Shanghai")
-    )
+    mocked_datetime.assert_called_once_with(2022, 1, 2)
     mocked_get_wordcloud.assert_called_once()
 
 
@@ -133,9 +131,7 @@ async def test_history_wordcloud(app: App, mocker: MockerFixture):
         ctx.should_call_send(event, MessageSegment.image(img_bytes), True)
         ctx.should_finished()
 
-    mocked_datetime.assert_called_once_with(
-        2022, 1, 1, tzinfo=ZoneInfo("Asia/Shanghai")
-    )
+    mocked_datetime.assert_called_once_with(2022, 1, 1)
     mocked_get_wordcloud.assert_called_once()
 
 
@@ -198,9 +194,7 @@ async def test_wordcloud_exclude_bot_msg(app: App, mocker: MockerFixture):
         ctx.should_finished()
 
     mocked_datetime.now.assert_called_once()
-    mocked_datetime.assert_called_once_with(
-        2022, 1, 2, tzinfo=ZoneInfo("Asia/Shanghai")
-    )
+    mocked_datetime.assert_called_once_with(2022, 1, 2)
 
 
 @pytest.mark.asyncio

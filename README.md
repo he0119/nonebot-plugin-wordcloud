@@ -71,8 +71,8 @@ _✨ NoneBot 词云插件 ✨_
 ### wordcloud_timezone
 
 - 类型: `str`
-- 默认: `Asia/Shanghai`
-- 说明: 用户所在时区
+- 默认: `None`
+- 说明: 用户自定义的 [时区](https://docs.python.org/zh-cn/3/library/zoneinfo.html)，留空则使用系统时区
 
 ## 迁移数据
 
