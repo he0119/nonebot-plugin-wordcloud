@@ -28,7 +28,7 @@ jobs:
       - name: Install dependencies
         run: poetry install
       - name: Run tests
-        run: poetry run pytest -n auto -cov=nonebot_plugin_wordcloud --cov-report xml
+        run: poetry run pytest -n auto --cov=nonebot_plugin_wordcloud --cov-report xml
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2
         with:
