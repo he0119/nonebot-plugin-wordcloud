@@ -20,6 +20,9 @@ _✨ NoneBot 词云插件 ✨_
     <img src="https://img.shields.io/pypi/v/nonebot-plugin-wordcloud.svg" alt="pypi">
   </a>
   <img src="https://img.shields.io/badge/python-3.7.3+-blue.svg" alt="python">
+  <a href="https://codecov.io/gh/he0119/nonebot-plugin-wordcloud">
+    <img src="https://codecov.io/gh/he0119/nonebot-plugin-wordcloud/branch/main/graph/badge.svg?token=e2ECtMI91C"/>
+  </a>
 </p>
 
 ## 使用方式
