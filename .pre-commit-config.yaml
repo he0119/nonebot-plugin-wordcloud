@@ -1,7 +1,7 @@
 ci:
   autofix_commit_msg: "style: auto fix by pre-commit hooks"
   autofix_prs: true
-  autoupdate_branch: master
+  autoupdate_branch: main
   autoupdate_schedule: weekly
   autoupdate_commit_msg: "chore: auto update by pre-commit hooks"
 repos:

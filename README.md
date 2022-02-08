@@ -13,7 +13,7 @@ _✨ NoneBot 词云插件 ✨_
 </div>
 
 <p align="center">
-  <a href="https://raw.githubusercontent.com/he0119/nonebot-plugin-wordcloud/master/LICENSE">
+  <a href="https://raw.githubusercontent.com/he0119/nonebot-plugin-wordcloud/main/LICENSE">
     <img src="https://img.shields.io/github/license/he0119/nonebot-plugin-wordcloud.svg" alt="license">
   </a>
   <a href="https://pypi.python.org/pypi/nonebot-plugin-wordcloud">
