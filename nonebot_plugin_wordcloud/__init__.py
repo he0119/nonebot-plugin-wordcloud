@@ -16,7 +16,7 @@ from nonebot.adapters import Bot
 from nonebot.adapters.onebot.v11 import Message, MessageSegment
 from nonebot.adapters.onebot.v11.event import GroupMessageEvent
 from nonebot.matcher import Matcher
-from nonebot.params import Arg, Command, CommandArg, Depends, State
+from nonebot.params import Arg, Command, CommandArg, Depends
 from nonebot.typing import T_State
 from nonebot_plugin_chatrecorder import get_message_records
 
@@ -43,7 +43,7 @@ def parse_int(key: str):
 
     async def _key_parser(
         matcher: Matcher,
-        state: T_State = State(),
+        state: T_State,
         input: Union[int, Message] = Arg(key),
     ):
         if isinstance(input, int):
@@ -68,8 +68,8 @@ def get_datetime_now_with_timezone() -> datetime:
 @wordcloud_cmd.handle()
 async def handle_first_receive(
     event: GroupMessageEvent,
+    state: T_State,
     commands: Tuple[str, ...] = Command(),
-    state: T_State = State(),
     args: Message = CommandArg(),
 ):
     command = commands[0]
