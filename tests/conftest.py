@@ -18,11 +18,11 @@ async def app(
     config.datastore_config_dir = tmp_path / "config"
     config.datastore_data_dir = tmp_path / "data"
 
-    from nonebot_plugin_datastore.db import init_db
-
     # 加载插件
-    nonebot.load_plugin("nonebot_plugin_wordcloud")
     nonebot.load_plugin("nonebot_plugin_datastore")
+    nonebot.load_plugin("nonebot_plugin_wordcloud")
+
+    from nonebot_plugin_datastore.db import init_db
 
     await init_db()
 
