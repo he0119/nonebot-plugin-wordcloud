@@ -66,4 +66,4 @@ def get_wordcloud(messages: List[str]) -> Optional[Image]:
         image = wordcloud.generate_from_frequencies(frequency).to_image()
         return image
     except ValueError as e:
-        logger.error(e)
+        pass
