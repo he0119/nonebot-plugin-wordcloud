@@ -41,7 +41,7 @@ async def test_timezone(app: App, mocker: MockerFixture):
 
 
 @pytest.mark.asyncio
-async def test_different_timezone(app: App, mocker: MockerFixture):
+async def test_set_timezone(app: App, mocker: MockerFixture):
     """测试设定时区"""
     from nonebot_plugin_wordcloud import (
         get_datetime_fromisoformat_with_timezone,

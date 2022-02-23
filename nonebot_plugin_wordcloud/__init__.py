@@ -21,7 +21,7 @@ from nonebot.typing import T_State
 from nonebot_plugin_chatrecorder import get_message_records
 
 from .config import plugin_config
-from .data import get_wordcloud
+from .data_source import get_wordcloud
 from .migrate import migrate_database
 
 wordcloud_cmd = on_command(
@@ -108,6 +108,7 @@ async def handle_first_receive(
 
     if command.startswith("我的"):
         state["my"] = True
+        command = command[2:]
     else:
         state["my"] = False
 
@@ -141,6 +142,12 @@ async def handle_first_receive(
                     state["stop"] = state["start"] + timedelta(days=1)
             except ValueError:
                 await wordcloud_cmd.finish("请输入正确的日期（如 2022-02-22），不然我没法理解呢！")
+    elif command == "年度词云":
+        dt = get_datetime_now_with_timezone()
+        state["start"] = dt.replace(
+            month=1, day=1, hour=0, minute=0, second=0, microsecond=0
+        )
+        state["stop"] = state["start"].replace(year=dt.year + 1)
     else:
         help_msg = cleandoc(wordcloud_cmd.__doc__) if wordcloud_cmd.__doc__ else ""
         await wordcloud_cmd.finish(help_msg)
