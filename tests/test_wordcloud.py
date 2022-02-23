@@ -59,7 +59,7 @@ async def test_wordcloud_empty(app: App):
         event = fake_group_message_event(message=Message("/今日词云"))
 
         ctx.receive_event(bot, event)
-        ctx.should_call_send(event, "没有足够的数据生成词云", True)
+        ctx.should_call_send(event, "没有足够的数据生成词云", True, at_sender=False)
         ctx.should_finished()
 
 
@@ -111,6 +111,7 @@ async def test_wordcloud_exclude_bot_msg(
             event,
             MessageSegment.image(FAKE_IMAGE[1]),
             True,
+            at_sender=False,
         )
         ctx.should_finished()
 
@@ -144,6 +145,7 @@ async def test_today_wordcloud(app: App, mocker: MockerFixture, message_record: 
             event,
             MessageSegment.image(FAKE_IMAGE[1]),
             True,
+            at_sender=False,
         )
         ctx.should_finished()
 
@@ -179,6 +181,7 @@ async def test_my_today_wordcloud(
             event,
             MessageSegment.image(FAKE_IMAGE[1]),
             True,
+            at_sender=True,
         )
         ctx.should_finished()
 
@@ -214,6 +217,7 @@ async def test_yesterday_wordcloud(
             event,
             MessageSegment.image(FAKE_IMAGE[1]),
             True,
+            at_sender=False,
         )
         ctx.should_finished()
 
@@ -249,6 +253,7 @@ async def test_my_yesterday_wordcloud(
             event,
             MessageSegment.image(FAKE_IMAGE[1]),
             True,
+            at_sender=True,
         )
         ctx.should_finished()
 
@@ -282,6 +287,7 @@ async def test_year_wordcloud(app: App, mocker: MockerFixture, message_record: N
             event,
             MessageSegment.image(FAKE_IMAGE[1]),
             True,
+            at_sender=False,
         )
         ctx.should_finished()
 
@@ -315,6 +321,7 @@ async def test_my_year_wordcloud(app: App, mocker: MockerFixture, message_record
             event,
             MessageSegment.image(FAKE_IMAGE[1]),
             True,
+            at_sender=True,
         )
         ctx.should_finished()
 
@@ -348,6 +355,7 @@ async def test_history_wordcloud(app: App, mocker: MockerFixture, message_record
             event,
             MessageSegment.image(FAKE_IMAGE[1]),
             True,
+            at_sender=False,
         )
         ctx.should_finished()
 
@@ -381,7 +389,12 @@ async def test_history_wordcloud_start_stop(
         event = fake_group_message_event(message=Message("/历史词云 2022-01-01~2022-02-22"))
 
         ctx.receive_event(bot, event)
-        ctx.should_call_send(event, MessageSegment.image(FAKE_IMAGE[1]), True)
+        ctx.should_call_send(
+            event,
+            MessageSegment.image(FAKE_IMAGE[1]),
+            True,
+            at_sender=False,
+        )
         ctx.should_finished()
 
     mocked_datetime_fromisoformat.assert_has_calls(
@@ -429,7 +442,12 @@ async def test_history_wordcloud_start_stop_get_args(
 
         stop_event = fake_group_message_event(message=Message("2022-02-22"))
         ctx.receive_event(bot, stop_event)
-        ctx.should_call_send(stop_event, MessageSegment.image(FAKE_IMAGE[1]), True)
+        ctx.should_call_send(
+            stop_event,
+            MessageSegment.image(FAKE_IMAGE[1]),
+            True,
+            at_sender=False,
+        )
         ctx.should_finished()
 
     mocked_datetime_fromisoformat.assert_has_calls(
