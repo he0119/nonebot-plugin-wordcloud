@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 ## [Unreleased]
 
+### Added
+
+- 支持查询本周与本月词云
+
 ### Changed
 
 - 我的词云系列命令，回复消息时将会@用户
