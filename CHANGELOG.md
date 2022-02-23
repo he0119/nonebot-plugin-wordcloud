@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 ## [Unreleased]
 
+### Added
+
+- 支持查询我的词云
+- 支持查询年度词云
+
 ## [0.0.6] - 2022-02-04
 
 ### Added

@@ -9,7 +9,7 @@ async def test_userdict(app: App):
     from nonebot_plugin_datastore import PluginData
 
     from nonebot_plugin_wordcloud.config import plugin_config
-    from nonebot_plugin_wordcloud.data import cut_message
+    from nonebot_plugin_wordcloud.data_source import cut_message
 
     data = PluginData("wordcloud")
     with data.open("userdict.txt", "w", encoding="utf8") as f:

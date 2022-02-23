@@ -21,10 +21,23 @@ from nonebot.typing import T_State
 from nonebot_plugin_chatrecorder import get_message_records
 
 from .config import plugin_config
-from .data import get_wordcloud
+from .data_source import get_wordcloud
 from .migrate import migrate_database
 
-wordcloud_cmd = on_command("wordcloud", aliases={"词云", "今日词云", "昨日词云", "历史词云"})
+wordcloud_cmd = on_command(
+    "wordcloud",
+    aliases={
+        "词云",
+        "今日词云",
+        "昨日词云",
+        "年度词云",
+        "历史词云",
+        "我的今日词云",
+        "我的昨日词云",
+        "我的年度词云",
+        "我的历史词云",
+    },
+)
 wordcloud_cmd.__doc__ = """
 词云
 
@@ -32,27 +45,36 @@ wordcloud_cmd.__doc__ = """
 /今日词云
 获取昨天的词云
 /昨日词云
+获取年度词云
+/年度词云
 获取历史词云
 /历史词云
 /历史词云 2022-01-01
+/历史词云 2022-01-01~2022-02-22
+如果想要获取自己的发言，可在命令前添加 我的
+/我的今日词云
+/我的昨日词云
+/我的年度词云
+/我的历史词云
 """
 
 
-def parse_int(key: str):
+def parse_datetime(key: str):
     """解析数字，并将结果存入 state 中"""
 
     async def _key_parser(
         matcher: Matcher,
         state: T_State,
-        input: Union[int, Message] = Arg(key),
+        input: Union[datetime, Message] = Arg(key),
     ):
-        if isinstance(input, int):
+        if isinstance(input, datetime):
             return
 
         plaintext = input.extract_plain_text()
-        if not plaintext.isdigit():
-            await matcher.reject_arg(key, "请只输入数字，不然我没法理解呢！")
-        state[key] = int(plaintext)
+        try:
+            state[key] = get_datetime_fromisoformat_with_timezone(plaintext)
+        except ValueError:
+            await matcher.reject_arg(key, "请输入正确的日期（如 2022-02-22），不然我没法理解呢！")
 
     return _key_parser
 
@@ -65,6 +87,16 @@ def get_datetime_now_with_timezone() -> datetime:
         return datetime.now().astimezone()
 
 
+def get_datetime_fromisoformat_with_timezone(date_string: str) -> datetime:
+    """从 iso8601 格式字符串中获取时间，并包含时区信息"""
+    if plugin_config.wordcloud_timezone:
+        return datetime.fromisoformat(date_string).astimezone(
+            ZoneInfo(plugin_config.wordcloud_timezone)
+        )
+    else:
+        return datetime.fromisoformat(date_string).astimezone()
+
+
 @wordcloud_cmd.handle()
 async def handle_first_receive(
     event: GroupMessageEvent,
@@ -73,69 +105,85 @@ async def handle_first_receive(
     args: Message = CommandArg(),
 ):
     command = commands[0]
+
+    if command.startswith("我的"):
+        state["my"] = True
+        command = command[2:]
+    else:
+        state["my"] = False
+
     if command == "今日词云":
         dt = get_datetime_now_with_timezone()
-        state["year"] = dt.year
-        state["month"] = dt.month
-        state["day"] = dt.day
+        state["start"] = dt.replace(hour=0, minute=0, second=0, microsecond=0)
+        state["stop"] = dt.replace(
+            hour=0, minute=0, second=0, microsecond=0
+        ) + timedelta(days=1)
     elif command == "昨日词云":
         dt = get_datetime_now_with_timezone()
         dt -= timedelta(days=1)
-        state["year"] = dt.year
-        state["month"] = dt.month
-        state["day"] = dt.day
+        state["start"] = dt.replace(hour=0, minute=0, second=0, microsecond=0)
+        state["stop"] = dt.replace(
+            hour=0, minute=0, second=0, microsecond=0
+        ) + timedelta(days=1)
     elif command == "历史词云":
         plaintext = args.extract_plain_text().strip()
-        match = re.match(r"^(\d+)(?:\-(\d+)(?:\-(\d+))?)?$", plaintext)
+        match = re.match(
+            r"^([0-9]{4}-[0-9]{2}-[0-9]{2})(?:~([0-9]{4}-[0-9]{2}-[0-9]{2}))?$",
+            plaintext,
+        )
         if match:
-            year = match.group(1)
-            month = match.group(2)
-            day = match.group(3)
-            if year:
-                state["year"] = int(year)
-            if month:
-                state["month"] = int(month)
-            if day:
-                state["day"] = int(day)
+            start = match.group(1)
+            stop = match.group(2)
+            try:
+                state["start"] = get_datetime_fromisoformat_with_timezone(start)
+                if stop:
+                    state["stop"] = get_datetime_fromisoformat_with_timezone(stop)
+                else:
+                    state["stop"] = state["start"] + timedelta(days=1)
+            except ValueError:
+                await wordcloud_cmd.finish("请输入正确的日期（如 2022-02-22），不然我没法理解呢！")
+    elif command == "年度词云":
+        dt = get_datetime_now_with_timezone()
+        state["start"] = dt.replace(
+            month=1, day=1, hour=0, minute=0, second=0, microsecond=0
+        )
+        state["stop"] = state["start"].replace(year=dt.year + 1)
     else:
         help_msg = cleandoc(wordcloud_cmd.__doc__) if wordcloud_cmd.__doc__ else ""
         await wordcloud_cmd.finish(help_msg)
 
 
 @wordcloud_cmd.got(
-    "year", prompt="请输入你要查询的年份", parameterless=[Depends(parse_int("year"))]
+    "start",
+    prompt="请输入你要查询的起始日期（如 2022-01-01）",
+    parameterless=[Depends(parse_datetime("start"))],
 )
 @wordcloud_cmd.got(
-    "month", prompt="请输入你要查询的月份", parameterless=[Depends(parse_int("month"))]
-)
-@wordcloud_cmd.got(
-    "day", prompt="请输入你要查询的日期", parameterless=[Depends(parse_int("day"))]
+    "stop",
+    prompt="请输入你要查询的结束日期（如 2022-02-22）",
+    parameterless=[Depends(parse_datetime("stop"))],
 )
 async def handle_message(
     bot: Bot,
     event: GroupMessageEvent,
-    year: int = Arg(),
-    month: int = Arg(),
-    day: int = Arg(),
+    start: datetime = Arg(),
+    stop: datetime = Arg(),
+    my: bool = Arg(),
 ):
-    # 获取本地时间
-    try:
-        if plugin_config.wordcloud_timezone:
-            dt = datetime(
-                year, month, day, tzinfo=ZoneInfo(plugin_config.wordcloud_timezone)
-            )
-        else:
-            dt = datetime(year, month, day).astimezone()
-    except ValueError:
-        await wordcloud_cmd.finish("日期错误，请输入正确的日期")
+    # 是否只查询自己的记录
+    if my:
+        user_ids = [str(event.user_id)]
+    else:
+        user_ids = None
 
     # 排除机器人自己发的消息
     # 将时间转换到 UTC 时区
     messages = await get_message_records(
+        user_ids=user_ids,
         group_ids=[str(event.group_id)],
         exclude_user_ids=[bot.self_id],
-        time_start=dt.astimezone(ZoneInfo("UTC")),
-        time_stop=(dt + timedelta(days=1)).astimezone(ZoneInfo("UTC")),
+        time_start=start.astimezone(ZoneInfo("UTC")),
+        time_stop=stop.astimezone(ZoneInfo("UTC")),
         plain_text=True,
     )
     image = get_wordcloud(messages)
