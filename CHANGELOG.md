@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 ## [Unreleased]
 
+### Changed
+
+- 我的词云系列命令，回复消息时将会@用户
+
 ## [0.0.7] - 2022-02-23
 
 ### Added
