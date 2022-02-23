@@ -309,7 +309,7 @@ async def test_month_wordcloud(app: App, mocker: MockerFixture, message_record: 
 
     mocked_datetime_now = mocker.patch(
         "nonebot_plugin_wordcloud.get_datetime_now_with_timezone",
-        return_value=datetime(2022, 1, 7, 2, tzinfo=ZoneInfo("Asia/Shanghai")),
+        return_value=datetime(2022, 2, 7, 2, tzinfo=ZoneInfo("Asia/Shanghai")),
     )
 
     mocked_get_wordcloud = mocker.patch(
@@ -331,9 +331,7 @@ async def test_month_wordcloud(app: App, mocker: MockerFixture, message_record: 
         ctx.should_finished()
 
     mocked_datetime_now.assert_called_once_with()
-    mocked_get_wordcloud.assert_called_once_with(
-        ["10:1-2", "11:1-2", "10:1-3", "11:1-3"]
-    )
+    mocked_get_wordcloud.assert_called_once_with(["10:2-1", "11:2-1"])
 
 
 @pytest.mark.asyncio
