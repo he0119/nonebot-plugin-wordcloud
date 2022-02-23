@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 ## [Unreleased]
 
+## [0.0.8] - 2022-02-23
+
 ### Added
 
 - 支持查询本周与本月词云
@@ -71,7 +73,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 - 可以使用的版本。
 
-[unreleased]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.0.7...HEAD
+[unreleased]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.0.8...HEAD
+[0.0.8]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.0.7...v0.0.8
 [0.0.7]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.0.6...v0.0.7
 [0.0.6]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.0.5...v0.0.6
 [0.0.5]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.0.4...v0.0.5
