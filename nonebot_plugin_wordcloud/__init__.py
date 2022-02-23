@@ -114,14 +114,14 @@ async def handle_first_receive(
     if command == "今日词云":
         dt = get_datetime_now_with_timezone()
         state["start"] = dt.replace(hour=0, minute=0, second=0, microsecond=0)
-        state["end"] = dt.replace(
+        state["stop"] = dt.replace(
             hour=0, minute=0, second=0, microsecond=0
         ) + timedelta(days=1)
     elif command == "昨日词云":
         dt = get_datetime_now_with_timezone()
         dt -= timedelta(days=1)
         state["start"] = dt.replace(hour=0, minute=0, second=0, microsecond=0)
-        state["end"] = dt.replace(
+        state["stop"] = dt.replace(
             hour=0, minute=0, second=0, microsecond=0
         ) + timedelta(days=1)
     elif command == "历史词云":
@@ -132,13 +132,13 @@ async def handle_first_receive(
         )
         if match:
             start = match.group(1)
-            end = match.group(2)
+            stop = match.group(2)
             try:
                 state["start"] = get_datetime_fromisoformat_with_timezone(start)
-                if end:
-                    state["end"] = get_datetime_fromisoformat_with_timezone(end)
+                if stop:
+                    state["stop"] = get_datetime_fromisoformat_with_timezone(stop)
                 else:
-                    state["end"] = state["start"] + timedelta(days=1)
+                    state["stop"] = state["start"] + timedelta(days=1)
             except ValueError:
                 await wordcloud_cmd.finish("请输入正确的日期（如 2022-02-22），不然我没法理解呢！")
     else:

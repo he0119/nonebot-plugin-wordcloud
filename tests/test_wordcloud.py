@@ -52,11 +52,10 @@ async def test_wordcloud(app: App, mocker: MockerFixture):
     assert image is not None
     assert image.size == (1920, 1200)
 
-    mocked_datetime = mocker.patch("nonebot_plugin_wordcloud.datetime")
-    mocked_datetime.return_value = datetime(
-        2022, 1, 2, tzinfo=ZoneInfo("Asia/Shanghai")
+    mocked_datetime_now = mocker.patch(
+        "nonebot_plugin_wordcloud.get_datetime_now_with_timezone"
     )
-    mocked_datetime.now.return_value = now
+    mocked_datetime_now.return_value = now
     mocked_get_wordcloud = mocker.patch("nonebot_plugin_wordcloud.get_wordcloud")
     mocked_get_wordcloud.return_value = image
     img_bytes = BytesIO()
@@ -70,8 +69,7 @@ async def test_wordcloud(app: App, mocker: MockerFixture):
         ctx.should_call_send(event, MessageSegment.image(img_bytes), True)
         ctx.should_finished()
 
-    mocked_datetime.now.assert_called_once()
-    mocked_datetime.assert_called_once_with(2022, 1, 2)
+    mocked_datetime_now.assert_called_once()
     mocked_get_wordcloud.assert_called_once()
 
 
@@ -114,8 +112,10 @@ async def test_history_wordcloud(app: App, mocker: MockerFixture):
     assert image is not None
     assert image.size == (1920, 1200)
 
-    mocked_datetime = mocker.patch("nonebot_plugin_wordcloud.datetime")
-    mocked_datetime.return_value = datetime(
+    mocked_datetime_fromisoformat = mocker.patch(
+        "nonebot_plugin_wordcloud.get_datetime_fromisoformat_with_timezone"
+    )
+    mocked_datetime_fromisoformat.return_value = datetime(
         2022, 1, 1, tzinfo=ZoneInfo("Asia/Shanghai")
     )
     mocked_get_wordcloud = mocker.patch("nonebot_plugin_wordcloud.get_wordcloud")
@@ -131,7 +131,7 @@ async def test_history_wordcloud(app: App, mocker: MockerFixture):
         ctx.should_call_send(event, MessageSegment.image(img_bytes), True)
         ctx.should_finished()
 
-    mocked_datetime.assert_called_once_with(2022, 1, 1)
+    mocked_datetime_fromisoformat.assert_called_once_with("2022-01-01")
     mocked_get_wordcloud.assert_called_once()
 
 
@@ -147,7 +147,7 @@ async def test_history_wordcloud_invalid_date(app: App):
         event = fake_group_message_event(message=Message("/历史词云 2022-13-01"))
 
         ctx.receive_event(bot, event)
-        ctx.should_call_send(event, "日期错误，请输入正确的日期", True)
+        ctx.should_call_send(event, "请输入正确的日期（如 2022-02-22），不然我没法理解呢！", True)
         ctx.should_finished()
 
 
@@ -193,11 +193,10 @@ async def test_wordcloud_exclude_bot_msg(app: App, mocker: MockerFixture):
             session.add(message)
         await session.commit()
 
-    mocked_datetime = mocker.patch("nonebot_plugin_wordcloud.datetime")
-    mocked_datetime.return_value = datetime(
-        2022, 1, 2, tzinfo=ZoneInfo("Asia/Shanghai")
+    mocked_datetime_now = mocker.patch(
+        "nonebot_plugin_wordcloud.get_datetime_now_with_timezone"
     )
-    mocked_datetime.now.return_value = datetime(
+    mocked_datetime_now.return_value = datetime(
         2022, 1, 2, 12, 0, 0, tzinfo=ZoneInfo("Asia/Shanghai")
     )
 
@@ -209,8 +208,7 @@ async def test_wordcloud_exclude_bot_msg(app: App, mocker: MockerFixture):
         ctx.should_call_send(event, "没有足够的数据生成词云", True)
         ctx.should_finished()
 
-    mocked_datetime.now.assert_called_once()
-    mocked_datetime.assert_called_once_with(2022, 1, 2)
+    mocked_datetime_now.assert_called_once()
 
 
 @pytest.mark.asyncio
@@ -218,7 +216,7 @@ async def test_wordcloud_help(app: App):
     """测试输出帮助信息"""
     from nonebot.adapters.onebot.v11 import Message
 
-    from nonebot_plugin_wordcloud import wordcloud_cmd
+    from nonebot_plugin_wordcloud import cleandoc, wordcloud_cmd
 
     async with app.test_matcher(wordcloud_cmd) as ctx:
         bot = ctx.create_bot()
@@ -227,7 +225,7 @@ async def test_wordcloud_help(app: App):
         ctx.receive_event(bot, event)
         ctx.should_call_send(
             event,
-            "词云\n\n获取今天的词云\n/今日词云\n获取昨天的词云\n/昨日词云\n获取历史词云\n/历史词云\n/历史词云 2022-01-01",
+            cleandoc(wordcloud_cmd.__doc__) if wordcloud_cmd.__doc__ else "",
             True,
         )
         ctx.should_finished()

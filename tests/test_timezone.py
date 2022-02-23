@@ -15,42 +15,38 @@ from .utils import fake_group_message_event
 @pytest.mark.asyncio
 async def test_timezone(app: App, mocker: MockerFixture):
     """测试系统时区"""
-    from nonebot.adapters.onebot.v11 import Message
-
-    from nonebot_plugin_wordcloud import wordcloud_cmd
+    from nonebot_plugin_wordcloud import (
+        get_datetime_fromisoformat_with_timezone,
+        get_datetime_now_with_timezone,
+    )
 
     mocked_datetime = mocker.patch("nonebot_plugin_wordcloud.datetime")
     mocked_datetime.now().astimezone.return_value = datetime(
         2022, 1, 1, 6, tzinfo=ZoneInfo("Asia/Shanghai")
     )
-
-    mocked_time = mocker.MagicMock()
-    mocked_time.astimezone.return_value = datetime(
-        2022, 1, 1, tzinfo=ZoneInfo("Asia/Shanghai")
+    mocked_datetime.fromisoformat().astimezone.return_value = datetime(
+        2022, 1, 1, 7, tzinfo=ZoneInfo("Asia/Shanghai")
     )
 
-    mocked_datetime.return_value = mocked_time
-
-    async with app.test_matcher(wordcloud_cmd) as ctx:
-        bot = ctx.create_bot()
-        event = fake_group_message_event(message=Message("/今日词云"))
-
-        ctx.receive_event(bot, event)
-        ctx.should_call_send(event, "没有足够的数据生成词云", True)
-        ctx.should_finished()
+    assert get_datetime_now_with_timezone() == datetime(
+        2022, 1, 1, 6, tzinfo=ZoneInfo("Asia/Shanghai")
+    )
+    assert get_datetime_fromisoformat_with_timezone("2022-01-01") == datetime(
+        2022, 1, 1, 7, tzinfo=ZoneInfo("Asia/Shanghai")
+    )
 
     # 通过调用 astimezone 来获取当前时区
     mocked_datetime.now().astimezone.assert_called_once_with()
-    mocked_datetime.assert_called_once_with(2022, 1, 1)
-    mocked_time.astimezone.assert_called_once_with()
+    mocked_datetime.fromisoformat.assert_any_call("2022-01-01")
 
 
 @pytest.mark.asyncio
 async def test_different_timezone(app: App, mocker: MockerFixture):
     """测试设定时区"""
-    from nonebot.adapters.onebot.v11 import Message
-
-    from nonebot_plugin_wordcloud import wordcloud_cmd
+    from nonebot_plugin_wordcloud import (
+        get_datetime_fromisoformat_with_timezone,
+        get_datetime_now_with_timezone,
+    )
     from nonebot_plugin_wordcloud.config import plugin_config
 
     # 设置时区
@@ -58,17 +54,18 @@ async def test_different_timezone(app: App, mocker: MockerFixture):
 
     mocked_datetime = mocker.patch("nonebot_plugin_wordcloud.datetime")
     mocked_datetime.now.return_value = datetime(2022, 1, 1, 6, tzinfo=ZoneInfo("UTC"))
+    mocked_datetime.fromisoformat().astimezone.return_value = datetime(
+        2022, 1, 1, 7, tzinfo=ZoneInfo("UTC")
+    )
 
-    mocked_datetime.return_value = datetime(2022, 1, 1, tzinfo=ZoneInfo("UTC"))
-
-    async with app.test_matcher(wordcloud_cmd) as ctx:
-        bot = ctx.create_bot()
-        event = fake_group_message_event(message=Message("/今日词云"))
-
-        ctx.receive_event(bot, event)
-        ctx.should_call_send(event, "没有足够的数据生成词云", True)
-        ctx.should_finished()
+    assert get_datetime_now_with_timezone() == datetime(
+        2022, 1, 1, 6, tzinfo=ZoneInfo("UTC")
+    )
+    assert get_datetime_fromisoformat_with_timezone("2022-01-01") == datetime(
+        2022, 1, 1, 7, tzinfo=ZoneInfo("UTC")
+    )
 
     # 直接获取设定时区的时间
     mocked_datetime.now.assert_called_once_with(ZoneInfo("UTC"))
-    mocked_datetime.assert_called_once_with(2022, 1, 1, tzinfo=ZoneInfo("UTC"))
+    mocked_datetime.fromisoformat.assert_any_call("2022-01-01")
+    mocked_datetime.fromisoformat().astimezone.assert_called_once_with(ZoneInfo("UTC"))

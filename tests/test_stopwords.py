@@ -40,11 +40,10 @@ async def test_stopwords(app: App, mocker: MockerFixture):
             session.add(message)
         await session.commit()
 
-    mocked_datetime = mocker.patch("nonebot_plugin_wordcloud.datetime")
-    mocked_datetime.return_value = datetime(
-        2022, 1, 2, tzinfo=ZoneInfo("Asia/Shanghai")
+    mocked_datetime_now = mocker.patch(
+        "nonebot_plugin_wordcloud.get_datetime_now_with_timezone"
     )
-    mocked_datetime.now.return_value = now
+    mocked_datetime_now.return_value = now
 
     async with app.test_matcher(wordcloud_cmd) as ctx:
         bot = ctx.create_bot()
@@ -54,5 +53,4 @@ async def test_stopwords(app: App, mocker: MockerFixture):
         ctx.should_call_send(event, "没有足够的数据生成词云", True)
         ctx.should_finished()
 
-    mocked_datetime.now.assert_called_once()
-    mocked_datetime.assert_called_once_with(2022, 1, 2)
+    mocked_datetime_now.assert_called_once()
