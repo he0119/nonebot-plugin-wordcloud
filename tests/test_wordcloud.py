@@ -394,6 +394,54 @@ async def test_history_wordcloud_start_stop(
 
 
 @pytest.mark.asyncio
+async def test_history_wordcloud_start_stop_get_args(
+    app: App, mocker: MockerFixture, message_record: None
+):
+    """测试历史词云，获取起始时间参数的情况"""
+    from nonebot.adapters.onebot.v11 import Message, MessageSegment
+
+    from nonebot_plugin_wordcloud import wordcloud_cmd
+
+    mocked_datetime_fromisoformat = mocker.patch(
+        "nonebot_plugin_wordcloud.get_datetime_fromisoformat_with_timezone",
+        side_effect=[
+            datetime(2022, 1, 1, tzinfo=ZoneInfo("Asia/Shanghai")),
+            datetime(2022, 2, 22, tzinfo=ZoneInfo("Asia/Shanghai")),
+        ],
+    )
+    mocked_get_wordcloud = mocker.patch(
+        "nonebot_plugin_wordcloud.get_wordcloud",
+        return_value=FAKE_IMAGE[0],
+    )
+
+    async with app.test_matcher(wordcloud_cmd) as ctx:
+        bot = ctx.create_bot()
+
+        event = fake_group_message_event(message=Message("/历史词云"))
+        ctx.receive_event(bot, event)
+        ctx.should_call_send(event, "请输入你要查询的起始日期（如 2022-01-01）", True)
+        ctx.should_rejected()
+
+        start_event = fake_group_message_event(message=Message("2022-01-01"))
+        ctx.receive_event(bot, start_event)
+        ctx.should_call_send(start_event, "请输入你要查询的结束日期（如 2022-02-22）", True)
+        ctx.should_rejected()
+
+        stop_event = fake_group_message_event(message=Message("2022-02-22"))
+        ctx.receive_event(bot, stop_event)
+        ctx.should_call_send(stop_event, MessageSegment.image(FAKE_IMAGE[1]), True)
+        ctx.should_finished()
+
+    mocked_datetime_fromisoformat.assert_has_calls(
+        [
+            mocker.call("2022-01-01"),
+            mocker.call("2022-02-22"),
+        ]
+    )
+    mocked_get_wordcloud.assert_called_once_with(["10-1", "11-1", "10-2", "11-2"])
+
+
+@pytest.mark.asyncio
 async def test_history_wordcloud_invalid_date(app: App):
     """测试历史词云，输入的日期无效"""
     from nonebot.adapters.onebot.v11 import Message
