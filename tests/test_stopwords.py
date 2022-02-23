@@ -50,7 +50,12 @@ async def test_stopwords(app: App, mocker: MockerFixture):
         event = fake_group_message_event(message=Message("/今日词云"))
 
         ctx.receive_event(bot, event)
-        ctx.should_call_send(event, "没有足够的数据生成词云", True)
+        ctx.should_call_send(
+            event,
+            "没有足够的数据生成词云",
+            True,
+            at_sender=False,
+        )
         ctx.should_finished()
 
     mocked_datetime_now.assert_called_once()

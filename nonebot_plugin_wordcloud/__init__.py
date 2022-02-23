@@ -190,9 +190,9 @@ async def handle_message(
     if image:
         image_bytes = BytesIO()
         image.save(image_bytes, format="PNG")
-        await wordcloud_cmd.finish(MessageSegment.image(image_bytes))
+        await wordcloud_cmd.finish(MessageSegment.image(image_bytes), at_sender=my)
     else:
-        await wordcloud_cmd.finish("没有足够的数据生成词云")
+        await wordcloud_cmd.finish("没有足够的数据生成词云", at_sender=my)
 
 
 migrate_cmd = on_command("迁移词云")
