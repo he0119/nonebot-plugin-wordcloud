@@ -30,10 +30,14 @@ wordcloud_cmd = on_command(
         "词云",
         "今日词云",
         "昨日词云",
+        "本周词云",
+        "本月词云",
         "年度词云",
         "历史词云",
         "我的今日词云",
         "我的昨日词云",
+        "我的本周词云",
+        "我的本月词云",
         "我的年度词云",
         "我的历史词云",
     },
@@ -47,15 +51,16 @@ wordcloud_cmd.__doc__ = """
 /昨日词云
 获取年度词云
 /年度词云
-获取历史词云
+获取本周词云
+/本周词云
+获取本月词云
+/本月词云
+获取历史词云，支持 ISO8601 格式的日期，如 2020-02-22
 /历史词云
 /历史词云 2022-01-01
 /历史词云 2022-01-01~2022-02-22
 如果想要获取自己的发言，可在命令前添加 我的
 /我的今日词云
-/我的昨日词云
-/我的年度词云
-/我的历史词云
 """
 
 
@@ -115,16 +120,27 @@ async def handle_first_receive(
     if command == "今日词云":
         dt = get_datetime_now_with_timezone()
         state["start"] = dt.replace(hour=0, minute=0, second=0, microsecond=0)
-        state["stop"] = dt.replace(
-            hour=0, minute=0, second=0, microsecond=0
-        ) + timedelta(days=1)
+        state["stop"] = dt
     elif command == "昨日词云":
         dt = get_datetime_now_with_timezone()
-        dt -= timedelta(days=1)
-        state["start"] = dt.replace(hour=0, minute=0, second=0, microsecond=0)
-        state["stop"] = dt.replace(
+        state["stop"] = dt.replace(hour=0, minute=0, second=0, microsecond=0)
+        state["start"] = state["stop"] - timedelta(days=1)
+    elif command == "本周词云":
+        dt = get_datetime_now_with_timezone()
+        state["start"] = dt.replace(
             hour=0, minute=0, second=0, microsecond=0
-        ) + timedelta(days=1)
+        ) - timedelta(days=dt.weekday())
+        state["stop"] = dt
+    elif command == "本月词云":
+        dt = get_datetime_now_with_timezone()
+        state["start"] = dt.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        state["stop"] = dt
+    elif command == "年度词云":
+        dt = get_datetime_now_with_timezone()
+        state["start"] = dt.replace(
+            month=1, day=1, hour=0, minute=0, second=0, microsecond=0
+        )
+        state["stop"] = dt
     elif command == "历史词云":
         plaintext = args.extract_plain_text().strip()
         match = re.match(
@@ -142,12 +158,6 @@ async def handle_first_receive(
                     state["stop"] = state["start"] + timedelta(days=1)
             except ValueError:
                 await wordcloud_cmd.finish("请输入正确的日期（如 2022-02-22），不然我没法理解呢！")
-    elif command == "年度词云":
-        dt = get_datetime_now_with_timezone()
-        state["start"] = dt.replace(
-            month=1, day=1, hour=0, minute=0, second=0, microsecond=0
-        )
-        state["stop"] = state["start"].replace(year=dt.year + 1)
     else:
         help_msg = cleandoc(wordcloud_cmd.__doc__) if wordcloud_cmd.__doc__ else ""
         await wordcloud_cmd.finish(help_msg)
