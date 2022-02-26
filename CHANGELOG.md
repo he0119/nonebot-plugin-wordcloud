@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 - 历史词云支持直接输入日期和时间，不局限于日期
 
+### Removed
+
+- 移除迁移词云命令
+
 ## [0.0.8] - 2022-02-23
 
 ### Added
