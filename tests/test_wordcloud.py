@@ -411,11 +411,6 @@ async def test_history_wordcloud(app: App, mocker: MockerFixture, message_record
 
     from nonebot_plugin_wordcloud import wordcloud_cmd
 
-    mocked_datetime_fromisoformat = mocker.patch(
-        "nonebot_plugin_wordcloud.get_datetime_fromisoformat_with_timezone",
-        return_value=datetime(2022, 1, 2, tzinfo=ZoneInfo("Asia/Shanghai")),
-    )
-
     mocked_get_wordcloud = mocker.patch(
         "nonebot_plugin_wordcloud.get_wordcloud",
         return_value=FAKE_IMAGE[0],
@@ -434,7 +429,6 @@ async def test_history_wordcloud(app: App, mocker: MockerFixture, message_record
         )
         ctx.should_finished()
 
-    mocked_datetime_fromisoformat.assert_called_once_with("2022-01-02")
     mocked_get_wordcloud.assert_called_once_with(["10:1-2", "11:1-2"])
 
 
@@ -447,13 +441,6 @@ async def test_history_wordcloud_start_stop(
 
     from nonebot_plugin_wordcloud import wordcloud_cmd
 
-    mocked_datetime_fromisoformat = mocker.patch(
-        "nonebot_plugin_wordcloud.get_datetime_fromisoformat_with_timezone",
-        side_effect=[
-            datetime(2022, 1, 2, 12, 0, 1, tzinfo=ZoneInfo("Asia/Shanghai")),
-            datetime(2022, 2, 22, tzinfo=ZoneInfo("Asia/Shanghai")),
-        ],
-    )
     mocked_get_wordcloud = mocker.patch(
         "nonebot_plugin_wordcloud.get_wordcloud",
         return_value=FAKE_IMAGE[0],
@@ -474,12 +461,6 @@ async def test_history_wordcloud_start_stop(
         )
         ctx.should_finished()
 
-    mocked_datetime_fromisoformat.assert_has_calls(
-        [
-            mocker.call("2022-01-02T12:00:01"),
-            mocker.call("2022-02-22"),
-        ]
-    )
     mocked_get_wordcloud.assert_called_once_with(
         ["10:1-3", "11:1-3", "10:2-1", "11:2-1"]
     )
@@ -494,13 +475,6 @@ async def test_history_wordcloud_start_stop_get_args(
 
     from nonebot_plugin_wordcloud import wordcloud_cmd
 
-    mocked_datetime_fromisoformat = mocker.patch(
-        "nonebot_plugin_wordcloud.get_datetime_fromisoformat_with_timezone",
-        side_effect=[
-            datetime(2022, 1, 1, tzinfo=ZoneInfo("Asia/Shanghai")),
-            datetime(2022, 2, 22, tzinfo=ZoneInfo("Asia/Shanghai")),
-        ],
-    )
     mocked_get_wordcloud = mocker.patch(
         "nonebot_plugin_wordcloud.get_wordcloud",
         return_value=FAKE_IMAGE[0],
@@ -519,6 +493,11 @@ async def test_history_wordcloud_start_stop_get_args(
         ctx.should_call_send(start_event, "请输入你要查询的结束日期（如 2022-02-22）", True)
         ctx.should_rejected()
 
+        invalid_stop_event = fake_group_message_event(message=Message("2022-02-30"))
+        ctx.receive_event(bot, invalid_stop_event)
+        ctx.should_call_send(invalid_stop_event, "请输入正确的日期，不然我没法理解呢！", True)
+        ctx.should_rejected()
+
         stop_event = fake_group_message_event(message=Message("2022-02-22"))
         ctx.receive_event(bot, stop_event)
         ctx.should_call_send(
@@ -529,12 +508,6 @@ async def test_history_wordcloud_start_stop_get_args(
         )
         ctx.should_finished()
 
-    mocked_datetime_fromisoformat.assert_has_calls(
-        [
-            mocker.call("2022-01-01"),
-            mocker.call("2022-02-22"),
-        ]
-    )
     mocked_get_wordcloud.assert_called_once_with(
         ["10:1-2", "11:1-2", "10:1-3", "11:1-3", "10:2-1", "11:2-1"]
     )
