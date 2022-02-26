@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 ## [Unreleased]
 
+## [0.1.0] - 2022-02-26
+
 ### Changed
 
 - 历史词云支持直接输入日期和时间，不局限于日期
@@ -81,7 +83,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 - 可以使用的版本。
 
-[unreleased]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.0.8...HEAD
+[unreleased]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.0.8...v0.1.0
 [0.0.8]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.0.7...v0.0.8
 [0.0.7]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.0.6...v0.0.7
 [0.0.6]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.0.5...v0.0.6
