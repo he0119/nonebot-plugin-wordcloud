@@ -22,7 +22,6 @@ from nonebot_plugin_chatrecorder import get_message_records
 
 from .config import plugin_config
 from .data_source import get_wordcloud
-from .migrate import migrate_database
 
 wordcloud_cmd = on_command(
     "wordcloud",
@@ -209,15 +208,3 @@ async def handle_message(
         await wordcloud_cmd.finish(MessageSegment.image(image_bytes), at_sender=my)
     else:
         await wordcloud_cmd.finish("没有足够的数据生成词云", at_sender=my)
-
-
-migrate_cmd = on_command("迁移词云")
-
-
-@migrate_cmd.handle()
-async def handle_migrate():
-    result = await migrate_database()
-    if result:
-        await migrate_cmd.finish("数据库迁移成功")
-    else:
-        await migrate_cmd.finish("旧版本数据库不存在，不需要迁移")

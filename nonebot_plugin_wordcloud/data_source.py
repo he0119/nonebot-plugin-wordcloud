@@ -4,7 +4,6 @@ from typing import List, Optional
 
 import jieba
 from emoji import replace_emoji  # type: ignore
-from nonebot.log import logger
 from PIL.Image import Image
 from wordcloud import WordCloud
 
