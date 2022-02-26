@@ -450,7 +450,7 @@ async def test_history_wordcloud_start_stop(
     mocked_datetime_fromisoformat = mocker.patch(
         "nonebot_plugin_wordcloud.get_datetime_fromisoformat_with_timezone",
         side_effect=[
-            datetime(2022, 1, 1, tzinfo=ZoneInfo("Asia/Shanghai")),
+            datetime(2022, 1, 2, 12, 0, 1, tzinfo=ZoneInfo("Asia/Shanghai")),
             datetime(2022, 2, 22, tzinfo=ZoneInfo("Asia/Shanghai")),
         ],
     )
@@ -461,7 +461,9 @@ async def test_history_wordcloud_start_stop(
 
     async with app.test_matcher(wordcloud_cmd) as ctx:
         bot = ctx.create_bot()
-        event = fake_group_message_event(message=Message("/历史词云 2022-01-01~2022-02-22"))
+        event = fake_group_message_event(
+            message=Message("/历史词云 2022-01-02T12:00:01~2022-02-22")
+        )
 
         ctx.receive_event(bot, event)
         ctx.should_call_send(
@@ -474,12 +476,12 @@ async def test_history_wordcloud_start_stop(
 
     mocked_datetime_fromisoformat.assert_has_calls(
         [
-            mocker.call("2022-01-01"),
+            mocker.call("2022-01-02T12:00:01"),
             mocker.call("2022-02-22"),
         ]
     )
     mocked_get_wordcloud.assert_called_once_with(
-        ["10:1-2", "11:1-2", "10:1-3", "11:1-3", "10:2-1", "11:2-1"]
+        ["10:1-3", "11:1-3", "10:2-1", "11:2-1"]
     )
 
 
@@ -550,7 +552,17 @@ async def test_history_wordcloud_invalid_date(app: App):
         event = fake_group_message_event(message=Message("/历史词云 2022-13-01"))
 
         ctx.receive_event(bot, event)
-        ctx.should_call_send(event, "请输入正确的日期（如 2022-02-22），不然我没法理解呢！", True)
+        ctx.should_call_send(event, "请输入正确的日期，不然我没法理解呢！", True)
+        ctx.should_finished()
+
+    async with app.test_matcher(wordcloud_cmd) as ctx:
+        bot = ctx.create_bot()
+        event = fake_group_message_event(
+            message=Message("/历史词云 2022-12-01T13:~2022-12-02")
+        )
+
+        ctx.receive_event(bot, event)
+        ctx.should_call_send(event, "请输入正确的日期，不然我没法理解呢！", True)
         ctx.should_finished()
 
     async with app.test_matcher(wordcloud_cmd) as ctx:
@@ -558,5 +570,5 @@ async def test_history_wordcloud_invalid_date(app: App):
         event = fake_group_message_event(message=Message("/历史词云 2022-12-01~2022-13-01"))
 
         ctx.receive_event(bot, event)
-        ctx.should_call_send(event, "请输入正确的日期（如 2022-02-22），不然我没法理解呢！", True)
+        ctx.should_call_send(event, "请输入正确的日期，不然我没法理解呢！", True)
         ctx.should_finished()
