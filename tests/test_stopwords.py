@@ -1,61 +1,13 @@
-from datetime import datetime
-
-try:
-    from zoneinfo import ZoneInfo
-except ImportError:
-    from backports.zoneinfo import ZoneInfo  # type: ignore
-
 import pytest
 from nonebug import App
-from pytest_mock import MockerFixture
-
-from .utils import fake_group_message_event
 
 
 @pytest.mark.asyncio
-async def test_stopwords(app: App, mocker: MockerFixture):
+async def test_stopwords(app: App):
     """测试消息均是 stopwords 的情况"""
-    from nonebot.adapters.onebot.v11 import Message
-    from nonebot_plugin_chatrecorder import serialize_message
-    from nonebot_plugin_chatrecorder.model import MessageRecord
-    from nonebot_plugin_datastore import create_session
 
-    from nonebot_plugin_wordcloud import wordcloud_cmd
+    from nonebot_plugin_wordcloud.data_source import cut_message
 
-    now = datetime(2022, 1, 2, 12, 0, 0, tzinfo=ZoneInfo("Asia/Shanghai"))
+    words = cut_message("你我他")
 
-    async with create_session() as session:
-        for word in ["你", "我", "他"]:
-            message = MessageRecord(
-                type="message",
-                user_id="10",
-                time=now.astimezone(ZoneInfo("UTC")),
-                platform="qq",
-                message_id="test",
-                message=serialize_message(Message(word)),
-                alt_message=word,
-                detail_type="group",
-                group_id="10000",
-            )
-            session.add(message)
-        await session.commit()
-
-    mocked_datetime_now = mocker.patch(
-        "nonebot_plugin_wordcloud.get_datetime_now_with_timezone"
-    )
-    mocked_datetime_now.return_value = now
-
-    async with app.test_matcher(wordcloud_cmd) as ctx:
-        bot = ctx.create_bot()
-        event = fake_group_message_event(message=Message("/今日词云"))
-
-        ctx.receive_event(bot, event)
-        ctx.should_call_send(
-            event,
-            "没有足够的数据生成词云",
-            True,
-            at_sender=False,
-        )
-        ctx.should_finished()
-
-    mocked_datetime_now.assert_called_once()
+    assert words == []
