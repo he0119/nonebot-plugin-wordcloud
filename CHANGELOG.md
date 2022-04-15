@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 ## [Unreleased]
 
+### Changed
+
+- 仅当消息为词云两字时才发送帮助
+
 ## [0.1.0] - 2022-02-26
 
 ### Changed
