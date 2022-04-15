@@ -164,8 +164,13 @@ async def handle_first_receive(
             except ValueError:
                 await wordcloud_cmd.finish("请输入正确的日期，不然我没法理解呢！")
     else:
-        help_msg = cleandoc(wordcloud_cmd.__doc__) if wordcloud_cmd.__doc__ else ""
-        await wordcloud_cmd.finish(help_msg)
+        plaintext = args.extract_plain_text()
+        # 当完整匹配词云的时候才输出帮助信息
+        if not plaintext:
+            help_msg = cleandoc(wordcloud_cmd.__doc__) if wordcloud_cmd.__doc__ else ""
+            await wordcloud_cmd.finish(help_msg)
+        else:
+            await wordcloud_cmd.finish()
 
 
 @wordcloud_cmd.got(
