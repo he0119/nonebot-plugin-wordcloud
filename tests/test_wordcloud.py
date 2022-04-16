@@ -113,6 +113,13 @@ async def test_wordcloud_help(app: App):
         )
         ctx.should_finished()
 
+    async with app.test_matcher(wordcloud_cmd) as ctx:
+        bot = ctx.create_bot()
+        event = fake_group_message_event(message=Message("/词云 123"))
+
+        ctx.receive_event(bot, event)
+        ctx.should_finished()
+
 
 @pytest.mark.asyncio
 async def test_wordcloud_exclude_bot_msg(
