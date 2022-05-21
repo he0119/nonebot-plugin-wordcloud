@@ -11,13 +11,15 @@ try:
 except ImportError:
     from backports.zoneinfo import ZoneInfo  # type: ignore
 
-from nonebot import on_command
+from nonebot import on_command, require
 from nonebot.adapters import Bot
 from nonebot.adapters.onebot.v11 import Message, MessageSegment
 from nonebot.adapters.onebot.v11.event import GroupMessageEvent
 from nonebot.matcher import Matcher
 from nonebot.params import Arg, Command, CommandArg, Depends
 from nonebot.typing import T_State
+
+require("nonebot_plugin_chatrecorder")
 from nonebot_plugin_chatrecorder import get_message_records
 
 from .config import plugin_config
