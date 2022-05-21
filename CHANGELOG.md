@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 ## [Unreleased]
 
+## [0.1.2] - 2022-05-21
+
+### Changed
+
+- 调整插件加载方式，并删除 numpy 依赖
+
 ## [0.1.1] - 2022-04-16
 
 ### Changed
