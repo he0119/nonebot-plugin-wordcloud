@@ -19,10 +19,6 @@ jieba = "^0.42.1"
 tzdata = "^2021.5"
 "backports.zoneinfo" = {version = "^0.2.1", markers = "python_version < '3.9'" }
 typing-extensions = "^4.0.1"
-numpy = [
-    {version = "^1.22.1", markers = "python_version >= '3.8'" },
-    {version = "<1.22", markers = "python_version < '3.8'" }
-]
 emoji = "^1.6.3"
 
 [tool.poetry.dev-dependencies]
