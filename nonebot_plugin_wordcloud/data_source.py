@@ -37,8 +37,8 @@ def analyse_message(msg: str) -> Dict[str, float]:
     if plugin_config.wordcloud_userdict_path:
         jieba.load_userdict(str(plugin_config.wordcloud_userdict_path))
     # 基于 TF-IDF 算法的关键词抽取
-    # 只取其中 200 个关键词，因为词云库默认是 200 个
-    words = jieba.analyse.extract_tags(msg, 200, withWeight=True)
+    # 返回所有关键词，因为设置了数量其实也只是 tags[:topK]，不如交给词云库处理
+    words = jieba.analyse.extract_tags(msg, topK=0, withWeight=True)
     return {word: weight for word, weight in words}
 
 
