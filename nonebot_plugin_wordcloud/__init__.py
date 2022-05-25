@@ -6,6 +6,8 @@ from inspect import cleandoc
 from io import BytesIO
 from typing import Tuple, Union
 
+from nonebot.utils import run_sync
+
 try:
     from zoneinfo import ZoneInfo
 except ImportError:
@@ -208,7 +210,7 @@ async def handle_message(
         time_stop=stop.astimezone(ZoneInfo("UTC")),
         plain_text=True,
     )
-    image = get_wordcloud(messages)
+    image = await run_sync(get_wordcloud)(messages)
     if image:
         image_bytes = BytesIO()
         image.save(image_bytes, format="PNG")

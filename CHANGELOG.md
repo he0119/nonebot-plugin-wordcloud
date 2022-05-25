@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 ## [Unreleased]
 
+### Changed
+
+- 防止生成词云时卡住，将函数放在执行器中运行
+
 ## [0.2.0] - 2022-05-25
 
 ### Changed
