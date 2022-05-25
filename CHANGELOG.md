@@ -7,9 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 ## [Unreleased]
 
+## [0.2.1] - 2022-05-25
+
 ### Changed
 
-- 防止生成词云时卡住，将函数放在执行器中运行
+- 将函数放在执行器中运行防止生成词云时阻塞事件循环
 
 ## [0.2.0] - 2022-05-25
 
@@ -110,7 +112,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 - 可以使用的版本。
 
-[unreleased]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.2.0...HEAD
+[unreleased]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.1.2...v0.2.0
 [0.1.2]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.1.0...v0.1.1
