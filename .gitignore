@@ -145,4 +145,3 @@ dmypy.json
 !.vscode/settings.json
 .env.dev
 data/
-poetry.lock
