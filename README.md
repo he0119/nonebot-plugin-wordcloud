@@ -64,8 +64,8 @@ _✨ NoneBot 词云插件 ✨_
 ### wordcloud_stopwords_path
 
 - 类型: `str`
-- 默认: 自带的停用词表
-- 说明: 生成图片的停用词表位置
+- 默认: `None`
+- 说明: 结巴分词的 [停用词表](https://github.com/fxsjy/jieba#%E5%9F%BA%E4%BA%8E-tf-idf-%E7%AE%97%E6%B3%95%E7%9A%84%E5%85%B3%E9%94%AE%E8%AF%8D%E6%8A%BD%E5%8F%96) 位置
 
 ### wordcloud_userdict_path
 

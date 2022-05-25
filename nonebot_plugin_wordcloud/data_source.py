@@ -1,8 +1,8 @@
 import re
-from collections import Counter
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 import jieba
+import jieba.analyse
 from emoji import replace_emoji  # type: ignore
 from PIL.Image import Image
 from wordcloud import WordCloud
@@ -25,24 +25,21 @@ def pre_precess(msg: str) -> str:
     return msg
 
 
-def cut_message(msg: str) -> List[str]:
-    """分词"""
-    with plugin_config.wordcloud_stopwords_path.open("r", encoding="utf8") as f:
-        stopwords = [word.strip() for word in f.readlines()]
+def analyse_message(msg: str) -> Dict[str, float]:
+    """分析消息
+
+    分词，并统计词频
+    """
+    # 设置停用词表
+    if plugin_config.wordcloud_stopwords_path:
+        jieba.analyse.set_stop_words(plugin_config.wordcloud_stopwords_path)
     # 加载用户词典
     if plugin_config.wordcloud_userdict_path:
         jieba.load_userdict(str(plugin_config.wordcloud_userdict_path))
-    words = jieba.lcut(msg)
-    return [word.strip() for word in words if word.strip() not in stopwords]
-
-
-def count_words(words: List[str]) -> Counter:
-    """统计词频"""
-    cnt = Counter()
-    for word in words:
-        if word:
-            cnt[word] += 1
-    return cnt
+    # 基于 TF-IDF 算法的关键词抽取
+    # 返回所有关键词，因为设置了数量其实也只是 tags[:topK]，不如交给词云库处理
+    words = jieba.analyse.extract_tags(msg, topK=0, withWeight=True)
+    return {word: weight for word, weight in words}
 
 
 def get_wordcloud(messages: List[str]) -> Optional[Image]:
@@ -51,10 +48,8 @@ def get_wordcloud(messages: List[str]) -> Optional[Image]:
     message = " ".join([m for m in messages if not m.startswith(command_start)])
     # 预处理
     message = pre_precess(message)
-    # 分词
-    words = cut_message(message)
-    # 统计词频
-    frequency = count_words(words)
+    # 分析消息。分词，并统计词频
+    frequency = analyse_message(message)
     try:
         wordcloud = WordCloud(
             font_path=str(plugin_config.wordcloud_font_path),
@@ -64,5 +59,5 @@ def get_wordcloud(messages: List[str]) -> Optional[Image]:
         )
         image = wordcloud.generate_from_frequencies(frequency).to_image()
         return image
-    except ValueError as e:
+    except ValueError:
         pass
