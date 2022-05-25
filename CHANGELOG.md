@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 ## [Unreleased]
 
+## [0.2.0] - 2022-05-25
+
+### Changed
+
+- 直接使用基于 TF-IDF 算法的关键词抽取
+- 不需要限制 tzdata 的版本
+
+### Removed
+
+- 删除 Python 3.7 的支持
+
 ## [0.1.2] - 2022-05-21
 
 ### Changed
@@ -95,7 +106,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 - 可以使用的版本。
 
-[unreleased]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.1.2...HEAD
+[unreleased]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.1.2...v0.2.0
 [0.1.2]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.0.8...v0.1.0
