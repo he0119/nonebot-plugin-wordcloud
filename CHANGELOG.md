@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 ## [Unreleased]
 
+## [0.2.2] - 2022-06-10
+
+### Added
+
+- 添加字体色彩映射表配置项
+
 ## [0.2.1] - 2022-05-25
 
 ### Changed
@@ -112,7 +118,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 - 可以使用的版本。
 
-[unreleased]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.2.1...HEAD
+[unreleased]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.2.2...HEAD
+[0.2.2]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.1.2...v0.2.0
 [0.1.2]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.1.1...v0.1.2
