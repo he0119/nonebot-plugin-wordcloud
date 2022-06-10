@@ -59,7 +59,7 @@ _✨ NoneBot 词云插件 ✨_
 
 - 类型: `str`
 - 默认: `viridis`
-- 说明: 生成图片字体的 [色彩映射表](https://matplotlib.org/stable/tutorials/colors/colormaps.html)
+- 说明: 生成图片的字体 [色彩映射表](https://matplotlib.org/stable/tutorials/colors/colormaps.html)
 
 ### wordcloud_font_path
 
