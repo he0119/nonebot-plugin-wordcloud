@@ -8,7 +8,7 @@ from pytest_mock import MockerFixture
 
 @pytest.mark.asyncio
 async def test_colormap(app: App, mocker: MockerFixture):
-    """测试设置颜色图"""
+    """测试设置色彩映射表"""
     import random
 
     from PIL import ImageChops
