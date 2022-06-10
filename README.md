@@ -55,6 +55,12 @@ _✨ NoneBot 词云插件 ✨_
 - 默认: `black`
 - 说明: 生成图片的背景颜色
 
+### wordcloud_colormap
+
+- 类型: `str`
+- 默认: `viridis`
+- 说明: 生成图片字体的 [颜色图](https://matplotlib.org/stable/tutorials/colors/colormaps.html)
+
 ### wordcloud_font_path
 
 - 类型: `str`

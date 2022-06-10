@@ -56,6 +56,7 @@ def get_wordcloud(messages: List[str]) -> Optional[Image]:
             width=plugin_config.wordcloud_width,
             height=plugin_config.wordcloud_height,
             background_color=plugin_config.wordcloud_background_color,
+            colormap=plugin_config.wordcloud_colormap,
         )
         image = wordcloud.generate_from_frequencies(frequency).to_image()
         return image
