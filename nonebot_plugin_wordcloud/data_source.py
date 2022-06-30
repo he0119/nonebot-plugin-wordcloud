@@ -13,7 +13,12 @@ from .config import global_config, plugin_config
 def pre_precess(msg: str) -> str:
     """对消息进行预处理"""
     # 去除网址
-    msg = re.sub(r"https?://[\w/:%#\$&\?\(\)~\.=\+\-]+", "", msg)
+    # https://stackoverflow.com/a/17773849/9212748
+    msg = re.sub(
+        r"(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})",
+        "",
+        msg,
+    )
 
     # 去除 \u200b
     msg = re.sub(r"\u200b", "", msg)
