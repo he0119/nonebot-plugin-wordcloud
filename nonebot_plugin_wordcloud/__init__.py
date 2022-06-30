@@ -19,6 +19,7 @@ from nonebot.adapters.onebot.v11 import Message, MessageSegment
 from nonebot.adapters.onebot.v11.event import GroupMessageEvent
 from nonebot.matcher import Matcher
 from nonebot.params import Arg, Command, CommandArg, Depends
+from nonebot.plugin import PluginMetadata
 from nonebot.typing import T_State
 
 require("nonebot_plugin_chatrecorder")
@@ -26,6 +27,12 @@ from nonebot_plugin_chatrecorder import get_message_records
 
 from .config import plugin_config
 from .data_source import get_wordcloud
+
+__plugin_meta__ = PluginMetadata(
+    name="词云",
+    description="利用群消息生成词云",
+    usage="获取今天的词云\n/今日词云\n获取昨天的词云\n/昨日词云\n获取本周词云\n/本周词云\n获取本月词云\n/本月词云\n获取年度词云\n/年度词云\n\n历史词云(支持 ISO8601 格式的日期与时间，如 2022-02-22T22:22:22)\n获取某日的词云\n/历史词云 2022-01-01\n获取指定时间段的词云\n/历史词云\n/历史词云 2022-01-01~2022-02-22\n/历史词云 2022-02-22T11:11:11~2022-02-22T22:22:22\n\n如果想要获取自己的发言，可在命令前添加 我的\n/我的今日词云",
+)
 
 wordcloud_cmd = on_command(
     "wordcloud",
@@ -45,31 +52,6 @@ wordcloud_cmd = on_command(
         "我的历史词云",
     },
 )
-wordcloud_cmd.__doc__ = """
-词云
-
-获取今天的词云
-/今日词云
-获取昨天的词云
-/昨日词云
-获取本周词云
-/本周词云
-获取本月词云
-/本月词云
-获取年度词云
-/年度词云
-
-历史词云(支持 ISO8601 格式的日期与时间，如 2022-02-22T22:22:22)
-获取某日的词云
-/历史词云 2022-01-01
-获取指定时间段的词云
-/历史词云
-/历史词云 2022-01-01~2022-02-22
-/历史词云 2022-02-22T11:11:11~2022-02-22T22:22:22
-
-如果想要获取自己的发言，可在命令前添加 我的
-/我的今日词云
-"""
 
 
 def parse_datetime(key: str):
