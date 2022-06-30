@@ -1116,7 +1116,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "51c0b4e9e33cdc4f9ce9789e9387cebc6622472d5ae58e4cd27abe4d5c715080"
+content-hash = "280cea10833a8e9a92b9192c773d53a470cb41232d446b4c2b8b7a73beae6d60"
 
 [metadata.files]
 aiosqlite = [
