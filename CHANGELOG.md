@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 ## [Unreleased]
 
+### Added
+
+- 适配插件元数据
+
 ### Fixed
 
 - 修复网址预处理无法处理掉微博国际版分享地址的问题
