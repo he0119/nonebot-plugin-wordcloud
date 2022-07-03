@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import Optional
 
 from nonebot import get_driver
-from pydantic import BaseModel, Extra, Field, root_validator
+from pydantic import BaseModel, Extra, root_validator
 
 
 class Config(BaseModel, extra=Extra.ignore):
