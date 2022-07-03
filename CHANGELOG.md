@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 - 适配插件元数据
 
+### Changed
+
+- 调整 `font_path` 默认配置设置方法
+
 ### Fixed
 
 - 修复网址预处理无法处理掉微博国际版分享地址的问题
