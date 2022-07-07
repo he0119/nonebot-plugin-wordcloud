@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 ## [Unreleased]
 
+## [0.2.4] - 2022-07-07
+
 ### Fixed
 
 - 修复无法正确获取到消息的问题
@@ -136,7 +138,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 - 可以使用的版本。
 
-[unreleased]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.2.3...HEAD
+[unreleased]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.2.4...HEAD
+[0.2.4]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.2.3...v0.2.4
 [0.2.3]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.2.2...v0.2.3
 [0.2.2]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.2.0...v0.2.1
