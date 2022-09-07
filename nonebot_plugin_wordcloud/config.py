@@ -2,7 +2,10 @@ from pathlib import Path
 from typing import Optional
 
 from nonebot import get_driver
+from nonebot_plugin_datastore import PluginData
 from pydantic import BaseModel, Extra, root_validator
+
+DATA = PluginData("wordcloud")
 
 
 class Config(BaseModel, extra=Extra.ignore):

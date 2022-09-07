@@ -22,6 +22,7 @@ from nonebot.plugin import PluginMetadata
 from nonebot.typing import T_State
 
 require("nonebot_plugin_chatrecorder")
+require("nonebot_plugin_datastore")
 from nonebot_plugin_chatrecorder import get_message_records
 
 from .config import plugin_config

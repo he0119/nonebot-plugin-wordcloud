@@ -3,11 +3,12 @@ from typing import Dict, List, Optional
 
 import jieba
 import jieba.analyse
+import numpy as np
 from emoji import replace_emoji  # type: ignore
-from PIL.Image import Image
+from PIL import Image
 from wordcloud import WordCloud
 
-from .config import global_config, plugin_config
+from .config import DATA, global_config, plugin_config
 
 
 def pre_precess(msg: str) -> str:
@@ -47,7 +48,14 @@ def analyse_message(msg: str) -> Dict[str, float]:
     return {word: weight for word, weight in words}
 
 
-def get_wordcloud(messages: List[str]) -> Optional[Image]:
+def get_mask():
+    """获取 mask"""
+    mask_path = DATA.data_dir / "mask.png"
+    if mask_path.exists():
+        return np.array(Image.open(mask_path))
+
+
+def get_wordcloud(messages: List[str]) -> Optional[Image.Image]:
     # 过滤掉命令
     command_start = tuple([i for i in global_config.command_start if i])
     message = " ".join([m for m in messages if not m.startswith(command_start)])
@@ -62,6 +70,7 @@ def get_wordcloud(messages: List[str]) -> Optional[Image]:
             height=plugin_config.wordcloud_height,
             background_color=plugin_config.wordcloud_background_color,
             colormap=plugin_config.wordcloud_colormap,
+            mask=get_mask(),
         )
         image = wordcloud.generate_from_frequencies(frequency).to_image()
         return image
