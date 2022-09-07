@@ -8,7 +8,7 @@ from emoji import replace_emoji  # type: ignore
 from PIL import Image
 from wordcloud import WordCloud
 
-from .config import DATA, global_config, plugin_config
+from .config import MASK_PATH, global_config, plugin_config
 
 
 def pre_precess(msg: str) -> str:
@@ -50,9 +50,8 @@ def analyse_message(msg: str) -> Dict[str, float]:
 
 def get_mask():
     """获取 mask"""
-    mask_path = DATA.data_dir / "mask.png"
-    if mask_path.exists():
-        return np.array(Image.open(mask_path))
+    if MASK_PATH.exists():
+        return np.array(Image.open(MASK_PATH))
 
 
 def get_wordcloud(messages: List[str]) -> Optional[Image.Image]:

@@ -7,6 +7,8 @@ from pydantic import BaseModel, Extra, root_validator
 
 DATA = PluginData("wordcloud")
 
+MASK_PATH = DATA.data_dir / "mask.png"
+
 
 class Config(BaseModel, extra=Extra.ignore):
     wordcloud_width: int = 1920

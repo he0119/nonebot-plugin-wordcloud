@@ -16,22 +16,25 @@ except ImportError:
 from nonebot import on_command, require
 from nonebot.adapters import Bot
 from nonebot.adapters.onebot.v11 import GroupMessageEvent, Message, MessageSegment
+from nonebot.adapters.onebot.v11.permission import GROUP_ADMIN, GROUP_OWNER
 from nonebot.matcher import Matcher
 from nonebot.params import Arg, Command, CommandArg, Depends
+from nonebot.permission import SUPERUSER
 from nonebot.plugin import PluginMetadata
 from nonebot.typing import T_State
+from PIL import Image
 
 require("nonebot_plugin_chatrecorder")
 require("nonebot_plugin_datastore")
 from nonebot_plugin_chatrecorder import get_message_records
 
-from .config import plugin_config
+from .config import DATA, MASK_PATH, plugin_config
 from .data_source import get_wordcloud
 
 __plugin_meta__ = PluginMetadata(
     name="词云",
     description="利用群消息生成词云",
-    usage="获取今天的词云\n/今日词云\n获取昨天的词云\n/昨日词云\n获取本周词云\n/本周词云\n获取本月词云\n/本月词云\n获取年度词云\n/年度词云\n\n历史词云(支持 ISO8601 格式的日期与时间，如 2022-02-22T22:22:22)\n获取某日的词云\n/历史词云 2022-01-01\n获取指定时间段的词云\n/历史词云\n/历史词云 2022-01-01~2022-02-22\n/历史词云 2022-02-22T11:11:11~2022-02-22T22:22:22\n\n如果想要获取自己的发言，可在命令前添加 我的\n/我的今日词云",
+    usage="获取今天的词云\n/今日词云\n获取昨天的词云\n/昨日词云\n获取本周词云\n/本周词云\n获取本月词云\n/本月词云\n获取年度词云\n/年度词云\n\n历史词云(支持 ISO8601 格式的日期与时间，如 2022-02-22T22:22:22)\n获取某日的词云\n/历史词云 2022-01-01\n获取指定时间段的词云\n/历史词云\n/历史词云 2022-01-01~2022-02-22\n/历史词云 2022-02-22T11:11:11~2022-02-22T22:22:22\n\n如果想要获取自己的发言，可在命令前添加 我的\n/我的今日词云\n\n自定义词云形状/设置词云形状",
 )
 
 wordcloud_cmd = on_command(
@@ -199,3 +202,49 @@ async def handle_message(
         await wordcloud_cmd.finish(MessageSegment.image(image_bytes), at_sender=my)
     else:
         await wordcloud_cmd.finish("没有足够的数据生成词云", at_sender=my)
+
+
+def parse_image(key: str):
+    """处理图片，并将结果存入 state 中"""
+
+    async def _key_parser(
+        matcher: Matcher,
+        state: T_State,
+        input: Union[MessageSegment, Message] = Arg(key),
+    ):
+        if isinstance(input, MessageSegment):
+            return
+
+        images = input["image"]
+        if not images:
+            await matcher.reject_arg(key, "请发送一张图片，不然我没法理解呢！")
+        else:
+            state[key] = images[0]
+
+    return _key_parser
+
+
+mask_cmd = on_command(
+    "wordcloud_mask",
+    aliases={"设置词云形状"},
+    permission=SUPERUSER | GROUP_OWNER | GROUP_ADMIN,
+)
+
+
+@mask_cmd.handle()
+async def _(state: T_State, args: Message = CommandArg()):
+    images = args["image"]
+    if images:
+        state["image"] = images[0]
+
+
+@mask_cmd.got(
+    "image",
+    prompt="请发送一张图片作为词云形状",
+    parameterless=[Depends(parse_image("image"))],
+)
+async def _(image: MessageSegment = Arg()):
+    image_bytes = await DATA.download_file(image.data["url"], "masked", cache=True)
+    mask = Image.open(BytesIO(image_bytes))
+    mask.save(MASK_PATH, format="PNG")
+    await mask_cmd.finish("设置成功")
