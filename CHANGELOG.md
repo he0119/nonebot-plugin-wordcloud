@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 ## [Unreleased]
 
+### Added
+
+- 支持自定义词云形状
+
 ## [0.2.4] - 2022-07-07
 
 ### Fixed

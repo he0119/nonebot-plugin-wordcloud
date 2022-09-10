@@ -2,7 +2,12 @@ from pathlib import Path
 from typing import Optional
 
 from nonebot import get_driver
+from nonebot_plugin_datastore import PluginData
 from pydantic import BaseModel, Extra, root_validator
+
+DATA = PluginData("wordcloud")
+
+MASK_PATH = DATA.data_dir / "mask.png"
 
 
 class Config(BaseModel, extra=Extra.ignore):
