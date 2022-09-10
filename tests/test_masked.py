@@ -5,6 +5,8 @@ from nonebug import App
 from PIL import Image
 from pytest_mock import MockerFixture
 
+from .utils import fake_group_message_event
+
 
 @pytest.mark.asyncio
 async def test_masked(app: App, mocker: MockerFixture):
@@ -36,3 +38,26 @@ async def test_masked(app: App, mocker: MockerFixture):
     assert diff.getbbox() is None
 
     mocked_random.assert_called()
+
+
+@pytest.mark.asyncio
+async def test_set_mask(app: App, mocker: MockerFixture):
+    """测试自定义图片形状"""
+    from nonebot.adapters.onebot.v11 import Message, MessageSegment
+
+    from nonebot_plugin_wordcloud import DATA, mask_cmd
+
+    mocked_download = mocker.patch("nonebot_plugin_wordcloud.DATA.download_file")
+    mocked_download.return_value = (Path(__file__).parent / "mask.png").read_bytes()
+
+    async with app.test_matcher(mask_cmd) as ctx:
+        bot = ctx.create_bot()
+        message = Message("/设置词云形状") + MessageSegment("image", {"url": "https://test"})
+        event = fake_group_message_event(message=message, sender={"role": "owner"})
+
+        ctx.receive_event(bot, event)
+        ctx.should_call_send(event, "设置成功", True)
+        ctx.should_finished()
+
+    mocked_download.assert_called_once_with("https://test", "masked", cache=True)
+    assert DATA.exists("mask.png")
