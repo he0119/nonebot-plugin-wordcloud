@@ -7,9 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 ## [Unreleased]
 
+## [0.3.0] - 2022-10-06
+
 ### Added
 
 - 支持自定义词云形状
+
+### Changed
+
+- 仅支持 NoneBot2 RC1 及以上版本
 
 ## [0.2.4] - 2022-07-07
 
@@ -142,7 +148,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 - 可以使用的版本。
 
-[unreleased]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.2.4...HEAD
+[unreleased]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.2.4...v0.3.0
 [0.2.4]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.2.3...v0.2.4
 [0.2.3]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.2.2...v0.2.3
 [0.2.2]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.2.1...v0.2.2
