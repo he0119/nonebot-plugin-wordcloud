@@ -11,9 +11,9 @@ documentation = "https://github.com/he0119/nonebot-plugin-wordcloud#readme"
 
 [tool.poetry.dependencies]
 python = "^3.8"
-nonebot2 = "^2.0.0-beta.4"
+nonebot2 = "^2.0.0-rc.1"
 nonebot-adapter-onebot = "^2.0.0-beta.1"
-nonebot-plugin-chatrecorder = "^0.1.8"
+nonebot-plugin-chatrecorder = "^0.1.9"
 wordcloud = "^1.8.1"
 jieba = "^0.42.1"
 tzdata = "*"
