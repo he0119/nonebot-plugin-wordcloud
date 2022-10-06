@@ -4,7 +4,7 @@ from typing import Dict, List, Optional
 import jieba
 import jieba.analyse
 import numpy as np
-from emoji import replace_emoji  # type: ignore
+from emoji import replace_emoji
 from PIL import Image
 from wordcloud import WordCloud
 
