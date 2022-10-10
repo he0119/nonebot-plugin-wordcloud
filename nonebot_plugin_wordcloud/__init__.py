@@ -156,8 +156,7 @@ async def handle_first_receive(
         plaintext = args.extract_plain_text()
         # 当完整匹配词云的时候才输出帮助信息
         if not plaintext:
-            help_msg = cleandoc(wordcloud_cmd.__doc__) if wordcloud_cmd.__doc__ else ""
-            await wordcloud_cmd.finish(help_msg)
+            await wordcloud_cmd.finish(__plugin_meta__.usage)
         else:
             await wordcloud_cmd.finish()
 
