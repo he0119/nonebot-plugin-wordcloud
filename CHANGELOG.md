@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 ## [Unreleased]
 
+### Fixed
+
+- 修复发送 `/词云` 后帮助信息为空的问题
+
 ## [0.3.0] - 2022-10-06
 
 ### Added
