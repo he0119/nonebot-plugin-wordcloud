@@ -99,7 +99,7 @@ async def test_wordcloud_help(app: App):
     """测试输出帮助信息"""
     from nonebot.adapters.onebot.v11 import Message
 
-    from nonebot_plugin_wordcloud import cleandoc, wordcloud_cmd
+    from nonebot_plugin_wordcloud import __plugin_meta__, wordcloud_cmd
 
     async with app.test_matcher(wordcloud_cmd) as ctx:
         bot = ctx.create_bot()
@@ -108,7 +108,7 @@ async def test_wordcloud_help(app: App):
         ctx.receive_event(bot, event)
         ctx.should_call_send(
             event,
-            cleandoc(wordcloud_cmd.__doc__) if wordcloud_cmd.__doc__ else "",
+            __plugin_meta__.usage,
             True,
         )
         ctx.should_finished()
