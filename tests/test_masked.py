@@ -8,7 +8,6 @@ from pytest_mock import MockerFixture
 from .utils import fake_group_message_event
 
 
-@pytest.mark.asyncio
 async def test_masked(app: App, mocker: MockerFixture):
     """测试自定义图片形状"""
     import random
@@ -40,7 +39,6 @@ async def test_masked(app: App, mocker: MockerFixture):
     mocked_random.assert_called()
 
 
-@pytest.mark.asyncio
 async def test_set_mask(app: App, mocker: MockerFixture):
     """测试自定义图片形状"""
     from nonebot.adapters.onebot.v11 import Message, MessageSegment
@@ -63,7 +61,6 @@ async def test_set_mask(app: App, mocker: MockerFixture):
     assert DATA.exists("mask.png")
 
 
-@pytest.mark.asyncio
 async def test_set_mask_get_args(app: App, mocker: MockerFixture):
     """测试自定义图片形状，需要额外获取图片时的情况"""
     from nonebot.adapters.onebot.v11 import Message, MessageSegment

@@ -2,7 +2,6 @@ import pytest
 from nonebug import App
 
 
-@pytest.mark.asyncio
 async def test_userdict(app: App):
     """测试添加用户词典"""
 

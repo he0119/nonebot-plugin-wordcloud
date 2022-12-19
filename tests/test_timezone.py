@@ -12,7 +12,6 @@ from pytest_mock import MockerFixture
 from .utils import fake_group_message_event
 
 
-@pytest.mark.asyncio
 async def test_timezone(app: App, mocker: MockerFixture):
     """测试系统时区"""
     from nonebot_plugin_wordcloud import (
@@ -40,7 +39,6 @@ async def test_timezone(app: App, mocker: MockerFixture):
     mocked_datetime.fromisoformat.assert_any_call("2022-01-01")
 
 
-@pytest.mark.asyncio
 async def test_set_timezone(app: App, mocker: MockerFixture):
     """测试设定时区"""
     from nonebot_plugin_wordcloud import (

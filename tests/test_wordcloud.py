@@ -53,7 +53,6 @@ async def message_record(app: App):
         await session.commit()
 
 
-@pytest.mark.asyncio
 async def test_get_wordcloud(app: App, mocker: MockerFixture):
     """测试生成词云"""
     import random
@@ -78,7 +77,6 @@ async def test_get_wordcloud(app: App, mocker: MockerFixture):
     mocked_random.assert_called_once_with()
 
 
-@pytest.mark.asyncio
 async def test_wordcloud_empty(app: App):
     """测试词云，消息为空的情况"""
     from nonebot.adapters.onebot.v11 import Message
@@ -94,7 +92,6 @@ async def test_wordcloud_empty(app: App):
         ctx.should_finished()
 
 
-@pytest.mark.asyncio
 async def test_wordcloud_help(app: App):
     """测试输出帮助信息"""
     from nonebot.adapters.onebot.v11 import Message
@@ -121,7 +118,6 @@ async def test_wordcloud_help(app: App):
         ctx.should_finished()
 
 
-@pytest.mark.asyncio
 async def test_wordcloud_exclude_bot_msg(
     app: App, mocker: MockerFixture, message_record: None
 ):
@@ -157,7 +153,6 @@ async def test_wordcloud_exclude_bot_msg(
     mocked_get_wordcloud.assert_called_once_with(["11:1-2"])
 
 
-@pytest.mark.asyncio
 async def test_today_wordcloud(app: App, mocker: MockerFixture, message_record: None):
     """测试今日词云"""
     from nonebot.adapters.onebot.v11 import Message, MessageSegment
@@ -191,7 +186,6 @@ async def test_today_wordcloud(app: App, mocker: MockerFixture, message_record: 
     mocked_get_wordcloud.assert_called_once_with(["10:1-2", "11:1-2"])
 
 
-@pytest.mark.asyncio
 async def test_my_today_wordcloud(
     app: App, mocker: MockerFixture, message_record: None
 ):
@@ -227,7 +221,6 @@ async def test_my_today_wordcloud(
     mocked_get_wordcloud.assert_called_once_with(["10:1-2"])
 
 
-@pytest.mark.asyncio
 async def test_yesterday_wordcloud(
     app: App, mocker: MockerFixture, message_record: None
 ):
@@ -263,7 +256,6 @@ async def test_yesterday_wordcloud(
     mocked_get_wordcloud.assert_called_once_with(["10:1-2", "11:1-2"])
 
 
-@pytest.mark.asyncio
 async def test_my_yesterday_wordcloud(
     app: App, mocker: MockerFixture, message_record: None
 ):
@@ -299,7 +291,6 @@ async def test_my_yesterday_wordcloud(
     mocked_get_wordcloud.assert_called_once_with(["10:1-2"])
 
 
-@pytest.mark.asyncio
 async def test_week_wordcloud(app: App, mocker: MockerFixture, message_record: None):
     """测试本周词云"""
     from nonebot.adapters.onebot.v11 import Message, MessageSegment
@@ -333,7 +324,6 @@ async def test_week_wordcloud(app: App, mocker: MockerFixture, message_record: N
     mocked_get_wordcloud.assert_called_once_with(["10:1-3", "11:1-3"])
 
 
-@pytest.mark.asyncio
 async def test_month_wordcloud(app: App, mocker: MockerFixture, message_record: None):
     """测试本月词云"""
     from nonebot.adapters.onebot.v11 import Message, MessageSegment
@@ -367,7 +357,6 @@ async def test_month_wordcloud(app: App, mocker: MockerFixture, message_record: 
     mocked_get_wordcloud.assert_called_once_with(["10:2-1", "11:2-1"])
 
 
-@pytest.mark.asyncio
 async def test_year_wordcloud(app: App, mocker: MockerFixture, message_record: None):
     """测试年度词云"""
     from nonebot.adapters.onebot.v11 import Message, MessageSegment
@@ -403,7 +392,6 @@ async def test_year_wordcloud(app: App, mocker: MockerFixture, message_record: N
     )
 
 
-@pytest.mark.asyncio
 async def test_my_year_wordcloud(app: App, mocker: MockerFixture, message_record: None):
     """测试我的年度词云"""
     from nonebot.adapters.onebot.v11 import Message, MessageSegment
@@ -437,7 +425,6 @@ async def test_my_year_wordcloud(app: App, mocker: MockerFixture, message_record
     mocked_get_wordcloud.assert_called_once_with(["10:1-2", "10:1-3", "10:2-1"])
 
 
-@pytest.mark.asyncio
 async def test_history_wordcloud(app: App, mocker: MockerFixture, message_record: None):
     """测试历史词云"""
     from nonebot.adapters.onebot.v11 import Message, MessageSegment
@@ -465,7 +452,6 @@ async def test_history_wordcloud(app: App, mocker: MockerFixture, message_record
     mocked_get_wordcloud.assert_called_once_with(["10:1-2", "11:1-2"])
 
 
-@pytest.mark.asyncio
 async def test_history_wordcloud_start_stop(
     app: App, mocker: MockerFixture, message_record: None
 ):
@@ -499,7 +485,6 @@ async def test_history_wordcloud_start_stop(
     )
 
 
-@pytest.mark.asyncio
 async def test_history_wordcloud_start_stop_get_args(
     app: App, mocker: MockerFixture, message_record: None
 ):
@@ -546,7 +531,6 @@ async def test_history_wordcloud_start_stop_get_args(
     )
 
 
-@pytest.mark.asyncio
 async def test_history_wordcloud_invalid_date(app: App):
     """测试历史词云，输入的日期无效"""
     from nonebot.adapters.onebot.v11 import Message

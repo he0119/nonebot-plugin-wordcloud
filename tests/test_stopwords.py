@@ -2,7 +2,6 @@ import pytest
 from nonebug import App
 
 
-@pytest.mark.asyncio
 async def test_stopwords(app: App):
     """测试设置停用词表"""
 

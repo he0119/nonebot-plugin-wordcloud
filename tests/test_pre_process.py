@@ -2,7 +2,6 @@ import pytest
 from nonebug import App
 
 
-@pytest.mark.asyncio
 async def test_remove_emoji(app: App):
     """测试移除 emoji"""
 
@@ -13,7 +12,6 @@ async def test_remove_emoji(app: App):
     assert msg == "1二"
 
 
-@pytest.mark.asyncio
 async def test_remove_http(app: App):
     """测试移除网址"""
 
