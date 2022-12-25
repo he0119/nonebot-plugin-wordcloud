@@ -100,6 +100,27 @@ class Scheduler:
                         message=MessageSegment.image(image),
                     )
 
+    async def get_schedule(self, bot_id: str, group_id: str) -> Optional[time]:
+        """获取定时任务时间"""
+        async with create_session() as session:
+            statement = (
+                select(Schedule)
+                .where(Schedule.bot_id == bot_id)
+                .where(Schedule.group_id == group_id)
+            )
+            results = await session.exec(statement)  # type: ignore
+            schedule = results.one_or_none()
+            if schedule:
+                schedule = cast(Schedule, schedule)
+                if schedule.time:
+                    # 将时间转换为本地时间
+                    local_time = time_astimezone(
+                        schedule.time.replace(tzinfo=ZoneInfo("UTC"))
+                    )
+                    return local_time
+                else:
+                    return plugin_config.wordcloud_default_schedule_time
+
     async def add_schedule(
         self, bot_id: str, group_id: str, time: Optional[time] = None
     ):

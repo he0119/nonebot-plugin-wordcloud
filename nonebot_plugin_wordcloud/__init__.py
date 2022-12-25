@@ -241,7 +241,7 @@ async def _(image: MessageSegment = Arg()):
 
 schedule_cmd = wordcloud.command(
     "schedule",
-    aliases={"开启词云每日定时发送", "关闭词云每日定时发送"},
+    aliases={"词云每日定时发送状态", "开启词云每日定时发送", "关闭词云每日定时发送"},
     permission=SUPERUSER | GROUP_OWNER | GROUP_ADMIN,
 )
 
@@ -255,7 +255,15 @@ async def _(
 ):
     command = commands[0]
     schedule_time = None
-    if command == "开启词云每日定时发送":
+    if command == "词云每日定时发送状态":
+        schedule_time = await schedule_service.get_schedule(
+            bot.self_id, str(event.group_id)
+        )
+        if schedule_time:
+            await schedule_cmd.finish(f"词云每日定时发送已开启，发送时间为：{schedule_time}")
+        else:
+            await schedule_cmd.finish("词云每日定时发送未开启")
+    elif command == "开启词云每日定时发送":
         if time_str := args.extract_plain_text().strip():
             try:
                 schedule_time = get_time_fromisoformat_with_timezone(time_str)
