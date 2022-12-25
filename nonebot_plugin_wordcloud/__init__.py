@@ -256,11 +256,9 @@ async def _(
     command = commands[0]
     schedule_time = None
     if command == "开启词云每日定时发送":
-        if args:
+        if time_str := args.extract_plain_text().strip():
             try:
-                schedule_time = get_time_fromisoformat_with_timezone(
-                    args.extract_plain_text().strip()
-                )
+                schedule_time = get_time_fromisoformat_with_timezone(time_str)
             except ValueError:
                 await schedule_cmd.finish("请输入正确的时间，不然我没法理解呢！")
         await schedule_service.add_schedule(
