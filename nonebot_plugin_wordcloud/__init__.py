@@ -1,7 +1,7 @@
 """ 词云
 """
 import re
-from datetime import datetime, timedelta
+from datetime import datetime, time, timedelta
 from io import BytesIO
 from typing import Tuple, Union
 
@@ -12,7 +12,7 @@ try:
 except ImportError:
     from backports.zoneinfo import ZoneInfo  # type: ignore
 
-from nonebot import on_command, require
+from nonebot import CommandGroup, on_command, require
 from nonebot.adapters import Bot
 from nonebot.adapters.onebot.v11 import GroupMessageEvent, Message, MessageSegment
 from nonebot.adapters.onebot.v11.permission import GROUP_ADMIN, GROUP_OWNER
@@ -28,11 +28,13 @@ require("nonebot_plugin_chatrecorder")
 require("nonebot_plugin_datastore")
 from nonebot_plugin_chatrecorder import get_message_records
 
-from .config import DATA, MASK_PATH
+from .config import DATA, MASK_PATH, plugin_config
 from .data_source import get_wordcloud
+from .schedule import Scheduler
 from .utils import (
     get_datetime_fromisoformat_with_timezone,
     get_datetime_now_with_timezone,
+    get_time_fromisoformat_with_timezone,
 )
 
 __plugin_meta__ = PluginMetadata(
@@ -41,8 +43,12 @@ __plugin_meta__ = PluginMetadata(
     usage="获取今天的词云\n/今日词云\n获取昨天的词云\n/昨日词云\n获取本周词云\n/本周词云\n获取本月词云\n/本月词云\n获取年度词云\n/年度词云\n\n历史词云(支持 ISO8601 格式的日期与时间，如 2022-02-22T22:22:22)\n获取某日的词云\n/历史词云 2022-01-01\n获取指定时间段的词云\n/历史词云\n/历史词云 2022-01-01~2022-02-22\n/历史词云 2022-02-22T11:11:11~2022-02-22T22:22:22\n\n如果想要获取自己的发言，可在命令前添加 我的\n/我的今日词云\n\n自定义词云形状\n/设置词云形状",
 )
 
-wordcloud_cmd = on_command(
-    "wordcloud",
+wordcloud = CommandGroup("wordcloud")
+
+schedule_service = Scheduler()
+
+wordcloud_cmd = wordcloud.command(
+    "main",
     aliases={
         "词云",
         "今日词云",
@@ -207,8 +213,8 @@ def parse_image(key: str):
     return _key_parser
 
 
-mask_cmd = on_command(
-    "wordcloud_mask",
+mask_cmd = wordcloud.command(
+    "mask",
     aliases={"设置词云形状"},
     permission=SUPERUSER | GROUP_OWNER | GROUP_ADMIN,
 )
@@ -231,3 +237,41 @@ async def _(image: MessageSegment = Arg()):
     mask = Image.open(BytesIO(image_bytes))
     mask.save(MASK_PATH, format="PNG")
     await mask_cmd.finish("设置成功")
+
+
+schedule_cmd = wordcloud.command(
+    "schedule",
+    aliases={"开启词云每日定时发送", "关闭词云每日定时发送"},
+    permission=SUPERUSER | GROUP_OWNER | GROUP_ADMIN,
+)
+
+
+@schedule_cmd.handle()
+async def _(
+    bot: Bot,
+    event: GroupMessageEvent,
+    commands: Tuple[str, ...] = Command(),
+    args: Message = CommandArg(),
+):
+    command = commands[0]
+    schedule_time = None
+    if command == "开启词云每日定时发送":
+        if args:
+            try:
+                schedule_time = get_time_fromisoformat_with_timezone(
+                    args.extract_plain_text().strip()
+                )
+            except ValueError:
+                await schedule_cmd.finish("请输入正确的时间，不然我没法理解呢！")
+        await schedule_service.add_schedule(
+            bot.self_id, str(event.group_id), schedule_time
+        )
+        if schedule_time:
+            await schedule_cmd.finish(f"已开启词云每日定时发送，发送时间为：{schedule_time}")
+        else:
+            await schedule_cmd.finish(
+                f"已开启词云每日定时发送，发送时间为：{plugin_config.wordcloud_default_schedule_time}"
+            )
+    elif command == "关闭词云每日定时发送":
+        await schedule_service.remove_schedule(bot.self_id, str(event.group_id))
+        await schedule_cmd.finish("已关闭词云每日定时发送")

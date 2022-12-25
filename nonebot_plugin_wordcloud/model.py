@@ -17,3 +17,4 @@ class Schedule(SQLModel, table=True):
     bot_id: str
     group_id: str
     time: Optional["time"] = Field(default=None)
+    """ UTC 时间 """
