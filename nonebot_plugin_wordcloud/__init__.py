@@ -23,12 +23,17 @@ from nonebot.plugin import PluginMetadata
 from nonebot.typing import T_State
 from PIL import Image
 
+require("nonebot_plugin_apscheduler")
 require("nonebot_plugin_chatrecorder")
 require("nonebot_plugin_datastore")
 from nonebot_plugin_chatrecorder import get_message_records
 
-from .config import DATA, MASK_PATH, plugin_config
+from .config import DATA, MASK_PATH
 from .data_source import get_wordcloud
+from .utils import (
+    get_datetime_fromisoformat_with_timezone,
+    get_datetime_now_with_timezone,
+)
 
 __plugin_meta__ = PluginMetadata(
     name="词云",
@@ -74,24 +79,6 @@ def parse_datetime(key: str):
             await matcher.reject_arg(key, "请输入正确的日期，不然我没法理解呢！")
 
     return _key_parser
-
-
-def get_datetime_now_with_timezone() -> datetime:
-    """获取当前时间，并包含时区信息"""
-    if plugin_config.wordcloud_timezone:
-        return datetime.now(ZoneInfo(plugin_config.wordcloud_timezone))
-    else:
-        return datetime.now().astimezone()
-
-
-def get_datetime_fromisoformat_with_timezone(date_string: str) -> datetime:
-    """从 iso8601 格式字符串中获取时间，并包含时区信息"""
-    if plugin_config.wordcloud_timezone:
-        return datetime.fromisoformat(date_string).astimezone(
-            ZoneInfo(plugin_config.wordcloud_timezone)
-        )
-    else:
-        return datetime.fromisoformat(date_string).astimezone()
 
 
 @wordcloud_cmd.handle()
@@ -195,9 +182,7 @@ async def handle_message(
     )
     image = await run_sync(get_wordcloud)(messages)
     if image:
-        image_bytes = BytesIO()
-        image.save(image_bytes, format="PNG")
-        await wordcloud_cmd.finish(MessageSegment.image(image_bytes), at_sender=my)
+        await wordcloud_cmd.finish(MessageSegment.image(image), at_sender=my)
     else:
         await wordcloud_cmd.finish("没有足够的数据生成词云", at_sender=my)
 

@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import time
 from typing import Optional
 
 from sqlmodel import Field, SQLModel, UniqueConstraint
@@ -16,4 +16,4 @@ class Schedule(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     bot_id: str
     group_id: str
-    time: Optional[datetime] = Field(default=None)
+    time: Optional["time"] = Field(default=None)

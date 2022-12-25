@@ -19,6 +19,7 @@ jieba = "^0.42.1"
 tzdata = "*"
 "backports.zoneinfo" = {version = "^0.2.1", markers = "python_version < '3.9'" }
 emoji = ">=1.6.3,<3.0.0"
+nonebot-plugin-apscheduler = "^0.2.0"
 
 [tool.poetry.group.dev.dependencies]
 black = "*"
