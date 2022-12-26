@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 ## [Unreleased]
 
+### Added
+
+- 支持定时发送每日词云
+
 ### Fixed
 
 - 修复发送 `/词云` 后帮助信息为空的问题
