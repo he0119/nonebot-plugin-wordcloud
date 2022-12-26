@@ -3,7 +3,7 @@ from typing import Dict, List, Optional, cast
 
 from apscheduler.job import Job
 from nonebot import get_bot
-from nonebot.adapters.onebot.v11 import MessageSegment
+from nonebot.adapters.onebot.v11 import Bot, Message, MessageSegment
 from nonebot_plugin_apscheduler import scheduler
 from nonebot_plugin_chatrecorder import get_message_records
 from nonebot_plugin_datastore import create_session
@@ -81,6 +81,7 @@ class Scheduler:
                 return
             for schedule in schedules:
                 bot = get_bot(schedule.bot_id)
+                bot = cast(Bot, bot)
 
                 dt = get_datetime_now_with_timezone()
                 start = dt.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -95,8 +96,13 @@ class Scheduler:
                 image = await get_wordcloud(messages)
                 if image:
                     await bot.send_group_msg(
-                        group_id=schedule.group_id,
-                        message=MessageSegment.image(image),
+                        group_id=int(schedule.group_id),
+                        message=Message(MessageSegment.image(image)),
+                    )
+                else:
+                    await bot.send_group_msg(
+                        group_id=int(schedule.group_id),
+                        message="今天没有足够的数据生成词云",
                     )
 
     async def get_schedule(self, bot_id: str, group_id: str) -> Optional[time]:
