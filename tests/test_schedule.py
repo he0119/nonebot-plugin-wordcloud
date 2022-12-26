@@ -79,7 +79,7 @@ async def test_disable_schedule(app: App):
 
 
 async def test_run_task(app: App, mocker: MockerFixture):
-    from nonebot.adapters.onebot.v11 import MessageSegment
+    from nonebot.adapters.onebot.v11 import Message, MessageSegment
     from nonebot_plugin_datastore import create_session
 
     from nonebot_plugin_wordcloud import schedule_service
@@ -107,15 +107,6 @@ async def test_run_task(app: App, mocker: MockerFixture):
     mocked_get_message_records.assert_called_once()
     mocked_get_wordcloud.assert_called_once_with(["test"])
     mocked_bot.send_group_msg.assert_called_once_with(
-        group_id="10000",
-        message=MessageSegment(
-            type="image",
-            data={
-                "file": "test",
-                "type": None,
-                "cache": "true",
-                "proxy": "true",
-                "timeout": None,
-            },
-        ),
+        group_id=10000,
+        message=Message(MessageSegment.image("test")),
     )
