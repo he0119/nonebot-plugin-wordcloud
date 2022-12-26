@@ -1,0 +1,3 @@
+[run]
+# https://github.com/nedbat/coveragepy/issues/1082
+concurrency = thread,gevent

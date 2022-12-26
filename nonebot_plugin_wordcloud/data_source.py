@@ -1,10 +1,12 @@
 import re
+from io import BytesIO
 from typing import Dict, List, Optional
 
 import jieba
 import jieba.analyse
 import numpy as np
 from emoji import replace_emoji
+from nonebot.utils import run_sync
 from PIL import Image
 from wordcloud import WordCloud
 
@@ -54,7 +56,8 @@ def get_mask():
         return np.array(Image.open(MASK_PATH))
 
 
-def get_wordcloud(messages: List[str]) -> Optional[Image.Image]:
+@run_sync
+def get_wordcloud(messages: List[str]) -> Optional[BytesIO]:
     # 过滤掉命令
     command_start = tuple([i for i in global_config.command_start if i])
     message = " ".join([m for m in messages if not m.startswith(command_start)])
@@ -72,6 +75,8 @@ def get_wordcloud(messages: List[str]) -> Optional[Image.Image]:
             mask=get_mask(),
         )
         image = wordcloud.generate_from_frequencies(frequency).to_image()
-        return image
+        image_bytes = BytesIO()
+        image.save(image_bytes, format="PNG")
+        return image_bytes
     except ValueError:
         pass

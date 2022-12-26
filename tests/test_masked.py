@@ -1,6 +1,5 @@
 from pathlib import Path
 
-import pytest
 from nonebug import App
 from PIL import Image
 from pytest_mock import MockerFixture
@@ -26,13 +25,14 @@ async def test_masked(app: App, mocker: MockerFixture):
     mocked_random = mocker.patch("wordcloud.wordcloud.Random")
     mocked_random.return_value = random.Random(0)
 
-    image = get_wordcloud(["示例", "插件", "测试"])
+    image_byte = await get_wordcloud(["示例", "插件", "测试"])
 
-    assert image is not None
+    assert image_byte is not None
 
     # 比较生成的图片是否相同
     test_image_path = Path(__file__).parent / "test_masked.png"
     test_image = Image.open(test_image_path)
+    image = Image.open(image_byte)
     diff = ImageChops.difference(image, test_image)
     assert diff.getbbox() is None
 

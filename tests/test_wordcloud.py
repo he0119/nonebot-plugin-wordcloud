@@ -6,6 +6,8 @@ try:
 except ImportError:
     from backports.zoneinfo import ZoneInfo  # type: ignore
 
+from io import BytesIO
+
 import pytest
 from nonebug import App
 from PIL import Image
@@ -14,7 +16,9 @@ from pytest_mock import MockerFixture
 from .utils import fake_group_message_event
 
 FAKE_IMAGE = (
-    Image.new("RGB", (1, 1), (255, 255, 255)),
+    BytesIO(
+        b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x02\x00\x00\x00\x90wS\xde\x00\x00\x00\x0cIDATx\x9cc\xf8\xff\xff?\x00\x05\xfe\x02\xfe\r\xefF\xb8\x00\x00\x00\x00IEND\xaeB`\x82"
+    ),
     "base64://iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4//8/AAX+Av4N70a4AAAAAElFTkSuQmCC",
 )
 
@@ -64,13 +68,14 @@ async def test_get_wordcloud(app: App, mocker: MockerFixture):
     mocked_random = mocker.patch("wordcloud.wordcloud.Random")
     mocked_random.return_value = random.Random(0)
 
-    image = get_wordcloud(["天气"])
+    image_byte = await get_wordcloud(["天气"])
 
-    assert image is not None
+    assert image_byte is not None
 
     # 比较生成的图片是否相同
     test_image_path = Path(__file__).parent / "test_wordcloud.png"
     test_image = Image.open(test_image_path)
+    image = Image.open(image_byte)
     diff = ImageChops.difference(image, test_image)
     assert diff.getbbox() is None
 
