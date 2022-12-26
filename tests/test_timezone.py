@@ -5,21 +5,18 @@ try:
 except ImportError:
     from backports.zoneinfo import ZoneInfo  # type: ignore
 
-import pytest
 from nonebug import App
 from pytest_mock import MockerFixture
-
-from .utils import fake_group_message_event
 
 
 async def test_timezone(app: App, mocker: MockerFixture):
     """测试系统时区"""
-    from nonebot_plugin_wordcloud import (
+    from nonebot_plugin_wordcloud.utils import (
         get_datetime_fromisoformat_with_timezone,
         get_datetime_now_with_timezone,
     )
 
-    mocked_datetime = mocker.patch("nonebot_plugin_wordcloud.datetime")
+    mocked_datetime = mocker.patch("nonebot_plugin_wordcloud.utils.datetime")
     mocked_datetime.now().astimezone.return_value = datetime(
         2022, 1, 1, 6, tzinfo=ZoneInfo("Asia/Shanghai")
     )
@@ -41,16 +38,16 @@ async def test_timezone(app: App, mocker: MockerFixture):
 
 async def test_set_timezone(app: App, mocker: MockerFixture):
     """测试设定时区"""
-    from nonebot_plugin_wordcloud import (
+    from nonebot_plugin_wordcloud.config import plugin_config
+    from nonebot_plugin_wordcloud.utils import (
         get_datetime_fromisoformat_with_timezone,
         get_datetime_now_with_timezone,
     )
-    from nonebot_plugin_wordcloud.config import plugin_config
 
     # 设置时区
     plugin_config.wordcloud_timezone = "UTC"
 
-    mocked_datetime = mocker.patch("nonebot_plugin_wordcloud.datetime")
+    mocked_datetime = mocker.patch("nonebot_plugin_wordcloud.utils.datetime")
     mocked_datetime.now.return_value = datetime(2022, 1, 1, 6, tzinfo=ZoneInfo("UTC"))
     mocked_datetime.fromisoformat().astimezone.return_value = datetime(
         2022, 1, 1, 7, tzinfo=ZoneInfo("UTC")

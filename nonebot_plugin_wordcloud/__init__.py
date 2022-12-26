@@ -1,18 +1,16 @@
 """ 词云
 """
 import re
-from datetime import datetime, time, timedelta
+from datetime import datetime, timedelta
 from io import BytesIO
 from typing import Tuple, Union
-
-from nonebot.utils import run_sync
 
 try:
     from zoneinfo import ZoneInfo
 except ImportError:
     from backports.zoneinfo import ZoneInfo  # type: ignore
 
-from nonebot import CommandGroup, on_command, require
+from nonebot import CommandGroup, require
 from nonebot.adapters import Bot
 from nonebot.adapters.onebot.v11 import GroupMessageEvent, Message, MessageSegment
 from nonebot.adapters.onebot.v11.permission import GROUP_ADMIN, GROUP_OWNER
@@ -186,7 +184,7 @@ async def handle_message(
         time_stop=stop.astimezone(ZoneInfo("UTC")),
         plain_text=True,
     )
-    image = await run_sync(get_wordcloud)(messages)
+    image = await get_wordcloud(messages)
     if image:
         await wordcloud_cmd.finish(MessageSegment.image(image), at_sender=my)
     else:

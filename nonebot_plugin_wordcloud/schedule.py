@@ -4,7 +4,6 @@ from typing import Dict, List, Optional, cast
 from apscheduler.job import Job
 from nonebot import get_bot
 from nonebot.adapters.onebot.v11 import MessageSegment
-from nonebot.utils import run_sync
 from nonebot_plugin_apscheduler import scheduler
 from nonebot_plugin_chatrecorder import get_message_records
 from nonebot_plugin_datastore import create_session
@@ -93,7 +92,7 @@ class Scheduler:
                     time_stop=stop.astimezone(ZoneInfo("UTC")),
                     plain_text=True,
                 )
-                image = await run_sync(get_wordcloud)(messages)
+                image = await get_wordcloud(messages)
                 if image:
                     await bot.send_group_msg(
                         group_id=schedule.group_id,
