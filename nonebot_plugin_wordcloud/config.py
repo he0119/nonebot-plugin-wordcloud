@@ -13,7 +13,8 @@ except ImportError:
 
 DATA = PluginData("wordcloud")
 
-MASK_PATH = DATA.data_dir / "mask.png"
+MASK_FOLDER = DATA.data_dir
+DEFAULT_MASK_PATH = MASK_FOLDER / "mask.png"
 
 
 class Config(BaseModel, extra=Extra.ignore):

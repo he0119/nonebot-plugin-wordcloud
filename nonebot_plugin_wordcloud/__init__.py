@@ -12,7 +12,12 @@ except ImportError:
 
 from nonebot import CommandGroup, get_driver, require
 from nonebot.adapters import Bot
-from nonebot.adapters.onebot.v11 import GroupMessageEvent, Message, MessageSegment
+from nonebot.adapters.onebot.v11 import (
+    GroupMessageEvent,
+    Message,
+    MessageEvent,
+    MessageSegment,
+)
 from nonebot.adapters.onebot.v11.permission import GROUP_ADMIN, GROUP_OWNER
 from nonebot.matcher import Matcher
 from nonebot.params import Arg, Command, CommandArg, Depends
@@ -26,7 +31,7 @@ require("nonebot_plugin_chatrecorder")
 require("nonebot_plugin_datastore")
 from nonebot_plugin_chatrecorder import get_message_records
 
-from .config import DATA, MASK_PATH, plugin_config
+from .config import DATA, DEFAULT_MASK_PATH, MASK_FOLDER, plugin_config
 from .data_source import get_wordcloud
 from .schedule import schedule_service
 from .utils import (
@@ -242,30 +247,77 @@ def parse_image(key: str):
     return _key_parser
 
 
-mask_cmd = wordcloud.command(
-    "mask",
-    aliases={"设置词云形状"},
+async def parse_group_id(
+    matcher: Matcher,
+    state: T_State,
+    input: Union[str, Message] = Arg("group_id"),
+):
+    """处理群号，并将结果存入 state 中"""
+
+    if isinstance(input, str):
+        return
+
+    group_id = input.extract_plain_text().strip()
+    if not group_id:
+        await matcher.reject_arg("group_id", "群号不能为空，不然我没法理解呢！")
+    else:
+        state["group_id"] = group_id
+
+
+set_mask_cmd = wordcloud.command(
+    "set_mask",
+    aliases={
+        "设置词云形状",
+        "设置词云默认形状",
+    },
     permission=SUPERUSER | GROUP_OWNER | GROUP_ADMIN,
 )
 
 
-@mask_cmd.handle()
-async def _(state: T_State, args: Message = CommandArg()):
+@set_mask_cmd.handle()
+async def _(
+    event: MessageEvent,
+    state: T_State,
+    args: Message = CommandArg(),
+    commands: Tuple[str, ...] = Command(),
+):
+    command = commands[0]
+    if command == "设置词云默认形状":
+        state["default"] = True
+        state["group_id"] = "default"
+    else:
+        state["default"] = False
+        if isinstance(event, GroupMessageEvent):
+            state["group_id"] = str(event.group_id)
+
     images = args["image"]
     if images:
         state["image"] = images[0]
 
 
-@mask_cmd.got(
+@set_mask_cmd.got(
     "image",
     prompt="请发送一张图片作为词云形状",
     parameterless=[Depends(parse_image("image"))],
 )
-async def _(image: MessageSegment = Arg()):
+@set_mask_cmd.got(
+    "group_id",
+    prompt="请输入群号",
+    parameterless=[Depends(parse_group_id)],
+)
+async def _(
+    image: MessageSegment = Arg(),
+    default: bool = Arg(),
+    group_id: str = Arg(),
+):
     image_bytes = await DATA.download_file(image.data["url"], "masked", cache=True)
     mask = Image.open(BytesIO(image_bytes))
-    mask.save(MASK_PATH, format="PNG")
-    await mask_cmd.finish("设置成功")
+    if default:
+        mask.save(DEFAULT_MASK_PATH, format="PNG")
+        await set_mask_cmd.finish("词云默认形状设置成功")
+    else:
+        mask.save(MASK_FOLDER / f"mask-{group_id}.png", format="PNG")
+        await set_mask_cmd.finish(f"群 {group_id} 的词云形状设置成功")
 
 
 schedule_cmd = wordcloud.command(

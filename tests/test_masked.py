@@ -43,18 +43,20 @@ async def test_set_mask(app: App, mocker: MockerFixture):
     """测试自定义图片形状"""
     from nonebot.adapters.onebot.v11 import Message, MessageSegment
 
-    from nonebot_plugin_wordcloud import DATA, mask_cmd
+    from nonebot_plugin_wordcloud import DATA, set_mask_cmd
 
     mocked_download = mocker.patch("nonebot_plugin_wordcloud.DATA.download_file")
     mocked_download.return_value = (Path(__file__).parent / "mask.png").read_bytes()
 
-    async with app.test_matcher(mask_cmd) as ctx:
+    async with app.test_matcher(set_mask_cmd) as ctx:
         bot = ctx.create_bot()
-        message = Message("/设置词云形状") + MessageSegment("image", {"url": "https://test"})
+        message = Message("/设置词云默认形状") + MessageSegment(
+            "image", {"url": "https://test"}
+        )
         event = fake_group_message_event(message=message, sender={"role": "owner"})
 
         ctx.receive_event(bot, event)
-        ctx.should_call_send(event, "设置成功", True)
+        ctx.should_call_send(event, "词云默认形状设置成功", True)
         ctx.should_finished()
 
     mocked_download.assert_called_once_with("https://test", "masked", cache=True)
@@ -65,14 +67,14 @@ async def test_set_mask_get_args(app: App, mocker: MockerFixture):
     """测试自定义图片形状，需要额外获取图片时的情况"""
     from nonebot.adapters.onebot.v11 import Message, MessageSegment
 
-    from nonebot_plugin_wordcloud import DATA, mask_cmd
+    from nonebot_plugin_wordcloud import DATA, set_mask_cmd
 
     mocked_download = mocker.patch("nonebot_plugin_wordcloud.DATA.download_file")
     mocked_download.return_value = (Path(__file__).parent / "mask.png").read_bytes()
 
-    async with app.test_matcher(mask_cmd) as ctx:
+    async with app.test_matcher(set_mask_cmd) as ctx:
         bot = ctx.create_bot()
-        message = Message("/设置词云形状")
+        message = Message("/设置词云默认形状")
         event = fake_group_message_event(message=message, sender={"role": "owner"})
 
         ctx.receive_event(bot, event)
@@ -92,7 +94,7 @@ async def test_set_mask_get_args(app: App, mocker: MockerFixture):
             message=image_message, sender={"role": "owner"}
         )
         ctx.receive_event(bot, image_event)
-        ctx.should_call_send(image_event, "设置成功", True)
+        ctx.should_call_send(image_event, "词云默认形状设置成功", True)
         ctx.should_finished()
 
     mocked_download.assert_called_once_with("https://test", "masked", cache=True)
