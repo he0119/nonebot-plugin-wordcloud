@@ -10,7 +10,7 @@ try:
 except ImportError:
     from backports.zoneinfo import ZoneInfo  # type: ignore
 
-from nonebot import CommandGroup, require
+from nonebot import CommandGroup, get_driver, require
 from nonebot.adapters import Bot
 from nonebot.adapters.onebot.v11 import GroupMessageEvent, Message, MessageSegment
 from nonebot.adapters.onebot.v11.permission import GROUP_ADMIN, GROUP_OWNER
@@ -28,12 +28,15 @@ from nonebot_plugin_chatrecorder import get_message_records
 
 from .config import DATA, MASK_PATH, plugin_config
 from .data_source import get_wordcloud
-from .schedule import Scheduler
+from .schedule import schedule_service
 from .utils import (
     get_datetime_fromisoformat_with_timezone,
     get_datetime_now_with_timezone,
     get_time_fromisoformat_with_timezone,
 )
+
+driver = get_driver()
+driver.on_startup(schedule_service.update)
 
 __plugin_meta__ = PluginMetadata(
     name="词云",
@@ -43,7 +46,6 @@ __plugin_meta__ = PluginMetadata(
 
 wordcloud = CommandGroup("wordcloud")
 
-schedule_service = Scheduler()
 
 wordcloud_cmd = wordcloud.command(
     "main",

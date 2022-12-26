@@ -4,6 +4,7 @@ from typing import Dict, List, Optional, cast
 from apscheduler.job import Job
 from nonebot import get_bot
 from nonebot.adapters.onebot.v11 import Bot, Message, MessageSegment
+from nonebot.log import logger
 from nonebot_plugin_apscheduler import scheduler
 from nonebot_plugin_chatrecorder import get_message_records
 from nonebot_plugin_datastore import create_session
@@ -64,6 +65,7 @@ class Scheduler:
                         second=scheduler_time.second,
                         args=(schedule.time,),
                     )
+                    logger.debug(f"已添加每日词云定时发送任务，发送时间：{time_str} UTC")
 
     async def run_task(self, time: Optional[time] = None):
         """执行定时任务
@@ -79,6 +81,7 @@ class Scheduler:
             if time and not schedules:
                 self.schedules.pop(time.isoformat()).remove()
                 return
+            logger.info(f"开始发送每日词云，时间为 {time if time else '默认时间'}")
             for schedule in schedules:
                 bot = get_bot(schedule.bot_id)
                 bot = cast(Bot, bot)
@@ -166,3 +169,6 @@ class Scheduler:
             if schedule:
                 await session.delete(schedule)
                 await session.commit()
+
+
+schedule_service = Scheduler()
