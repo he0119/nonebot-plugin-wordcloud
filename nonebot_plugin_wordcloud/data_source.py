@@ -10,7 +10,7 @@ from nonebot.utils import run_sync
 from PIL import Image
 from wordcloud import WordCloud
 
-from .config import DEFAULT_MASK_PATH, MASK_FOLDER, global_config, plugin_config
+from .config import global_config, plugin_config
 
 
 def pre_precess(msg: str) -> str:
@@ -52,12 +52,9 @@ def analyse_message(msg: str) -> Dict[str, float]:
 
 def get_mask(key: Optional[str] = None):
     """获取 mask"""
-    if key:
-        mask_path = MASK_FOLDER / f"{key}.png"
-        if mask_path.exists():
-            return np.array(Image.open(mask_path))
-    if DEFAULT_MASK_PATH.exists():
-        return np.array(Image.open(DEFAULT_MASK_PATH))
+    mask_path = plugin_config.get_mask_path(key)
+    if mask_path.exists():
+        return np.array(Image.open(mask_path))
 
 
 @run_sync
