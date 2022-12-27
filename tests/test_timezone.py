@@ -36,11 +36,16 @@ async def test_get_datetime_now(app: App, mocker: MockerFixture):
     mocked_datetime.now.assert_called_with(ZoneInfo("UTC"))
 
 
-async def test_get_datetime_fromisoformat(app: App):
-    """测试从 iso 格式字符串获取时间"""
+async def test_time(app: App):
+    """测试时间相关函数"""
     from nonebot_plugin_wordcloud.config import plugin_config
-    from nonebot_plugin_wordcloud.utils import get_datetime_fromisoformat_with_timezone
+    from nonebot_plugin_wordcloud.utils import (
+        get_datetime_fromisoformat_with_timezone,
+        get_time_fromisoformat_with_timezone,
+        time_astimezone,
+    )
 
+    # 测试从 iso 格式字符串获取时间
     assert (
         get_datetime_fromisoformat_with_timezone("2022-01-01T10:00:00").isoformat()
         == "2022-01-01T10:00:00+08:00"
@@ -66,11 +71,7 @@ async def test_get_datetime_fromisoformat(app: App):
         == "2022-01-01T02:00:00+00:00"
     )
 
-
-async def test_time_astimezone(app: App):
-    """测试转换 time 对象时区"""
-    from nonebot_plugin_wordcloud.utils import time_astimezone
-
+    # 测试转换 time 对象时区
     assert time_astimezone(time(10, 0, 0)).isoformat() == "10:00:00+08:00"
 
     assert (
@@ -78,12 +79,8 @@ async def test_time_astimezone(app: App):
         == "18:00:00+08:00"
     )
 
-
-async def test_get_time_fromisoformat(app: App):
-    """测试从 iso 格式字符串获取时间"""
-    from nonebot_plugin_wordcloud.config import plugin_config
-    from nonebot_plugin_wordcloud.utils import get_time_fromisoformat_with_timezone
-
+    # 测试从 iso 格式字符串获取时间
+    plugin_config.wordcloud_timezone = None
     assert (
         get_time_fromisoformat_with_timezone("10:00:00").isoformat() == "10:00:00+08:00"
     )

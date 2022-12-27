@@ -10,7 +10,7 @@ from nonebot.utils import run_sync
 from PIL import Image
 from wordcloud import WordCloud
 
-from .config import MASK_PATH, global_config, plugin_config
+from .config import global_config, plugin_config
 
 
 def pre_precess(msg: str) -> str:
@@ -50,14 +50,17 @@ def analyse_message(msg: str) -> Dict[str, float]:
     return {word: weight for word, weight in words}
 
 
-def get_mask():
+def get_mask(key: Optional[str] = None):
     """获取 mask"""
-    if MASK_PATH.exists():
-        return np.array(Image.open(MASK_PATH))
+    mask_path = plugin_config.get_mask_path(key)
+    if mask_path.exists():
+        return np.array(Image.open(mask_path))
 
 
 @run_sync
-def get_wordcloud(messages: List[str]) -> Optional[BytesIO]:
+def get_wordcloud(
+    messages: List[str], mask_key: Optional[str] = None
+) -> Optional[BytesIO]:
     # 过滤掉命令
     command_start = tuple([i for i in global_config.command_start if i])
     message = " ".join([m for m in messages if not m.startswith(command_start)])
@@ -72,7 +75,7 @@ def get_wordcloud(messages: List[str]) -> Optional[BytesIO]:
             height=plugin_config.wordcloud_height,
             background_color=plugin_config.wordcloud_background_color,
             colormap=plugin_config.wordcloud_colormap,
-            mask=get_mask(),
+            mask=get_mask(mask_key),
         )
         image = wordcloud.generate_from_frequencies(frequency).to_image()
         image_bytes = BytesIO()

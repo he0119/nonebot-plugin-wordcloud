@@ -13,8 +13,6 @@ except ImportError:
 
 DATA = PluginData("wordcloud")
 
-MASK_PATH = DATA.data_dir / "mask.png"
-
 
 class Config(BaseModel, extra=Extra.ignore):
     wordcloud_width: int = 1920
@@ -55,6 +53,12 @@ class Config(BaseModel, extra=Extra.ignore):
             )
         values["wordcloud_default_schedule_time"] = default_schedule_time
         return values
+
+    def get_mask_path(self, key: Optional[str] = None) -> Path:
+        """获取 mask 文件路径"""
+        if key is None:
+            return DATA.data_dir / "mask.png"
+        return DATA.data_dir / f"mask-{key}.png"
 
 
 global_config = get_driver().config
