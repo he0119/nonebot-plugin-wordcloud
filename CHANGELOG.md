@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 ### Added
 
 - 支持定时发送每日词云
+- 支持每个群单独设置词云形状
 
 ### Fixed
 
