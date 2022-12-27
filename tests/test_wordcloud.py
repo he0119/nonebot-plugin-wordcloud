@@ -155,7 +155,7 @@ async def test_wordcloud_exclude_bot_msg(
         ctx.should_finished()
 
     mocked_datetime_now.assert_called_once_with()
-    mocked_get_wordcloud.assert_called_once_with(["11:1-2"])
+    mocked_get_wordcloud.assert_called_once_with(["11:1-2"], "10000")
 
 
 async def test_today_wordcloud(app: App, mocker: MockerFixture, message_record: None):
@@ -188,7 +188,7 @@ async def test_today_wordcloud(app: App, mocker: MockerFixture, message_record: 
         ctx.should_finished()
 
     mocked_datetime_now.assert_called_once_with()
-    mocked_get_wordcloud.assert_called_once_with(["10:1-2", "11:1-2"])
+    mocked_get_wordcloud.assert_called_once_with(["10:1-2", "11:1-2"], "10000")
 
 
 async def test_my_today_wordcloud(
@@ -223,7 +223,7 @@ async def test_my_today_wordcloud(
         ctx.should_finished()
 
     mocked_datetime_now.assert_called_once_with()
-    mocked_get_wordcloud.assert_called_once_with(["10:1-2"])
+    mocked_get_wordcloud.assert_called_once_with(["10:1-2"], "10000")
 
 
 async def test_yesterday_wordcloud(
@@ -258,7 +258,7 @@ async def test_yesterday_wordcloud(
         ctx.should_finished()
 
     mocked_datetime_now.assert_called_once_with()
-    mocked_get_wordcloud.assert_called_once_with(["10:1-2", "11:1-2"])
+    mocked_get_wordcloud.assert_called_once_with(["10:1-2", "11:1-2"], "10000")
 
 
 async def test_my_yesterday_wordcloud(
@@ -293,7 +293,7 @@ async def test_my_yesterday_wordcloud(
         ctx.should_finished()
 
     mocked_datetime_now.assert_called_once_with()
-    mocked_get_wordcloud.assert_called_once_with(["10:1-2"])
+    mocked_get_wordcloud.assert_called_once_with(["10:1-2"], "10000")
 
 
 async def test_week_wordcloud(app: App, mocker: MockerFixture, message_record: None):
@@ -326,7 +326,7 @@ async def test_week_wordcloud(app: App, mocker: MockerFixture, message_record: N
         ctx.should_finished()
 
     mocked_datetime_now.assert_called_once_with()
-    mocked_get_wordcloud.assert_called_once_with(["10:1-3", "11:1-3"])
+    mocked_get_wordcloud.assert_called_once_with(["10:1-3", "11:1-3"], "10000")
 
 
 async def test_month_wordcloud(app: App, mocker: MockerFixture, message_record: None):
@@ -359,7 +359,7 @@ async def test_month_wordcloud(app: App, mocker: MockerFixture, message_record: 
         ctx.should_finished()
 
     mocked_datetime_now.assert_called_once_with()
-    mocked_get_wordcloud.assert_called_once_with(["10:2-1", "11:2-1"])
+    mocked_get_wordcloud.assert_called_once_with(["10:2-1", "11:2-1"], "10000")
 
 
 async def test_year_wordcloud(app: App, mocker: MockerFixture, message_record: None):
@@ -393,7 +393,7 @@ async def test_year_wordcloud(app: App, mocker: MockerFixture, message_record: N
 
     mocked_datetime_now.assert_called_once_with()
     mocked_get_wordcloud.assert_called_once_with(
-        ["10:1-2", "11:1-2", "10:1-3", "11:1-3", "10:2-1", "11:2-1"]
+        ["10:1-2", "11:1-2", "10:1-3", "11:1-3", "10:2-1", "11:2-1"], "10000"
     )
 
 
@@ -427,7 +427,9 @@ async def test_my_year_wordcloud(app: App, mocker: MockerFixture, message_record
         ctx.should_finished()
 
     mocked_datetime_now.assert_called_once_with()
-    mocked_get_wordcloud.assert_called_once_with(["10:1-2", "10:1-3", "10:2-1"])
+    mocked_get_wordcloud.assert_called_once_with(
+        ["10:1-2", "10:1-3", "10:2-1"], "10000"
+    )
 
 
 async def test_history_wordcloud(app: App, mocker: MockerFixture, message_record: None):
@@ -454,7 +456,7 @@ async def test_history_wordcloud(app: App, mocker: MockerFixture, message_record
         )
         ctx.should_finished()
 
-    mocked_get_wordcloud.assert_called_once_with(["10:1-2", "11:1-2"])
+    mocked_get_wordcloud.assert_called_once_with(["10:1-2", "11:1-2"], "10000")
 
 
 async def test_history_wordcloud_start_stop(
@@ -486,7 +488,7 @@ async def test_history_wordcloud_start_stop(
         ctx.should_finished()
 
     mocked_get_wordcloud.assert_called_once_with(
-        ["10:1-3", "11:1-3", "10:2-1", "11:2-1"]
+        ["10:1-3", "11:1-3", "10:2-1", "11:2-1"], "10000"
     )
 
 
@@ -532,7 +534,7 @@ async def test_history_wordcloud_start_stop_get_args(
         ctx.should_finished()
 
     mocked_get_wordcloud.assert_called_once_with(
-        ["10:1-2", "11:1-2", "10:1-3", "11:1-3", "10:2-1", "11:2-1"]
+        ["10:1-2", "11:1-2", "10:1-3", "11:1-3", "10:2-1", "11:2-1"], "10000"
     )
 
 

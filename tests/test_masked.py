@@ -39,6 +39,38 @@ async def test_masked(app: App, mocker: MockerFixture):
     mocked_random.assert_called()
 
 
+async def test_masked_group(app: App, mocker: MockerFixture):
+    """测试不同群的自定义图片形状"""
+    import random
+    import shutil
+
+    from PIL import ImageChops
+
+    from nonebot_plugin_wordcloud.config import DATA, plugin_config
+    from nonebot_plugin_wordcloud.data_source import get_wordcloud
+
+    plugin_config.wordcloud_background_color = "white"
+
+    mask_path = Path(__file__).parent / "mask.png"
+    shutil.copy(mask_path, DATA.data_dir / "mask-10000.png")
+
+    mocked_random = mocker.patch("wordcloud.wordcloud.Random")
+    mocked_random.return_value = random.Random(0)
+
+    image_byte = await get_wordcloud(["示例", "插件", "测试"], "10000")
+
+    assert image_byte is not None
+
+    # 比较生成的图片是否相同
+    test_image_path = Path(__file__).parent / "test_masked.png"
+    test_image = Image.open(test_image_path)
+    image = Image.open(image_byte)
+    diff = ImageChops.difference(image, test_image)
+    assert diff.getbbox() is None
+
+    mocked_random.assert_called()
+
+
 async def test_set_mask(app: App, mocker: MockerFixture):
     """测试自定义图片形状"""
     from nonebot.adapters.onebot.v11 import Message, MessageSegment

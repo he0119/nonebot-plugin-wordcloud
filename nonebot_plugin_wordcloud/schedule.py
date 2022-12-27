@@ -96,7 +96,7 @@ class Scheduler:
                     time_stop=stop.astimezone(ZoneInfo("UTC")),
                     plain_text=True,
                 )
-                image = await get_wordcloud(messages)
+                image = await get_wordcloud(messages, schedule.group_id)
                 if image:
                     await bot.send_group_msg(
                         group_id=int(schedule.group_id),

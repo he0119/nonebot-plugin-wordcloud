@@ -215,7 +215,7 @@ async def handle_message(
         time_stop=stop.astimezone(ZoneInfo("UTC")),
         plain_text=True,
     )
-    image = await get_wordcloud(messages)
+    image = await get_wordcloud(messages, str(event.group_id))
     if image:
         await wordcloud_cmd.finish(MessageSegment.image(image), at_sender=my)
     else:

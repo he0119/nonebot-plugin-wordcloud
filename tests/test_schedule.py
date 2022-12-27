@@ -150,7 +150,7 @@ async def test_run_task(app: App, mocker: MockerFixture):
 
     mocked_get_bot.assert_called_once_with("test")
     mocked_get_message_records.assert_called_once()
-    mocked_get_wordcloud.assert_called_once_with(["test"])
+    mocked_get_wordcloud.assert_called_once_with(["test"], "10000")
     mocked_bot.send_group_msg.assert_called_once_with(
         group_id=10000,
         message=Message(MessageSegment.image("test")),
@@ -184,7 +184,7 @@ async def test_run_task_without_data(app: App, mocker: MockerFixture):
 
     mocked_get_bot.assert_called_once_with("test")
     mocked_get_message_records.assert_called_once()
-    mocked_get_wordcloud.assert_called_once_with(["test"])
+    mocked_get_wordcloud.assert_called_once_with(["test"], "10000")
     mocked_bot.send_group_msg.assert_called_once_with(
         group_id=10000,
         message="今天没有足够的数据生成词云",
