@@ -82,7 +82,7 @@ __plugin_meta__ = PluginMetadata(
 /关闭词云每日定时发送""",
 )
 
-wordcloud = CommandGroup("wordcloud")
+wordcloud = CommandGroup("词云")
 
 
 wordcloud_cmd = wordcloud.command(
