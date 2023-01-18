@@ -10,7 +10,7 @@ try:
 except ImportError:
     from backports.zoneinfo import ZoneInfo  # type: ignore
 
-from nonebot import CommandGroup, get_driver, require
+from nonebot import CommandGroup, require
 from nonebot.adapters import Bot
 from nonebot.adapters.onebot.v11 import GroupMessageEvent, Message, MessageSegment
 from nonebot.adapters.onebot.v11.permission import GROUP_ADMIN, GROUP_OWNER
@@ -24,9 +24,10 @@ from PIL import Image
 require("nonebot_plugin_apscheduler")
 require("nonebot_plugin_chatrecorder")
 require("nonebot_plugin_datastore")
-from nonebot_plugin_chatrecorder import get_message_records
+from nonebot_plugin_chatrecorder import get_messages_plain_text
+from nonebot_plugin_datastore.db import post_db_init
 
-from .config import DATA, plugin_config
+from .config import plugin_config, plugin_data
 from .data_source import get_wordcloud
 from .schedule import schedule_service
 from .utils import (
@@ -35,8 +36,7 @@ from .utils import (
     get_time_fromisoformat_with_timezone,
 )
 
-driver = get_driver()
-driver.on_startup(schedule_service.update)
+post_db_init(schedule_service.update)
 
 __plugin_meta__ = PluginMetadata(
     name="词云",
@@ -72,8 +72,8 @@ __plugin_meta__ = PluginMetadata(
 设置定时发送每日词云
 /词云每日定时发送状态
 /开启词云每日定时发送
-/关闭词云每日定时发送
-""",
+/开启词云每日定时发送 23:59
+/关闭词云每日定时发送""",
 )
 
 wordcloud = CommandGroup("wordcloud")
@@ -210,13 +210,12 @@ async def handle_message(
 
     # 排除机器人自己发的消息
     # 将时间转换到 UTC 时区
-    messages = await get_message_records(
+    messages = await get_messages_plain_text(
         user_ids=user_ids,
         group_ids=[str(event.group_id)],
-        exclude_user_ids=[bot.self_id],
+        types=["message"],
         time_start=start.astimezone(ZoneInfo("UTC")),
         time_stop=stop.astimezone(ZoneInfo("UTC")),
-        plain_text=True,
     )
     image = await get_wordcloud(messages, str(event.group_id))
     if image:
@@ -295,7 +294,9 @@ async def _(
     default: bool = Arg(),
     group_id: str = Arg(),
 ):
-    image_bytes = await DATA.download_file(image.data["url"], "masked", cache=True)
+    image_bytes = await plugin_data.download_file(
+        image.data["url"], "masked", cache=True
+    )
     mask = Image.open(BytesIO(image_bytes))
     if default:
         mask.save(plugin_config.get_mask_path(), format="PNG")

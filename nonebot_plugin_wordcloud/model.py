@@ -1,13 +1,14 @@
 from datetime import time
 from typing import Optional
 
-from sqlmodel import Field, SQLModel, UniqueConstraint
+from sqlmodel import Field, UniqueConstraint
+
+from .config import plugin_data
 
 
-class Schedule(SQLModel, table=True):
+class Schedule(plugin_data.Model, table=True):
     """定时发送"""
 
-    __tablename__: str = "wordcloud_schedule"
     __table_args__ = (
         UniqueConstraint("bot_id", "group_id"),
         {"extend_existing": True},
