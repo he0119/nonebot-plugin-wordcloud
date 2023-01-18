@@ -3,7 +3,7 @@
 import re
 from datetime import datetime, timedelta
 from io import BytesIO
-from typing import Tuple, Union
+from typing import List, Tuple, Union
 
 try:
     from zoneinfo import ZoneInfo
@@ -11,9 +11,15 @@ except ImportError:
     from backports.zoneinfo import ZoneInfo  # type: ignore
 
 from nonebot import CommandGroup, require
-from nonebot.adapters import Bot
-from nonebot.adapters.onebot.v11 import GroupMessageEvent, Message, MessageSegment
+from nonebot.adapters import Message
+from nonebot.adapters.onebot.v11 import Bot as BotV11
+from nonebot.adapters.onebot.v11 import GroupMessageEvent as GroupMessageEventV11
+from nonebot.adapters.onebot.v11 import MessageSegment as MessageSegmentV11
 from nonebot.adapters.onebot.v11.permission import GROUP_ADMIN, GROUP_OWNER
+from nonebot.adapters.onebot.v12 import Bot as BotV12
+from nonebot.adapters.onebot.v12 import ChannelMessageEvent
+from nonebot.adapters.onebot.v12 import GroupMessageEvent as GroupMessageEventV12
+from nonebot.adapters.onebot.v12 import MessageSegment as MessageSegmentV12
 from nonebot.matcher import Matcher
 from nonebot.params import Arg, Command, CommandArg, Depends
 from nonebot.permission import SUPERUSER
@@ -121,7 +127,7 @@ def parse_datetime(key: str):
 
 @wordcloud_cmd.handle()
 async def handle_first_receive(
-    event: GroupMessageEvent,
+    event: Union[GroupMessageEventV11, GroupMessageEventV12, ChannelMessageEvent],
     state: T_State,
     commands: Tuple[str, ...] = Command(),
     args: Message = CommandArg(),
@@ -195,33 +201,77 @@ async def handle_first_receive(
     prompt="请输入你要查询的结束日期（如 2022-02-22）",
     parameterless=[Depends(parse_datetime("stop"))],
 )
-async def handle_message(
-    bot: Bot,
-    event: GroupMessageEvent,
+async def handle_get_messages_group_message(
+    bot: Union[BotV11, BotV12],
+    event: Union[GroupMessageEventV11, GroupMessageEventV12],
+    state: T_State,
     start: datetime = Arg(),
     stop: datetime = Arg(),
     my: bool = Arg(),
 ):
-    # 是否只查询自己的记录
-    if my:
-        user_ids = [str(event.user_id)]
-    else:
-        user_ids = None
-
-    # 排除机器人自己发的消息
     # 将时间转换到 UTC 时区
-    messages = await get_messages_plain_text(
-        user_ids=user_ids,
+    state["messages"] = await get_messages_plain_text(
+        user_ids=[str(event.user_id)] if my else None,  # 是否只查询自己的记录
         group_ids=[str(event.group_id)],
+        types=["message"],  # 排除机器人自己发的消息
+        time_start=start.astimezone(ZoneInfo("UTC")),
+        time_stop=stop.astimezone(ZoneInfo("UTC")),
+    )
+    state["mask_key"] = (
+        f"qq-{event.group_id}"
+        if isinstance(bot, BotV11)
+        else f"{bot.platform}-{event.group_id}"
+    )
+
+
+@wordcloud_cmd.got(
+    "start",
+    prompt="请输入你要查询的起始日期（如 2022-01-01）",
+    parameterless=[Depends(parse_datetime("start"))],
+)
+@wordcloud_cmd.got(
+    "stop",
+    prompt="请输入你要查询的结束日期（如 2022-02-22）",
+    parameterless=[Depends(parse_datetime("stop"))],
+)
+async def handle_get_messages_channel_message(
+    bot: BotV12,
+    event: ChannelMessageEvent,
+    state: T_State,
+    start: datetime = Arg(),
+    stop: datetime = Arg(),
+    my: bool = Arg(),
+):
+    state["messages"] = await get_messages_plain_text(
+        user_ids=[event.user_id] if my else None,
+        guild_ids=[event.guild_id],
+        channel_ids=[event.channel_id],
         types=["message"],
         time_start=start.astimezone(ZoneInfo("UTC")),
         time_stop=stop.astimezone(ZoneInfo("UTC")),
     )
-    image = await get_wordcloud(messages, str(event.group_id))
-    if image:
-        await wordcloud_cmd.finish(MessageSegment.image(image), at_sender=my)
-    else:
+    state["mask_key"] = f"{bot.platform}-{event.guild_id}"
+
+
+@wordcloud_cmd.handle()
+async def handle_send_message(
+    bot: Union[BotV11, BotV12],
+    messages: List[str] = Arg(),
+    mask_key: str = Arg(),
+    my: bool = Arg(),
+):
+    image = await get_wordcloud(messages, mask_key)
+    if not image:
         await wordcloud_cmd.finish("没有足够的数据生成词云", at_sender=my)
+
+    if isinstance(bot, BotV11):
+        await wordcloud_cmd.send(MessageSegmentV11.image(image))
+    else:
+        resp = await bot.upload_file(
+            type="data", name="wordcloud", data=image.getvalue()
+        )
+        file_id = resp["file_id"]
+        await wordcloud_cmd.send(MessageSegmentV12.image(file_id))
 
 
 def parse_image(key: str):
@@ -230,9 +280,9 @@ def parse_image(key: str):
     async def _key_parser(
         matcher: Matcher,
         state: T_State,
-        input: Union[MessageSegment, Message] = Arg(key),
+        input: Union[MessageSegmentV11, Message] = Arg(key),
     ):
-        if isinstance(input, MessageSegment):
+        if isinstance(input, MessageSegmentV11):
             return
 
         images = input["image"]
@@ -258,7 +308,7 @@ mask_cmd = wordcloud.command(
 
 @mask_cmd.handle()
 async def _(
-    event: GroupMessageEvent,
+    event: GroupMessageEventV11,
     state: T_State,
     args: Message = CommandArg(),
     commands: Tuple[str, ...] = Command(),
@@ -290,7 +340,7 @@ async def _(
     parameterless=[Depends(parse_image("image"))],
 )
 async def _(
-    image: MessageSegment = Arg(),
+    image: MessageSegmentV11 = Arg(),
     default: bool = Arg(),
     group_id: str = Arg(),
 ):
@@ -315,8 +365,8 @@ schedule_cmd = wordcloud.command(
 
 @schedule_cmd.handle()
 async def _(
-    bot: Bot,
-    event: GroupMessageEvent,
+    bot: BotV11,
+    event: GroupMessageEventV11,
     commands: Tuple[str, ...] = Command(),
     args: Message = CommandArg(),
 ):
