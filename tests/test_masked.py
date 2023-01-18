@@ -14,13 +14,13 @@ async def test_masked(app: App, mocker: MockerFixture):
 
     from PIL import ImageChops
 
-    from nonebot_plugin_wordcloud.config import DATA, plugin_config
+    from nonebot_plugin_wordcloud.config import plugin_config, plugin_data
     from nonebot_plugin_wordcloud.data_source import get_wordcloud
 
     plugin_config.wordcloud_background_color = "white"
 
     mask_path = Path(__file__).parent / "mask.png"
-    shutil.copy(mask_path, DATA.data_dir / "mask.png")
+    shutil.copy(mask_path, plugin_data.data_dir / "mask.png")
 
     mocked_random = mocker.patch("wordcloud.wordcloud.Random")
     mocked_random.return_value = random.Random(0)
@@ -46,13 +46,13 @@ async def test_masked_group(app: App, mocker: MockerFixture):
 
     from PIL import ImageChops
 
-    from nonebot_plugin_wordcloud.config import DATA, plugin_config
+    from nonebot_plugin_wordcloud.config import plugin_config, plugin_data
     from nonebot_plugin_wordcloud.data_source import get_wordcloud
 
     plugin_config.wordcloud_background_color = "white"
 
     mask_path = Path(__file__).parent / "mask.png"
-    shutil.copy(mask_path, DATA.data_dir / "mask-10000.png")
+    shutil.copy(mask_path, plugin_data.data_dir / "mask-10000.png")
 
     mocked_random = mocker.patch("wordcloud.wordcloud.Random")
     mocked_random.return_value = random.Random(0)
@@ -75,9 +75,9 @@ async def test_set_mask(app: App, mocker: MockerFixture):
     """测试自定义图片形状"""
     from nonebot.adapters.onebot.v11 import Message, MessageSegment
 
-    from nonebot_plugin_wordcloud import DATA, mask_cmd
+    from nonebot_plugin_wordcloud import mask_cmd, plugin_data
 
-    mocked_download = mocker.patch("nonebot_plugin_wordcloud.DATA.download_file")
+    mocked_download = mocker.patch("nonebot_plugin_wordcloud.plugin_data.download_file")
     mocked_download.return_value = (Path(__file__).parent / "mask.png").read_bytes()
 
     async with app.test_matcher(mask_cmd) as ctx:
@@ -92,7 +92,7 @@ async def test_set_mask(app: App, mocker: MockerFixture):
         ctx.should_finished()
 
     mocked_download.assert_called_once_with("https://test", "masked", cache=True)
-    assert DATA.exists("mask.png")
+    assert plugin_data.exists("mask.png")
 
     async with app.test_matcher(mask_cmd) as ctx:
         bot = ctx.create_bot()
@@ -109,16 +109,16 @@ async def test_set_mask(app: App, mocker: MockerFixture):
             mocker.call("https://test", "masked", cache=True),
         ]  # type: ignore
     )
-    assert DATA.exists("mask-10000.png")
+    assert plugin_data.exists("mask-10000.png")
 
 
 async def test_set_mask_get_args(app: App, mocker: MockerFixture):
     """测试自定义图片形状，需要额外获取图片时的情况"""
     from nonebot.adapters.onebot.v11 import Message, MessageSegment
 
-    from nonebot_plugin_wordcloud import DATA, mask_cmd
+    from nonebot_plugin_wordcloud import mask_cmd, plugin_data
 
-    mocked_download = mocker.patch("nonebot_plugin_wordcloud.DATA.download_file")
+    mocked_download = mocker.patch("nonebot_plugin_wordcloud.plugin_data.download_file")
     mocked_download.return_value = (Path(__file__).parent / "mask.png").read_bytes()
 
     async with app.test_matcher(mask_cmd) as ctx:
@@ -147,7 +147,7 @@ async def test_set_mask_get_args(app: App, mocker: MockerFixture):
         ctx.should_finished()
 
     mocked_download.assert_called_once_with("https://test", "masked", cache=True)
-    assert DATA.exists("mask.png")
+    assert plugin_data.exists("mask.png")
 
     async with app.test_matcher(mask_cmd) as ctx:
         bot = ctx.create_bot()
@@ -180,7 +180,7 @@ async def test_set_mask_get_args(app: App, mocker: MockerFixture):
             mocker.call("https://test", "masked", cache=True),
         ]  # type: ignore
     )
-    assert DATA.exists("mask-10000.png")
+    assert plugin_data.exists("mask-10000.png")
 
 
 async def test_remove_mask(app: App):
@@ -188,12 +188,12 @@ async def test_remove_mask(app: App):
 
     from nonebot.adapters.onebot.v11 import Message
 
-    from nonebot_plugin_wordcloud import DATA, mask_cmd
+    from nonebot_plugin_wordcloud import mask_cmd, plugin_data
 
     mask_path = Path(__file__).parent / "mask.png"
 
-    mask_default_path = DATA.data_dir / "mask.png"
-    mask_group_path = DATA.data_dir / "mask-10000.png"
+    mask_default_path = plugin_data.data_dir / "mask.png"
+    mask_group_path = plugin_data.data_dir / "mask-10000.png"
 
     shutil.copy(mask_path, mask_default_path)
     shutil.copy(mask_path, mask_group_path)

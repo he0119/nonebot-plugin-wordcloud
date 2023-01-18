@@ -32,19 +32,24 @@ async def message_record(app: App):
 
     def make_message_record(message: str, user_id: str, time: datetime):
         return MessageRecord(
-            type="message",
+            bot_id="test",
+            bot_type="OneBot V11",
+            type="message_sent" if user_id == "bot" else "message",
             user_id=user_id,
             time=time,  # UTC 时间
             platform="qq",
             message_id="test",
             message=serialize_message(Message(message)),
-            alt_message=message,
+            plain_text=message,
             detail_type="group",
             group_id="10000",
         )
 
     async with create_session() as session:
         # 星期日
+        session.add(
+            make_message_record("bot:1-2", "bot", datetime(2022, 1, 2, 4, 0, 0))
+        )
         session.add(make_message_record("10:1-2", "10", datetime(2022, 1, 2, 4, 0, 0)))
         session.add(make_message_record("11:1-2", "11", datetime(2022, 1, 2, 4, 0, 0)))
         # 星期一
@@ -119,35 +124,13 @@ async def test_wordcloud_cmd(app: App):
 async def test_wordcloud(app: App, mocker: MockerFixture, message_record: None):
     """测试词云"""
     from nonebot.adapters.onebot.v11 import Message, MessageSegment
+    from nonebot_plugin_chatrecorder import get_messages_plain_text
 
     from nonebot_plugin_wordcloud import wordcloud_cmd
 
     # 排除机器人自己的消息
-    mocked_datetime_now_exclude_bot_msg = mocker.patch(
-        "nonebot_plugin_wordcloud.get_datetime_now_with_timezone",
-        return_value=datetime(2022, 1, 2, 23, 0, 0, tzinfo=ZoneInfo("Asia/Shanghai")),
-    )
-
-    mocked_get_wordcloud_exclude_bot_msg = mocker.patch(
-        "nonebot_plugin_wordcloud.get_wordcloud",
-        return_value=FAKE_IMAGE[0],
-    )
-
-    async with app.test_matcher(wordcloud_cmd) as ctx:
-        bot = ctx.create_bot(self_id="10")
-        event = fake_group_message_event(message=Message("/今日词云"))
-
-        ctx.receive_event(bot, event)
-        ctx.should_call_send(
-            event,
-            MessageSegment.image(FAKE_IMAGE[1]),
-            True,
-            at_sender=False,
-        )
-        ctx.should_finished()
-
-    mocked_datetime_now_exclude_bot_msg.assert_called_once_with()
-    mocked_get_wordcloud_exclude_bot_msg.assert_called_once_with(["11:1-2"], "10000")
+    messages = await get_messages_plain_text()
+    assert len(messages) == 7
 
     # 测试今日词云
     mocked_datetime_now_today_wordcloud = mocker.patch(

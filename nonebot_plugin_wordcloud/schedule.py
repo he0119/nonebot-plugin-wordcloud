@@ -6,7 +6,7 @@ from nonebot import get_bot
 from nonebot.adapters.onebot.v11 import Bot, Message, MessageSegment
 from nonebot.log import logger
 from nonebot_plugin_apscheduler import scheduler
-from nonebot_plugin_chatrecorder import get_message_records
+from nonebot_plugin_chatrecorder import get_messages_plain_text
 from nonebot_plugin_datastore import create_session
 from sqlmodel import select
 
@@ -89,12 +89,11 @@ class Scheduler:
                 dt = get_datetime_now_with_timezone()
                 start = dt.replace(hour=0, minute=0, second=0, microsecond=0)
                 stop = dt
-                messages = await get_message_records(
+                messages = await get_messages_plain_text(
                     group_ids=[schedule.group_id],
-                    exclude_user_ids=[bot.self_id],
+                    types=["message"],
                     time_start=start.astimezone(ZoneInfo("UTC")),
                     time_stop=stop.astimezone(ZoneInfo("UTC")),
-                    plain_text=True,
                 )
                 image = await get_wordcloud(messages, schedule.group_id)
                 if image:
