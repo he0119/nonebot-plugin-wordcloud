@@ -35,7 +35,7 @@ def upgrade() -> None:
             sa.Column("group_id", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
             sa.Column("time", sa.Time(), nullable=True),
             sa.PrimaryKeyConstraint("id"),
-            sa.UniqueConstraint("bot_id", "group_id"),
+            sa.UniqueConstraint("bot_id", "group_id", name="unique_schedule"),
         )
     # ### end Alembic commands ###
 

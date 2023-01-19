@@ -1,6 +1,11 @@
 from datetime import datetime, time
-from typing import Optional
+from typing import Optional, Union
 
+from nonebot.adapters import Bot
+from nonebot.adapters.onebot.v11 import Bot as BotV11
+from nonebot.adapters.onebot.v11 import Message as MessageV11
+from nonebot.adapters.onebot.v12 import Bot as BotV12
+from nonebot.adapters.onebot.v12 import Message as MessageV12
 from nonebot_plugin_apscheduler import scheduler
 
 from .config import plugin_config
@@ -55,3 +60,35 @@ def get_time_fromisoformat_with_timezone(time_string: str) -> time:
 def get_time_with_scheduler_timezone(time: time) -> time:
     """获取转换到 APScheduler 时区的时间"""
     return time_astimezone(time, scheduler.timezone)
+
+
+async def send_message(
+    bot: Bot,
+    message: Union[str, MessageV11, MessageV12],
+    group_id: Optional[str] = None,
+    guild_id: Optional[str] = None,
+    channel_id: Optional[str] = None,
+) -> None:
+    if isinstance(bot, BotV11) and group_id:
+        if isinstance(message, str):
+            message = MessageV11(message)
+        if isinstance(message, MessageV11):
+            await bot.send_group_msg(group_id=int(group_id), message=message)
+            return
+
+    if isinstance(bot, BotV12):
+        if isinstance(message, str):
+            message = MessageV12(message)
+        if not isinstance(message, MessageV12):
+            return
+        if group_id:
+            await bot.send_message(
+                detail_type="group", group_id=group_id, message=message
+            )
+        elif guild_id and channel_id:
+            await bot.send_message(
+                detail_type="channel",
+                guild_id=guild_id,
+                channel_id=channel_id,
+                message=message,
+            )

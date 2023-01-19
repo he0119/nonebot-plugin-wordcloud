@@ -365,29 +365,45 @@ schedule_cmd = wordcloud.command(
 
 @schedule_cmd.handle()
 async def _(
-    bot: BotV11,
-    event: GroupMessageEventV11,
+    bot: Union[BotV11, BotV12],
+    event: Union[GroupMessageEventV11, GroupMessageEventV12, ChannelMessageEvent],
     commands: Tuple[str, ...] = Command(),
     args: Message = CommandArg(),
 ):
     command = commands[0]
-    schedule_time = None
+
+    group_id = None
+    guild_id = None
+    channel_id = None
+    if isinstance(event, GroupMessageEventV11):
+        group_id = str(event.group_id)
+    elif isinstance(event, GroupMessageEventV12):
+        group_id = event.group_id
+    elif isinstance(event, ChannelMessageEvent):
+        guild_id = event.guild_id
+        channel_id = event.channel_id
+
     if command == "词云每日定时发送状态":
         schedule_time = await schedule_service.get_schedule(
-            bot.self_id, str(event.group_id)
+            bot.self_id, group_id=group_id, guild_id=guild_id, channel_id=channel_id
         )
         if schedule_time:
             await schedule_cmd.finish(f"词云每日定时发送已开启，发送时间为：{schedule_time}")
         else:
             await schedule_cmd.finish("词云每日定时发送未开启")
     elif command == "开启词云每日定时发送":
+        schedule_time = None
         if time_str := args.extract_plain_text().strip():
             try:
                 schedule_time = get_time_fromisoformat_with_timezone(time_str)
             except ValueError:
                 await schedule_cmd.finish("请输入正确的时间，不然我没法理解呢！")
         await schedule_service.add_schedule(
-            bot.self_id, str(event.group_id), schedule_time
+            bot.self_id,
+            schedule_time,
+            group_id=group_id,
+            guild_id=guild_id,
+            channel_id=channel_id,
         )
         if schedule_time:
             await schedule_cmd.finish(f"已开启词云每日定时发送，发送时间为：{schedule_time}")
@@ -396,5 +412,7 @@ async def _(
                 f"已开启词云每日定时发送，发送时间为：{plugin_config.wordcloud_default_schedule_time}"
             )
     elif command == "关闭词云每日定时发送":
-        await schedule_service.remove_schedule(bot.self_id, str(event.group_id))
+        await schedule_service.remove_schedule(
+            bot.self_id, group_id=group_id, guild_id=guild_id, channel_id=channel_id
+        )
         await schedule_cmd.finish("已关闭词云每日定时发送")
