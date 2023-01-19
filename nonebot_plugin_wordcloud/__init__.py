@@ -3,7 +3,7 @@
 import re
 from datetime import datetime, timedelta
 from io import BytesIO
-from typing import List, Tuple, Union
+from typing import List, Tuple, Union, cast
 
 try:
     from zoneinfo import ZoneInfo
@@ -11,7 +11,7 @@ except ImportError:
     from backports.zoneinfo import ZoneInfo  # type: ignore
 
 from nonebot import CommandGroup, require
-from nonebot.adapters import Message
+from nonebot.adapters import Message, MessageSegment
 from nonebot.adapters.onebot.v11 import Bot as BotV11
 from nonebot.adapters.onebot.v11 import GroupMessageEvent as GroupMessageEventV11
 from nonebot.adapters.onebot.v11 import MessageSegment as MessageSegmentV11
@@ -280,9 +280,9 @@ def parse_image(key: str):
     async def _key_parser(
         matcher: Matcher,
         state: T_State,
-        input: Union[MessageSegmentV11, Message] = Arg(key),
+        input: Union[MessageSegment, Message] = Arg(key),
     ):
-        if isinstance(input, MessageSegmentV11):
+        if isinstance(input, MessageSegment):
             return
 
         images = input["image"]
@@ -308,27 +308,40 @@ mask_cmd = wordcloud.command(
 
 @mask_cmd.handle()
 async def _(
-    event: GroupMessageEventV11,
+    bot: Union[BotV11, BotV12],
+    event: Union[GroupMessageEventV11, GroupMessageEventV12, ChannelMessageEvent],
     state: T_State,
     args: Message = CommandArg(),
     commands: Tuple[str, ...] = Command(),
 ):
     command = commands[0]
+
+    if isinstance(event, GroupMessageEventV11):
+        mask_key = f"qq-group-{event.group_id}"
+        msg = f"群 {event.group_id}"
+    elif isinstance(event, GroupMessageEventV12):
+        bot = cast(BotV12, bot)
+        mask_key = f"{bot.platform}-group-{event.group_id}"
+        msg = f"群 {event.group_id}"
+    else:
+        bot = cast(BotV12, bot)
+        mask_key = f"{bot.platform}-guild-{event.guild_id}"
+        msg = f"频道 {event.guild_id}"
+
     if command == "设置词云默认形状":
         state["default"] = True
-        state["group_id"] = "default"
+        state["mask_key"] = "default"
     elif command == "设置词云形状":
         state["default"] = False
-        state["group_id"] = str(event.group_id)
+        state["mask_key"] = mask_key
     elif command == "删除词云默认形状":
         mask_path = plugin_config.get_mask_path()
         mask_path.unlink(missing_ok=True)
         await mask_cmd.finish("词云默认形状已删除")
     elif command == "删除词云形状":
-        group_id = str(event.group_id)
-        mask_path = plugin_config.get_mask_path(group_id)
+        mask_path = plugin_config.get_mask_path(mask_key)
         mask_path.unlink(missing_ok=True)
-        await mask_cmd.finish(f"群 {group_id} 的词云形状已删除")
+        await mask_cmd.finish(f"{msg} 的词云形状已删除")
 
     if images := args["image"]:
         state["image"] = images[0]
@@ -339,21 +352,40 @@ async def _(
     prompt="请发送一张图片作为词云形状",
     parameterless=[Depends(parse_image("image"))],
 )
-async def _(
-    image: MessageSegmentV11 = Arg(),
-    default: bool = Arg(),
-    group_id: str = Arg(),
+async def handle_get_image_v11(
+    bot: BotV11, state: T_State, image: MessageSegment = Arg()
 ):
-    image_bytes = await plugin_data.download_file(
+    state["image_bytes"] = await plugin_data.download_file(
         image.data["url"], "masked", cache=True
     )
+
+
+@mask_cmd.got(
+    "image",
+    prompt="请发送一张图片作为词云形状",
+    parameterless=[Depends(parse_image("image"))],
+)
+async def handle_get_image_v12(
+    bot: BotV12, state: T_State, image: MessageSegment = Arg()
+):
+    file_id = image.data["file_id"]
+    result = await bot.get_file(type="data", file_id=file_id)
+    state["image_bytes"] = result["data"]
+
+
+@mask_cmd.handle()
+async def handle_save_mask(
+    image_bytes: bytes = Arg(),
+    default: bool = Arg(),
+    mask_key: str = Arg(),
+):
     mask = Image.open(BytesIO(image_bytes))
     if default:
         mask.save(plugin_config.get_mask_path(), format="PNG")
         await mask_cmd.finish("词云默认形状设置成功")
     else:
-        mask.save(plugin_config.get_mask_path(group_id), format="PNG")
-        await mask_cmd.finish(f"群 {group_id} 的词云形状设置成功")
+        mask.save(plugin_config.get_mask_path(mask_key), format="PNG")
+        await mask_cmd.finish(f"群 {mask_key} 的词云形状设置成功")
 
 
 schedule_cmd = wordcloud.command(
@@ -415,4 +447,5 @@ async def _(
         await schedule_service.remove_schedule(
             bot.self_id, group_id=group_id, guild_id=guild_id, channel_id=channel_id
         )
+        await schedule_cmd.finish("已关闭词云每日定时发送")
         await schedule_cmd.finish("已关闭词云每日定时发送")
