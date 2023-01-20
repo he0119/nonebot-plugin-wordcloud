@@ -17,9 +17,9 @@ depends_on = None
 
 
 def _has_table(name: str) -> bool:
-    from sqlalchemy.engine.reflection import Inspector
+    from sqlalchemy import inspect
 
-    insp = Inspector.from_engine(op.get_bind())
+    insp = inspect(op.get_bind())
     return name in insp.get_table_names()
 
 

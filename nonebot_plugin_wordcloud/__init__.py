@@ -218,9 +218,9 @@ async def handle_get_messages_group_message(
         time_stop=stop.astimezone(ZoneInfo("UTC")),
     )
     state["mask_key"] = (
-        f"qq-{event.group_id}"
+        f"qq-group-{event.group_id}"
         if isinstance(bot, BotV11)
-        else f"{bot.platform}-{event.group_id}"
+        else f"{bot.platform}-group-{event.group_id}"
     )
 
 
@@ -250,7 +250,7 @@ async def handle_get_messages_channel_message(
         time_start=start.astimezone(ZoneInfo("UTC")),
         time_stop=stop.astimezone(ZoneInfo("UTC")),
     )
-    state["mask_key"] = f"{bot.platform}-{event.guild_id}"
+    state["mask_key"] = f"{bot.platform}-guild-{event.guild_id}"
 
 
 @wordcloud_cmd.handle()
@@ -265,13 +265,13 @@ async def handle_send_message(
         await wordcloud_cmd.finish("没有足够的数据生成词云", at_sender=my)
 
     if isinstance(bot, BotV11):
-        await wordcloud_cmd.send(MessageSegmentV11.image(image))
+        await wordcloud_cmd.finish(MessageSegmentV11.image(image), at_sender=my)
     else:
         resp = await bot.upload_file(
             type="data", name="wordcloud", data=image.getvalue()
         )
         file_id = resp["file_id"]
-        await wordcloud_cmd.send(MessageSegmentV12.image(file_id))
+        await wordcloud_cmd.finish(MessageSegmentV12.image(file_id), at_sender=my)
 
 
 def parse_image(key: str):
@@ -346,6 +346,8 @@ async def _(
     if images := args["image"]:
         state["image"] = images[0]
 
+    state["msg"] = msg
+
 
 @mask_cmd.got(
     "image",
@@ -378,6 +380,7 @@ async def handle_save_mask(
     image_bytes: bytes = Arg(),
     default: bool = Arg(),
     mask_key: str = Arg(),
+    msg: str = Arg(),
 ):
     mask = Image.open(BytesIO(image_bytes))
     if default:
@@ -385,7 +388,7 @@ async def handle_save_mask(
         await mask_cmd.finish("词云默认形状设置成功")
     else:
         mask.save(plugin_config.get_mask_path(mask_key), format="PNG")
-        await mask_cmd.finish(f"群 {mask_key} 的词云形状设置成功")
+        await mask_cmd.finish(f"{msg} 的词云形状设置成功")
 
 
 schedule_cmd = wordcloud.command(
@@ -447,5 +450,4 @@ async def _(
         await schedule_service.remove_schedule(
             bot.self_id, group_id=group_id, guild_id=guild_id, channel_id=channel_id
         )
-        await schedule_cmd.finish("已关闭词云每日定时发送")
         await schedule_cmd.finish("已关闭词云每日定时发送")

@@ -7,12 +7,12 @@ from .utils import fake_group_message_event
 
 
 async def test_enable_schedule(app: App):
-    from nonebot.adapters.onebot.v11 import Message
+    from nonebot.adapters.onebot.v11 import Bot, Message
 
     from nonebot_plugin_wordcloud import schedule_cmd, schedule_service
 
     async with app.test_matcher(schedule_cmd) as ctx:
-        bot = ctx.create_bot()
+        bot = ctx.create_bot(base=Bot)
         event = fake_group_message_event(
             message=Message("/开启词云每日定时发送"), sender={"role": "admin"}
         )
@@ -23,7 +23,7 @@ async def test_enable_schedule(app: App):
     assert len(schedule_service.schedules) == 1
 
     async with app.test_matcher(schedule_cmd) as ctx:
-        bot = ctx.create_bot()
+        bot = ctx.create_bot(base=Bot)
         event = fake_group_message_event(
             message=Message("/开启词云每日定时发送 10:00"), sender={"role": "admin"}
         )
@@ -35,7 +35,7 @@ async def test_enable_schedule(app: App):
     assert len(schedule_service.schedules) == 2
 
     async with app.test_matcher(schedule_cmd) as ctx:
-        bot = ctx.create_bot()
+        bot = ctx.create_bot(base=Bot)
         event = fake_group_message_event(
             message=Message("/开启词云每日定时发送 10:"), sender={"role": "admin"}
         )
@@ -46,7 +46,7 @@ async def test_enable_schedule(app: App):
 
 
 async def test_disable_schedule(app: App):
-    from nonebot.adapters.onebot.v11 import Message
+    from nonebot.adapters.onebot.v11 import Bot, Message
     from nonebot_plugin_datastore import create_session
     from sqlmodel import select
 
@@ -62,7 +62,7 @@ async def test_disable_schedule(app: App):
     assert len(schedule_service.schedules) == 2
 
     async with app.test_matcher(schedule_cmd) as ctx:
-        bot = ctx.create_bot()
+        bot = ctx.create_bot(base=Bot)
         event = fake_group_message_event(
             message=Message("/关闭词云每日定时发送"), sender={"role": "admin"}
         )
@@ -79,14 +79,14 @@ async def test_disable_schedule(app: App):
 
 
 async def test_schedule_status(app: App):
-    from nonebot.adapters.onebot.v11 import Message
+    from nonebot.adapters.onebot.v11 import Bot, Message
     from nonebot_plugin_datastore import create_session
 
     from nonebot_plugin_wordcloud import schedule_cmd
     from nonebot_plugin_wordcloud.model import Schedule
 
     async with app.test_matcher(schedule_cmd) as ctx:
-        bot = ctx.create_bot()
+        bot = ctx.create_bot(base=Bot)
         event = fake_group_message_event(
             message=Message("/词云每日定时发送状态"), sender={"role": "admin"}
         )
@@ -100,7 +100,7 @@ async def test_schedule_status(app: App):
         await session.commit()
 
     async with app.test_matcher(schedule_cmd) as ctx:
-        bot = ctx.create_bot()
+        bot = ctx.create_bot(base=Bot)
         event = fake_group_message_event(
             message=Message("/词云每日定时发送状态"), sender={"role": "admin"}
         )
@@ -114,7 +114,7 @@ async def test_schedule_status(app: App):
         await session.commit()
 
     async with app.test_matcher(schedule_cmd) as ctx:
-        bot = ctx.create_bot(self_id="test2")
+        bot = ctx.create_bot(base=Bot, self_id="test2")
         event = fake_group_message_event(
             message=Message("/词云每日定时发送状态"), sender={"role": "admin"}
         )
@@ -124,7 +124,7 @@ async def test_schedule_status(app: App):
 
 
 async def test_run_task(app: App, mocker: MockerFixture):
-    from nonebot.adapters.onebot.v11 import Message, MessageSegment
+    from nonebot.adapters.onebot.v11 import Bot, Message, MessageSegment
     from nonebot_plugin_datastore import create_session
 
     from nonebot_plugin_wordcloud import schedule_service
@@ -135,10 +135,12 @@ async def test_run_task(app: App, mocker: MockerFixture):
         session.add(schedule)
         await session.commit()
 
-    mocked_get_message_records = mocker.patch(
-        "nonebot_plugin_wordcloud.schedule.get_message_records", return_value=["test"]
+    mocked_get_messages_plain_text = mocker.patch(
+        "nonebot_plugin_wordcloud.schedule.get_messages_plain_text",
+        return_value=["test"],
     )
-    mocked_bot = mocker.AsyncMock()
+    mocked_bot = mocker.AsyncMock(spec=Bot)
+    mocked_bot.send_group_msg = mocker.AsyncMock()
     mocked_get_bot = mocker.patch(
         "nonebot_plugin_wordcloud.schedule.get_bot", return_value=mocked_bot
     )
@@ -149,7 +151,7 @@ async def test_run_task(app: App, mocker: MockerFixture):
     await schedule_service.run_task()
 
     mocked_get_bot.assert_called_once_with("test")
-    mocked_get_message_records.assert_called_once()
+    mocked_get_messages_plain_text.assert_called_once()
     mocked_get_wordcloud.assert_called_once_with(["test"], "10000")
     mocked_bot.send_group_msg.assert_called_once_with(
         group_id=10000,
@@ -158,7 +160,7 @@ async def test_run_task(app: App, mocker: MockerFixture):
 
 
 async def test_run_task_without_data(app: App, mocker: MockerFixture):
-    from nonebot.adapters.onebot.v11 import Message, MessageSegment
+    from nonebot.adapters.onebot.v11 import Bot, Message
     from nonebot_plugin_datastore import create_session
 
     from nonebot_plugin_wordcloud import schedule_service
@@ -169,10 +171,12 @@ async def test_run_task_without_data(app: App, mocker: MockerFixture):
         session.add(schedule)
         await session.commit()
 
-    mocked_get_message_records = mocker.patch(
-        "nonebot_plugin_wordcloud.schedule.get_message_records", return_value=["test"]
+    mocked_get_messages_plain_text = mocker.patch(
+        "nonebot_plugin_wordcloud.schedule.get_messages_plain_text",
+        return_value=["test"],
     )
-    mocked_bot = mocker.AsyncMock()
+    mocked_bot = mocker.AsyncMock(spec=Bot)
+    mocked_bot.send_group_msg = mocker.AsyncMock()
     mocked_get_bot = mocker.patch(
         "nonebot_plugin_wordcloud.schedule.get_bot", return_value=mocked_bot
     )
@@ -183,11 +187,11 @@ async def test_run_task_without_data(app: App, mocker: MockerFixture):
     await schedule_service.run_task()
 
     mocked_get_bot.assert_called_once_with("test")
-    mocked_get_message_records.assert_called_once()
+    mocked_get_messages_plain_text.assert_called_once()
     mocked_get_wordcloud.assert_called_once_with(["test"], "10000")
     mocked_bot.send_group_msg.assert_called_once_with(
         group_id=10000,
-        message="今天没有足够的数据生成词云",
+        message=Message("今天没有足够的数据生成词云"),
     )
 
 

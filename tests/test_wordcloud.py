@@ -89,12 +89,12 @@ async def test_get_wordcloud(app: App, mocker: MockerFixture):
 
 async def test_wordcloud_cmd(app: App):
     """测试输出帮助信息与没有数据的情况"""
-    from nonebot.adapters.onebot.v11 import Message
+    from nonebot.adapters.onebot.v11 import Bot, Message
 
     from nonebot_plugin_wordcloud import __plugin_meta__, wordcloud_cmd
 
     async with app.test_matcher(wordcloud_cmd) as ctx:
-        bot = ctx.create_bot()
+        bot = ctx.create_bot(base=Bot)
         event = fake_group_message_event(message=Message("/词云"))
 
         ctx.receive_event(bot, event)
@@ -106,14 +106,14 @@ async def test_wordcloud_cmd(app: App):
         ctx.should_finished()
 
     async with app.test_matcher(wordcloud_cmd) as ctx:
-        bot = ctx.create_bot()
+        bot = ctx.create_bot(base=Bot)
         event = fake_group_message_event(message=Message("/词云 123"))
 
         ctx.receive_event(bot, event)
         ctx.should_finished()
 
     async with app.test_matcher(wordcloud_cmd) as ctx:
-        bot = ctx.create_bot()
+        bot = ctx.create_bot(base=Bot)
         event = fake_group_message_event(message=Message("/今日词云"))
 
         ctx.receive_event(bot, event)
@@ -123,7 +123,7 @@ async def test_wordcloud_cmd(app: App):
 
 async def test_wordcloud(app: App, mocker: MockerFixture, message_record: None):
     """测试词云"""
-    from nonebot.adapters.onebot.v11 import Message, MessageSegment
+    from nonebot.adapters.onebot.v11 import Bot, Message, MessageSegment
     from nonebot_plugin_chatrecorder import get_messages_plain_text
 
     from nonebot_plugin_wordcloud import wordcloud_cmd
@@ -144,7 +144,7 @@ async def test_wordcloud(app: App, mocker: MockerFixture, message_record: None):
     )
 
     async with app.test_matcher(wordcloud_cmd) as ctx:
-        bot = ctx.create_bot()
+        bot = ctx.create_bot(base=Bot)
         event = fake_group_message_event(message=Message("/今日词云"))
 
         ctx.receive_event(bot, event)
@@ -158,7 +158,7 @@ async def test_wordcloud(app: App, mocker: MockerFixture, message_record: None):
 
     mocked_datetime_now_today_wordcloud.assert_called_once_with()
     mocked_get_wordcloud_today_wordcloud.assert_called_once_with(
-        ["10:1-2", "11:1-2"], "10000"
+        ["10:1-2", "11:1-2"], "qq-group-10000"
     )
 
     # 测试我的今日词云
@@ -173,7 +173,7 @@ async def test_wordcloud(app: App, mocker: MockerFixture, message_record: None):
     )
 
     async with app.test_matcher(wordcloud_cmd) as ctx:
-        bot = ctx.create_bot()
+        bot = ctx.create_bot(base=Bot)
         event = fake_group_message_event(message=Message("/我的今日词云"))
 
         ctx.receive_event(bot, event)
@@ -186,7 +186,9 @@ async def test_wordcloud(app: App, mocker: MockerFixture, message_record: None):
         ctx.should_finished()
 
     mocked_datetime_now_my_today_wordcloud.assert_called_once_with()
-    mocked_get_wordcloud_my_today_wordcloud.assert_called_once_with(["10:1-2"], "10000")
+    mocked_get_wordcloud_my_today_wordcloud.assert_called_once_with(
+        ["10:1-2"], "qq-group-10000"
+    )
 
     # 测试昨日词云
     mocked_datetime_now_yesterday_wordcloud = mocker.patch(
@@ -200,7 +202,7 @@ async def test_wordcloud(app: App, mocker: MockerFixture, message_record: None):
     )
 
     async with app.test_matcher(wordcloud_cmd) as ctx:
-        bot = ctx.create_bot()
+        bot = ctx.create_bot(base=Bot)
         event = fake_group_message_event(message=Message("/昨日词云"))
 
         ctx.receive_event(bot, event)
@@ -214,7 +216,7 @@ async def test_wordcloud(app: App, mocker: MockerFixture, message_record: None):
 
     mocked_datetime_now_yesterday_wordcloud.assert_called_once_with()
     mocked_get_wordcloud_yesterday_wordcloud.assert_called_once_with(
-        ["10:1-2", "11:1-2"], "10000"
+        ["10:1-2", "11:1-2"], "qq-group-10000"
     )
 
     # 测试我的昨日词云
@@ -229,7 +231,7 @@ async def test_wordcloud(app: App, mocker: MockerFixture, message_record: None):
     )
 
     async with app.test_matcher(wordcloud_cmd) as ctx:
-        bot = ctx.create_bot()
+        bot = ctx.create_bot(base=Bot)
         event = fake_group_message_event(message=Message("/我的昨日词云"))
 
         ctx.receive_event(bot, event)
@@ -243,7 +245,7 @@ async def test_wordcloud(app: App, mocker: MockerFixture, message_record: None):
 
     mocked_datetime_now_my_yesterday_wordcloud.assert_called_once_with()
     mocked_get_wordcloud_my_yesterday_wordcloud.assert_called_once_with(
-        ["10:1-2"], "10000"
+        ["10:1-2"], "qq-group-10000"
     )
 
     # 测试本周词云
@@ -258,7 +260,7 @@ async def test_wordcloud(app: App, mocker: MockerFixture, message_record: None):
     )
 
     async with app.test_matcher(wordcloud_cmd) as ctx:
-        bot = ctx.create_bot()
+        bot = ctx.create_bot(base=Bot)
         event = fake_group_message_event(message=Message("/本周词云"))
 
         ctx.receive_event(bot, event)
@@ -272,7 +274,7 @@ async def test_wordcloud(app: App, mocker: MockerFixture, message_record: None):
 
     mocked_datetime_now_week_wordcloud.assert_called_once_with()
     mocked_get_wordcloud_week_wordcloud.assert_called_once_with(
-        ["10:1-3", "11:1-3"], "10000"
+        ["10:1-3", "11:1-3"], "qq-group-10000"
     )
 
     # 测试本月词云
@@ -287,7 +289,7 @@ async def test_wordcloud(app: App, mocker: MockerFixture, message_record: None):
     )
 
     async with app.test_matcher(wordcloud_cmd) as ctx:
-        bot = ctx.create_bot()
+        bot = ctx.create_bot(base=Bot)
         event = fake_group_message_event(message=Message("/本月词云"))
 
         ctx.receive_event(bot, event)
@@ -301,7 +303,7 @@ async def test_wordcloud(app: App, mocker: MockerFixture, message_record: None):
 
     mocked_datetime_now_month_wordcloud.assert_called_once_with()
     mocked_get_wordcloud_month_wordcloud.assert_called_once_with(
-        ["10:2-1", "11:2-1"], "10000"
+        ["10:2-1", "11:2-1"], "qq-group-10000"
     )
 
     # 测试年度词云
@@ -316,7 +318,7 @@ async def test_wordcloud(app: App, mocker: MockerFixture, message_record: None):
     )
 
     async with app.test_matcher(wordcloud_cmd) as ctx:
-        bot = ctx.create_bot()
+        bot = ctx.create_bot(base=Bot)
         event = fake_group_message_event(message=Message("/年度词云"))
 
         ctx.receive_event(bot, event)
@@ -330,7 +332,7 @@ async def test_wordcloud(app: App, mocker: MockerFixture, message_record: None):
 
     mocked_datetime_now_year_wordcloud.assert_called_once_with()
     mocked_get_wordcloud_year_wordcloud.assert_called_once_with(
-        ["10:1-2", "11:1-2", "10:1-3", "11:1-3", "10:2-1", "11:2-1"], "10000"
+        ["10:1-2", "11:1-2", "10:1-3", "11:1-3", "10:2-1", "11:2-1"], "qq-group-10000"
     )
 
     # 测试我的年度词云
@@ -345,7 +347,7 @@ async def test_wordcloud(app: App, mocker: MockerFixture, message_record: None):
     )
 
     async with app.test_matcher(wordcloud_cmd) as ctx:
-        bot = ctx.create_bot()
+        bot = ctx.create_bot(base=Bot)
         event = fake_group_message_event(message=Message("/我的年度词云"))
 
         ctx.receive_event(bot, event)
@@ -359,7 +361,7 @@ async def test_wordcloud(app: App, mocker: MockerFixture, message_record: None):
 
     mocked_datetime_now_my_year_wordcloud.assert_called_once_with()
     mocked_get_wordcloud_my_year_wordcloud.assert_called_once_with(
-        ["10:1-2", "10:1-3", "10:2-1"], "10000"
+        ["10:1-2", "10:1-3", "10:2-1"], "qq-group-10000"
     )
 
     # 测试历史词云
@@ -369,7 +371,7 @@ async def test_wordcloud(app: App, mocker: MockerFixture, message_record: None):
     )
 
     async with app.test_matcher(wordcloud_cmd) as ctx:
-        bot = ctx.create_bot()
+        bot = ctx.create_bot(base=Bot)
         event = fake_group_message_event(message=Message("/历史词云 2022-01-02"))
 
         ctx.receive_event(bot, event)
@@ -382,7 +384,7 @@ async def test_wordcloud(app: App, mocker: MockerFixture, message_record: None):
         ctx.should_finished()
 
     mocked_get_wordcloud_history_wordcloud.assert_called_once_with(
-        ["10:1-2", "11:1-2"], "10000"
+        ["10:1-2", "11:1-2"], "qq-group-10000"
     )
 
     # 测试历史词云，有起始时间的情况
@@ -392,7 +394,7 @@ async def test_wordcloud(app: App, mocker: MockerFixture, message_record: None):
     )
 
     async with app.test_matcher(wordcloud_cmd) as ctx:
-        bot = ctx.create_bot()
+        bot = ctx.create_bot(base=Bot)
         event = fake_group_message_event(
             message=Message("/历史词云 2022-01-02T12:00:01~2022-02-22")
         )
@@ -407,7 +409,7 @@ async def test_wordcloud(app: App, mocker: MockerFixture, message_record: None):
         ctx.should_finished()
 
     mocked_get_wordcloud_history_wordcloud_start_stop.assert_called_once_with(
-        ["10:1-3", "11:1-3", "10:2-1", "11:2-1"], "10000"
+        ["10:1-3", "11:1-3", "10:2-1", "11:2-1"], "qq-group-10000"
     )
 
     # 测试历史词云，获取起始时间参数的情况
@@ -417,7 +419,7 @@ async def test_wordcloud(app: App, mocker: MockerFixture, message_record: None):
     )
 
     async with app.test_matcher(wordcloud_cmd) as ctx:
-        bot = ctx.create_bot()
+        bot = ctx.create_bot(base=Bot)
 
         event = fake_group_message_event(message=Message("/历史词云"))
         ctx.receive_event(bot, event)
@@ -445,12 +447,12 @@ async def test_wordcloud(app: App, mocker: MockerFixture, message_record: None):
         ctx.should_finished()
 
     mocked_get_wordcloud_history_wordcloud_start_stop_get_args.assert_called_once_with(
-        ["10:1-2", "11:1-2", "10:1-3", "11:1-3", "10:2-1", "11:2-1"], "10000"
+        ["10:1-2", "11:1-2", "10:1-3", "11:1-3", "10:2-1", "11:2-1"], "qq-group-10000"
     )
 
     # 测试历史词云，输入的日期无效
     async with app.test_matcher(wordcloud_cmd) as ctx:
-        bot = ctx.create_bot()
+        bot = ctx.create_bot(base=Bot)
         event = fake_group_message_event(message=Message("/历史词云 2022-13-01"))
 
         ctx.receive_event(bot, event)
@@ -458,7 +460,7 @@ async def test_wordcloud(app: App, mocker: MockerFixture, message_record: None):
         ctx.should_finished()
 
     async with app.test_matcher(wordcloud_cmd) as ctx:
-        bot = ctx.create_bot()
+        bot = ctx.create_bot(base=Bot)
         event = fake_group_message_event(
             message=Message("/历史词云 2022-12-01T13:~2022-12-02")
         )
@@ -468,7 +470,7 @@ async def test_wordcloud(app: App, mocker: MockerFixture, message_record: None):
         ctx.should_finished()
 
     async with app.test_matcher(wordcloud_cmd) as ctx:
-        bot = ctx.create_bot()
+        bot = ctx.create_bot(base=Bot)
         event = fake_group_message_event(message=Message("/历史词云 2022-12-01~2022-13-01"))
 
         ctx.receive_event(bot, event)

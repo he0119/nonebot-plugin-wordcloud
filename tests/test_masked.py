@@ -73,7 +73,7 @@ async def test_masked_group(app: App, mocker: MockerFixture):
 
 async def test_set_mask(app: App, mocker: MockerFixture):
     """测试自定义图片形状"""
-    from nonebot.adapters.onebot.v11 import Message, MessageSegment
+    from nonebot.adapters.onebot.v11 import Bot, Message, MessageSegment
 
     from nonebot_plugin_wordcloud import mask_cmd, plugin_data
 
@@ -81,7 +81,7 @@ async def test_set_mask(app: App, mocker: MockerFixture):
     mocked_download.return_value = (Path(__file__).parent / "mask.png").read_bytes()
 
     async with app.test_matcher(mask_cmd) as ctx:
-        bot = ctx.create_bot()
+        bot = ctx.create_bot(base=Bot)
         message = Message("/设置词云默认形状") + MessageSegment(
             "image", {"url": "https://test"}
         )
@@ -95,7 +95,7 @@ async def test_set_mask(app: App, mocker: MockerFixture):
     assert plugin_data.exists("mask.png")
 
     async with app.test_matcher(mask_cmd) as ctx:
-        bot = ctx.create_bot()
+        bot = ctx.create_bot(base=Bot)
         message = Message("/设置词云形状") + MessageSegment("image", {"url": "https://test"})
         event = fake_group_message_event(message=message, sender={"role": "owner"})
 
@@ -109,12 +109,12 @@ async def test_set_mask(app: App, mocker: MockerFixture):
             mocker.call("https://test", "masked", cache=True),
         ]  # type: ignore
     )
-    assert plugin_data.exists("mask-10000.png")
+    assert plugin_data.exists("mask-qq-group-10000.png")
 
 
 async def test_set_mask_get_args(app: App, mocker: MockerFixture):
     """测试自定义图片形状，需要额外获取图片时的情况"""
-    from nonebot.adapters.onebot.v11 import Message, MessageSegment
+    from nonebot.adapters.onebot.v11 import Bot, Message, MessageSegment
 
     from nonebot_plugin_wordcloud import mask_cmd, plugin_data
 
@@ -122,7 +122,7 @@ async def test_set_mask_get_args(app: App, mocker: MockerFixture):
     mocked_download.return_value = (Path(__file__).parent / "mask.png").read_bytes()
 
     async with app.test_matcher(mask_cmd) as ctx:
-        bot = ctx.create_bot()
+        bot = ctx.create_bot(base=Bot)
         message = Message("/设置词云默认形状")
         event = fake_group_message_event(message=message, sender={"role": "owner"})
 
@@ -150,7 +150,7 @@ async def test_set_mask_get_args(app: App, mocker: MockerFixture):
     assert plugin_data.exists("mask.png")
 
     async with app.test_matcher(mask_cmd) as ctx:
-        bot = ctx.create_bot()
+        bot = ctx.create_bot(base=Bot)
         message = Message("/设置词云形状")
         event = fake_group_message_event(message=message, sender={"role": "owner"})
 
@@ -180,20 +180,20 @@ async def test_set_mask_get_args(app: App, mocker: MockerFixture):
             mocker.call("https://test", "masked", cache=True),
         ]  # type: ignore
     )
-    assert plugin_data.exists("mask-10000.png")
+    assert plugin_data.exists("mask-qq-group-10000.png")
 
 
 async def test_remove_mask(app: App):
     import shutil
 
-    from nonebot.adapters.onebot.v11 import Message
+    from nonebot.adapters.onebot.v11 import Bot, Message
 
     from nonebot_plugin_wordcloud import mask_cmd, plugin_data
 
     mask_path = Path(__file__).parent / "mask.png"
 
     mask_default_path = plugin_data.data_dir / "mask.png"
-    mask_group_path = plugin_data.data_dir / "mask-10000.png"
+    mask_group_path = plugin_data.data_dir / "mask-qq-group-10000.png"
 
     shutil.copy(mask_path, mask_default_path)
     shutil.copy(mask_path, mask_group_path)
@@ -202,7 +202,7 @@ async def test_remove_mask(app: App):
     assert mask_group_path.exists()
 
     async with app.test_matcher(mask_cmd) as ctx:
-        bot = ctx.create_bot()
+        bot = ctx.create_bot(base=Bot)
         message = Message("/删除词云默认形状")
         event = fake_group_message_event(message=message, sender={"role": "owner"})
 
@@ -214,7 +214,7 @@ async def test_remove_mask(app: App):
     assert mask_group_path.exists()
 
     async with app.test_matcher(mask_cmd) as ctx:
-        bot = ctx.create_bot()
+        bot = ctx.create_bot(base=Bot)
         message = Message("/删除词云形状")
         event = fake_group_message_event(message=message, sender={"role": "owner"})
 
