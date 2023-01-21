@@ -33,7 +33,8 @@ def upgrade() -> None:
         batch_op.alter_column("group_id", existing_type=sa.VARCHAR(), nullable=True)
         batch_op.drop_constraint("unique_schedule", type_="unique")
         batch_op.create_unique_constraint(
-            "unique_schedule", ["bot_id", "group_id", "guild_id", "channel_id"]
+            "unique_schedule",
+            ["bot_id", "platform", "group_id", "guild_id", "channel_id"],
         )
 
     # ### end Alembic commands ###

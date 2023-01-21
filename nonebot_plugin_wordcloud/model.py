@@ -11,7 +11,12 @@ class Schedule(plugin_data.Model, table=True):
 
     __table_args__ = (
         UniqueConstraint(
-            "bot_id", "group_id", "guild_id", "channel_id", name="unique_schedule"
+            "bot_id",
+            "platform",
+            "group_id",
+            "guild_id",
+            "channel_id",
+            name="unique_schedule",
         ),
         {"extend_existing": True},
     )
