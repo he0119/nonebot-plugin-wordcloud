@@ -1,4 +1,5 @@
 from datetime import time
+from io import BytesIO
 
 from nonebug import App
 from pytest_mock import MockerFixture
@@ -161,6 +162,9 @@ async def test_schedule_status(app: App):
 
 async def test_run_task(app: App, mocker: MockerFixture):
     from nonebot.adapters.onebot.v11 import Bot, Message, MessageSegment
+    from nonebot.adapters.onebot.v12 import Bot as BotV12
+    from nonebot.adapters.onebot.v12 import Message as MessageV12
+    from nonebot.adapters.onebot.v12 import MessageSegment as MessageSegmentV12
     from nonebot_plugin_datastore import create_session
 
     from nonebot_plugin_wordcloud import schedule_service
@@ -188,9 +192,76 @@ async def test_run_task(app: App, mocker: MockerFixture):
 
     mocked_get_bot.assert_called_once_with("test")
     mocked_get_messages_plain_text.assert_called_once()
-    mocked_get_wordcloud.assert_called_once_with(["test"], "10000")
+    mocked_get_wordcloud.assert_called_once_with(["test"], "qq-group-10000")
     mocked_bot.send_group_msg.assert_called_once_with(
         group_id=10000,
+        message=Message(MessageSegment.image("test")),
+    )
+
+    # OneBot V12
+    mocked_get_messages_plain_text_v12 = mocker.patch(
+        "nonebot_plugin_wordcloud.schedule.get_messages_plain_text",
+        return_value=["test"],
+    )
+    mocked_bot_v12 = mocker.AsyncMock(spec=BotV12)
+    mocked_bot_v12.send_message = mocker.AsyncMock()
+    mocked_bot_v12.upload_file = mocker.AsyncMock(return_value={"file_id": "test"})
+    mocked_get_bot_v12 = mocker.patch(
+        "nonebot_plugin_wordcloud.schedule.get_bot", return_value=mocked_bot_v12
+    )
+    mocked_get_wordcloud_v12 = mocker.patch(
+        "nonebot_plugin_wordcloud.schedule.get_wordcloud", return_value=BytesIO(b"test")
+    )
+
+    await schedule_service.run_task()
+
+    mocked_get_bot_v12.assert_called_once_with("test")
+    mocked_get_messages_plain_text_v12.assert_called_once()
+    mocked_get_wordcloud_v12.assert_called_once_with(["test"], "qq-group-10000")
+    mocked_bot_v12.send_message.assert_called_once_with(
+        detail_type="group",
+        group_id="10000",
+        message=MessageV12(MessageSegmentV12.image("test")),
+    )
+
+
+async def test_run_task_channel(app: App, mocker: MockerFixture):
+    from nonebot.adapters.onebot.v12 import Bot, Message, MessageSegment
+    from nonebot_plugin_datastore import create_session
+
+    from nonebot_plugin_wordcloud import schedule_service
+    from nonebot_plugin_wordcloud.model import Schedule
+
+    async with create_session() as session:
+        schedule = Schedule(
+            bot_id="test", platform="qq", guild_id="10000", channel_id="100000"
+        )
+        session.add(schedule)
+        await session.commit()
+
+    mocked_get_messages_plain_text = mocker.patch(
+        "nonebot_plugin_wordcloud.schedule.get_messages_plain_text",
+        return_value=["test"],
+    )
+    mocked_bot = mocker.AsyncMock(spec=Bot)
+    mocked_bot.send_message = mocker.AsyncMock()
+    mocked_bot.upload_file = mocker.AsyncMock(return_value={"file_id": "test"})
+    mocked_get_bot = mocker.patch(
+        "nonebot_plugin_wordcloud.schedule.get_bot", return_value=mocked_bot
+    )
+    mocked_get_wordcloud_v12 = mocker.patch(
+        "nonebot_plugin_wordcloud.schedule.get_wordcloud", return_value=BytesIO(b"test")
+    )
+
+    await schedule_service.run_task()
+
+    mocked_get_bot.assert_called_once_with("test")
+    mocked_get_messages_plain_text.assert_called_once()
+    mocked_get_wordcloud_v12.assert_called_once_with(["test"], "qq-guild-10000")
+    mocked_bot.send_message.assert_called_once_with(
+        detail_type="channel",
+        guild_id="10000",
+        channel_id="100000",
         message=Message(MessageSegment.image("test")),
     )
 
@@ -224,7 +295,7 @@ async def test_run_task_without_data(app: App, mocker: MockerFixture):
 
     mocked_get_bot.assert_called_once_with("test")
     mocked_get_messages_plain_text.assert_called_once()
-    mocked_get_wordcloud.assert_called_once_with(["test"], "10000")
+    mocked_get_wordcloud.assert_called_once_with(["test"], "qq-group-10000")
     mocked_bot.send_group_msg.assert_called_once_with(
         group_id=10000,
         message=Message("今天没有足够的数据生成词云"),

@@ -39,6 +39,7 @@ from .schedule import schedule_service
 from .utils import (
     get_datetime_fromisoformat_with_timezone,
     get_datetime_now_with_timezone,
+    get_mask_key,
     get_time_fromisoformat_with_timezone,
 )
 
@@ -218,9 +219,9 @@ async def handle_get_messages_group_message(
         time_stop=stop.astimezone(ZoneInfo("UTC")),
     )
     state["mask_key"] = (
-        f"qq-group-{event.group_id}"
+        get_mask_key("qq", group_id=event.group_id)
         if isinstance(bot, BotV11)
-        else f"{bot.platform}-group-{event.group_id}"
+        else get_mask_key(bot.platform, group_id=event.group_id)
     )
 
 
@@ -250,7 +251,7 @@ async def handle_get_messages_channel_message(
         time_start=start.astimezone(ZoneInfo("UTC")),
         time_stop=stop.astimezone(ZoneInfo("UTC")),
     )
-    state["mask_key"] = f"{bot.platform}-guild-{event.guild_id}"
+    state["mask_key"] = get_mask_key(bot.platform, guild_id=event.guild_id)
 
 
 @wordcloud_cmd.handle()
@@ -317,15 +318,15 @@ async def _(
     command = commands[0]
 
     if isinstance(event, GroupMessageEventV11):
-        mask_key = f"qq-group-{event.group_id}"
+        mask_key = get_mask_key("qq", group_id=event.group_id)
         msg = f"群 {event.group_id}"
     elif isinstance(event, GroupMessageEventV12):
         bot = cast(BotV12, bot)
-        mask_key = f"{bot.platform}-group-{event.group_id}"
+        mask_key = get_mask_key(bot.platform, group_id=event.group_id)
         msg = f"群 {event.group_id}"
     else:
         bot = cast(BotV12, bot)
-        mask_key = f"{bot.platform}-guild-{event.guild_id}"
+        mask_key = get_mask_key(bot.platform, guild_id=event.guild_id)
         msg = f"频道 {event.guild_id}"
 
     if command == "设置词云默认形状":

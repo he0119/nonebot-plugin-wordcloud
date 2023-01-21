@@ -92,3 +92,15 @@ async def send_message(
                 channel_id=channel_id,
                 message=message,
             )
+
+
+def get_mask_key(
+    platform: str,
+    *,
+    group_id: Optional[Union[str, int]] = None,
+    guild_id: Optional[Union[str, int]] = None,
+) -> str:
+    if group_id:
+        return f"{platform}-group-{group_id}"
+    else:
+        return f"{platform}-guild-{guild_id}"
