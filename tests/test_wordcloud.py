@@ -53,7 +53,7 @@ async def message_record(app: App):
             type="message_sent" if user_id == "bot" else "message",
             user_id=user_id,
             time=time,  # UTC 时间
-            platform="qq",
+            platform="test",
             message_id="test",
             message=serialize_message(MessageV12(message)),
             plain_text=message,
@@ -517,13 +517,78 @@ async def test_wordcloud(app: App, mocker: MockerFixture, message_record: None):
         ctx.should_call_send(event, "请输入正确的日期，不然我没法理解呢！", True)
         ctx.should_finished()
 
-    # OneBot v12
+    # OneBot 12
     mocked_datetime_now_today_wordcloud_v12 = mocker.patch(
         "nonebot_plugin_wordcloud.get_datetime_now_with_timezone",
         return_value=datetime(2022, 1, 2, 23, tzinfo=ZoneInfo("Asia/Shanghai")),
     )
 
     mocked_get_wordcloud_today_wordcloud_v12 = mocker.patch(
+        "nonebot_plugin_wordcloud.get_wordcloud",
+        return_value=FAKE_IMAGE[0],
+    )
+    async with app.test_matcher(wordcloud_cmd) as ctx:
+        bot = ctx.create_bot(base=BotV12, platform="test")
+        event = fake_channel_message_event_v12(message=MessageV12("/今日词云"))
+
+        ctx.receive_event(bot, event)
+        ctx.should_call_api(
+            "upload_file",
+            {"type": "data", "name": "wordcloud", "data": FAKE_IMAGE[0].getvalue()},
+            {"file_id": "test"},
+        )
+        ctx.should_call_send(
+            event,
+            MessageSegmentV12.image("test"),
+            True,
+            at_sender=False,
+        )
+        ctx.should_finished()
+
+    mocked_datetime_now_today_wordcloud_v12.assert_called_once_with()
+    mocked_get_wordcloud_today_wordcloud_v12.assert_called_once_with(
+        ["v12-10:1-2", "v12-11:1-2"], "test-guild-10000"
+    )
+
+    mocked_datetime_now_my_today_wordcloud_v12 = mocker.patch(
+        "nonebot_plugin_wordcloud.get_datetime_now_with_timezone",
+        return_value=datetime(2022, 1, 2, 23, tzinfo=ZoneInfo("Asia/Shanghai")),
+    )
+
+    mocked_get_wordcloud_my_today_wordcloud_v12 = mocker.patch(
+        "nonebot_plugin_wordcloud.get_wordcloud",
+        return_value=FAKE_IMAGE[0],
+    )
+
+    async with app.test_matcher(wordcloud_cmd) as ctx:
+        bot = ctx.create_bot(base=BotV12, platform="test")
+        event = fake_channel_message_event_v12(message=MessageV12("/我的今日词云"))
+
+        ctx.receive_event(bot, event)
+        ctx.should_call_api(
+            "upload_file",
+            {"type": "data", "name": "wordcloud", "data": FAKE_IMAGE[0].getvalue()},
+            {"file_id": "test"},
+        )
+        ctx.should_call_send(
+            event,
+            MessageSegmentV12.image("test"),
+            True,
+            at_sender=True,
+        )
+        ctx.should_finished()
+
+    mocked_datetime_now_my_today_wordcloud_v12.assert_called_once_with()
+    mocked_get_wordcloud_my_today_wordcloud_v12.assert_called_once_with(
+        ["v12-10:1-2"], "test-guild-10000"
+    )
+
+    mocked_datetime_now_today_wordcloud_v12_qq = mocker.patch(
+        "nonebot_plugin_wordcloud.get_datetime_now_with_timezone",
+        return_value=datetime(2022, 1, 2, 23, tzinfo=ZoneInfo("Asia/Shanghai")),
+    )
+
+    mocked_get_wordcloud_today_wordcloud_v12_qq = mocker.patch(
         "nonebot_plugin_wordcloud.get_wordcloud",
         return_value=FAKE_IMAGE[0],
     )
@@ -545,40 +610,7 @@ async def test_wordcloud(app: App, mocker: MockerFixture, message_record: None):
         )
         ctx.should_finished()
 
-    mocked_datetime_now_today_wordcloud_v12.assert_called_once_with()
-    mocked_get_wordcloud_today_wordcloud_v12.assert_called_once_with(
-        ["v12-10:1-2", "v12-11:1-2"], "qq-guild-10000"
-    )
-
-    mocked_datetime_now_my_today_wordcloud_v12 = mocker.patch(
-        "nonebot_plugin_wordcloud.get_datetime_now_with_timezone",
-        return_value=datetime(2022, 1, 2, 23, tzinfo=ZoneInfo("Asia/Shanghai")),
-    )
-
-    mocked_get_wordcloud_my_today_wordcloud_v12 = mocker.patch(
-        "nonebot_plugin_wordcloud.get_wordcloud",
-        return_value=FAKE_IMAGE[0],
-    )
-
-    async with app.test_matcher(wordcloud_cmd) as ctx:
-        bot = ctx.create_bot(base=BotV12, platform="qq")
-        event = fake_channel_message_event_v12(message=MessageV12("/我的今日词云"))
-
-        ctx.receive_event(bot, event)
-        ctx.should_call_api(
-            "upload_file",
-            {"type": "data", "name": "wordcloud", "data": FAKE_IMAGE[0].getvalue()},
-            {"file_id": "test"},
-        )
-        ctx.should_call_send(
-            event,
-            MessageSegmentV12.image("test"),
-            True,
-            at_sender=True,
-        )
-        ctx.should_finished()
-
-    mocked_datetime_now_my_today_wordcloud_v12.assert_called_once_with()
-    mocked_get_wordcloud_my_today_wordcloud_v12.assert_called_once_with(
-        ["v12-10:1-2"], "qq-guild-10000"
+    mocked_datetime_now_today_wordcloud_v12_qq.assert_called_once_with()
+    mocked_get_wordcloud_today_wordcloud_v12_qq.assert_called_once_with(
+        [], "qq-guild-10000"
     )
