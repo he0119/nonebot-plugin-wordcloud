@@ -17,6 +17,7 @@ from sqlmodel import select
 
 from .utils import (
     get_datetime_now_with_timezone,
+    get_mask_key,
     get_time_with_scheduler_timezone,
     send_message,
 )
@@ -93,6 +94,10 @@ class Scheduler:
             logger.info(f"开始发送每日词云，时间为 {time if time else '默认时间'}")
             for schedule in schedules:
                 bot = get_bot(schedule.bot_id)
+                if not isinstance(bot, (BotV11, BotV12)):
+                    logger.warning(f"机器人 {schedule.bot_id} 不是 OneBot 协议，跳过")
+                    continue
+
                 dt = get_datetime_now_with_timezone()
                 start = dt.replace(hour=0, minute=0, second=0, microsecond=0)
                 stop = dt
@@ -105,10 +110,11 @@ class Scheduler:
                     time_start=start.astimezone(ZoneInfo("UTC")),
                     time_stop=stop.astimezone(ZoneInfo("UTC")),
                 )
-                if schedule.group_id:
-                    mask_key = f"{schedule.platform}-group-{schedule.group_id}"
-                else:
-                    mask_key = f"{schedule.platform}-guild-{schedule.guild_id}"
+                mask_key = get_mask_key(
+                    schedule.platform,
+                    group_id=schedule.group_id,
+                    guild_id=schedule.guild_id,
+                )
                 image = await get_wordcloud(messages, mask_key)
                 if not image:
                     await send_message(
@@ -122,14 +128,12 @@ class Scheduler:
 
                 if isinstance(bot, BotV11) and schedule.group_id:
                     message = MessageV11(MessageSegmentV11.image(image))
-                elif isinstance(bot, BotV12):
+                else:
                     result = await bot.upload_file(
                         type="data", name="wordcloud.png", data=image.getvalue()
                     )
                     file_id = result["file_id"]
                     message = MessageV12(MessageSegmentV12.image(file_id))
-                else:
-                    continue
 
                 await send_message(
                     bot,

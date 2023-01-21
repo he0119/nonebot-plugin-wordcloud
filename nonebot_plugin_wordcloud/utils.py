@@ -79,17 +79,12 @@ async def send_message(
     if isinstance(bot, BotV12):
         if isinstance(message, str):
             message = MessageV12(message)
-        if not isinstance(message, MessageV12):
-            return
-        if group_id:
+        if isinstance(message, MessageV12):
             await bot.send_message(
-                detail_type="group", group_id=group_id, message=message
-            )
-        elif guild_id and channel_id:
-            await bot.send_message(
-                detail_type="channel",
-                guild_id=guild_id,
-                channel_id=channel_id,
+                detail_type="group" if group_id else "channel",
+                group_id=group_id,  # type: ignore
+                guild_id=guild_id,  # type: ignore
+                channel_id=channel_id,  # type: ignore
                 message=message,
             )
 
