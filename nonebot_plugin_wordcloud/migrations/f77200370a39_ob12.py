@@ -22,6 +22,9 @@ def upgrade() -> None:
         "nonebot_plugin_wordcloud_schedule", schema=None
     ) as batch_op:
         batch_op.add_column(
+            sa.Column("platform", sqlmodel.sql.sqltypes.AutoString(), nullable=False)
+        )
+        batch_op.add_column(
             sa.Column("guild_id", sqlmodel.sql.sqltypes.AutoString(), nullable=True)
         )
         batch_op.add_column(
@@ -46,5 +49,6 @@ def downgrade() -> None:
         batch_op.alter_column("group_id", existing_type=sa.VARCHAR(), nullable=False)
         batch_op.drop_column("channel_id")
         batch_op.drop_column("guild_id")
+        batch_op.drop_column("platform")
 
     # ### end Alembic commands ###

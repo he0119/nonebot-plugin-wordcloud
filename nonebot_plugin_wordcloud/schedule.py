@@ -97,6 +97,7 @@ class Scheduler:
                 start = dt.replace(hour=0, minute=0, second=0, microsecond=0)
                 stop = dt
                 messages = await get_messages_plain_text(
+                    platforms=[schedule.platform],
                     group_ids=[schedule.group_id] if schedule.group_id else None,
                     guild_ids=[schedule.guild_id] if schedule.guild_id else None,
                     channel_ids=[schedule.channel_id] if schedule.channel_id else None,
@@ -137,6 +138,7 @@ class Scheduler:
     async def get_schedule(
         self,
         bot_id: str,
+        platfrom: str,
         *,
         group_id: Optional[str] = None,
         guild_id: Optional[str] = None,
@@ -147,6 +149,7 @@ class Scheduler:
             statement = (
                 select(Schedule)
                 .where(Schedule.bot_id == bot_id)
+                .where(Schedule.platform == platfrom)
                 .where(Schedule.group_id == group_id)
                 .where(Schedule.guild_id == guild_id)
                 .where(Schedule.channel_id == channel_id)
@@ -167,8 +170,9 @@ class Scheduler:
     async def add_schedule(
         self,
         bot_id: str,
-        time: Optional[time] = None,
+        platfrom: str,
         *,
+        time: Optional[time] = None,
         group_id: Optional[str] = None,
         guild_id: Optional[str] = None,
         channel_id: Optional[str] = None,
@@ -185,6 +189,7 @@ class Scheduler:
             statement = (
                 select(Schedule)
                 .where(Schedule.bot_id == bot_id)
+                .where(Schedule.platform == platfrom)
                 .where(Schedule.group_id == group_id)
                 .where(Schedule.guild_id == guild_id)
                 .where(Schedule.channel_id == channel_id)
@@ -196,6 +201,7 @@ class Scheduler:
             else:
                 schedule = Schedule(
                     bot_id=bot_id,
+                    platform=platfrom,
                     time=time,
                     group_id=group_id,
                     guild_id=guild_id,
@@ -208,6 +214,7 @@ class Scheduler:
     async def remove_schedule(
         self,
         bot_id: str,
+        platfrom: str,
         *,
         group_id: Optional[str] = None,
         guild_id: Optional[str] = None,
@@ -218,6 +225,7 @@ class Scheduler:
             statement = (
                 select(Schedule)
                 .where(Schedule.bot_id == bot_id)
+                .where(Schedule.platform == platfrom)
                 .where(Schedule.group_id == group_id)
                 .where(Schedule.guild_id == guild_id)
                 .where(Schedule.channel_id == channel_id)

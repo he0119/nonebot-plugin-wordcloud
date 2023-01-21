@@ -18,6 +18,7 @@ class Schedule(plugin_data.Model, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
     bot_id: str
+    platform: str
     group_id: Optional[str] = Field(default=None)
     guild_id: Optional[str] = Field(default=None)
     channel_id: Optional[str] = Field(default=None)

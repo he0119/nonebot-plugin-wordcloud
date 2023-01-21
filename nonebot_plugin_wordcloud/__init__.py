@@ -412,15 +412,24 @@ async def _(
     channel_id = None
     if isinstance(event, GroupMessageEventV11):
         group_id = str(event.group_id)
+        platform = "qq"
     elif isinstance(event, GroupMessageEventV12):
+        bot = cast(BotV12, bot)
         group_id = event.group_id
-    elif isinstance(event, ChannelMessageEvent):
+        platform = bot.platform
+    else:
+        bot = cast(BotV12, bot)
         guild_id = event.guild_id
         channel_id = event.channel_id
+        platform = bot.platform
 
     if command == "词云每日定时发送状态":
         schedule_time = await schedule_service.get_schedule(
-            bot.self_id, group_id=group_id, guild_id=guild_id, channel_id=channel_id
+            bot.self_id,
+            platform,
+            group_id=group_id,
+            guild_id=guild_id,
+            channel_id=channel_id,
         )
         if schedule_time:
             await schedule_cmd.finish(f"词云每日定时发送已开启，发送时间为：{schedule_time}")
@@ -435,7 +444,8 @@ async def _(
                 await schedule_cmd.finish("请输入正确的时间，不然我没法理解呢！")
         await schedule_service.add_schedule(
             bot.self_id,
-            schedule_time,
+            platform,
+            time=schedule_time,
             group_id=group_id,
             guild_id=guild_id,
             channel_id=channel_id,
@@ -448,6 +458,10 @@ async def _(
             )
     elif command == "关闭词云每日定时发送":
         await schedule_service.remove_schedule(
-            bot.self_id, group_id=group_id, guild_id=guild_id, channel_id=channel_id
+            bot.self_id,
+            platform,
+            group_id=group_id,
+            guild_id=guild_id,
+            channel_id=channel_id,
         )
         await schedule_cmd.finish("已关闭词云每日定时发送")

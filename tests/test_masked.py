@@ -4,7 +4,11 @@ from nonebug import App
 from PIL import Image
 from pytest_mock import MockerFixture
 
-from .utils import fake_group_message_event
+from .utils import (
+    fake_channel_message_event_v12,
+    fake_group_message_event_v11,
+    fake_group_message_event_v12,
+)
 
 
 async def test_masked(app: App, mocker: MockerFixture):
@@ -70,10 +74,11 @@ async def test_masked_group(app: App, mocker: MockerFixture):
 
     mocked_random.assert_called()
 
-
-async def test_set_mask(app: App, mocker: MockerFixture):
     """测试自定义图片形状"""
     from nonebot.adapters.onebot.v11 import Bot, Message, MessageSegment
+    from nonebot.adapters.onebot.v12 import Bot as BotV12
+    from nonebot.adapters.onebot.v12 import Message as MessageV12
+    from nonebot.adapters.onebot.v12 import MessageSegment as MessageSegmentV12
 
     from nonebot_plugin_wordcloud import mask_cmd, plugin_data
 
@@ -85,7 +90,7 @@ async def test_set_mask(app: App, mocker: MockerFixture):
         message = Message("/设置词云默认形状") + MessageSegment(
             "image", {"url": "https://test"}
         )
-        event = fake_group_message_event(message=message, sender={"role": "owner"})
+        event = fake_group_message_event_v11(message=message, sender={"role": "owner"})
 
         ctx.receive_event(bot, event)
         ctx.should_call_send(event, "词云默认形状设置成功", True)
@@ -97,7 +102,7 @@ async def test_set_mask(app: App, mocker: MockerFixture):
     async with app.test_matcher(mask_cmd) as ctx:
         bot = ctx.create_bot(base=Bot)
         message = Message("/设置词云形状") + MessageSegment("image", {"url": "https://test"})
-        event = fake_group_message_event(message=message, sender={"role": "owner"})
+        event = fake_group_message_event_v11(message=message, sender={"role": "owner"})
 
         ctx.receive_event(bot, event)
         ctx.should_call_send(event, "群 10000 的词云形状设置成功", True)
@@ -110,6 +115,41 @@ async def test_set_mask(app: App, mocker: MockerFixture):
         ]  # type: ignore
     )
     assert plugin_data.exists("mask-qq-group-10000.png")
+
+    # OneBot v12
+    async with app.test_matcher(mask_cmd) as ctx:
+        bot = ctx.create_bot(base=BotV12, platform="qq")
+        message = MessageV12("/设置词云形状") + MessageSegmentV12.image("test")
+        event = fake_group_message_event_v12(message=message)
+
+        ctx.receive_event(bot, event)
+        # 必须是超级用户才能设置
+        ctx.should_ignore_permission()
+        ctx.should_call_api(
+            "get_file",
+            {"type": "data", "file_id": "test"},
+            {"data": (Path(__file__).parent / "mask.png").read_bytes()},
+        )
+        ctx.should_call_send(event, "群 10000 的词云形状设置成功", True)
+
+    assert plugin_data.exists("mask-qq-group-10000.png")
+
+    async with app.test_matcher(mask_cmd) as ctx:
+        bot = ctx.create_bot(base=BotV12, platform="qq")
+        message = MessageV12("/设置词云形状") + MessageSegmentV12.image("test")
+        event = fake_channel_message_event_v12(message=message)
+
+        ctx.receive_event(bot, event)
+        # 必须是超级用户才能设置
+        ctx.should_ignore_permission()
+        ctx.should_call_api(
+            "get_file",
+            {"type": "data", "file_id": "test"},
+            {"data": (Path(__file__).parent / "mask.png").read_bytes()},
+        )
+        ctx.should_call_send(event, "频道 10000 的词云形状设置成功", True)
+
+    assert plugin_data.exists("mask-qq-guild-10000.png")
 
 
 async def test_set_mask_get_args(app: App, mocker: MockerFixture):
@@ -124,14 +164,14 @@ async def test_set_mask_get_args(app: App, mocker: MockerFixture):
     async with app.test_matcher(mask_cmd) as ctx:
         bot = ctx.create_bot(base=Bot)
         message = Message("/设置词云默认形状")
-        event = fake_group_message_event(message=message, sender={"role": "owner"})
+        event = fake_group_message_event_v11(message=message, sender={"role": "owner"})
 
         ctx.receive_event(bot, event)
         ctx.should_call_send(event, "请发送一张图片作为词云形状", True)
         ctx.should_rejected()
 
         invalid_message = Message(MessageSegment.text("test"))
-        invalid_event = fake_group_message_event(
+        invalid_event = fake_group_message_event_v11(
             message=invalid_message, sender={"role": "owner"}
         )
         ctx.receive_event(bot, invalid_event)
@@ -139,7 +179,7 @@ async def test_set_mask_get_args(app: App, mocker: MockerFixture):
         ctx.should_rejected()
 
         image_message = Message(MessageSegment("image", {"url": "https://test"}))
-        image_event = fake_group_message_event(
+        image_event = fake_group_message_event_v11(
             message=image_message, sender={"role": "owner"}
         )
         ctx.receive_event(bot, image_event)
@@ -152,14 +192,14 @@ async def test_set_mask_get_args(app: App, mocker: MockerFixture):
     async with app.test_matcher(mask_cmd) as ctx:
         bot = ctx.create_bot(base=Bot)
         message = Message("/设置词云形状")
-        event = fake_group_message_event(message=message, sender={"role": "owner"})
+        event = fake_group_message_event_v11(message=message, sender={"role": "owner"})
 
         ctx.receive_event(bot, event)
         ctx.should_call_send(event, "请发送一张图片作为词云形状", True)
         ctx.should_rejected()
 
         invalid_message = Message(MessageSegment.text("test"))
-        invalid_event = fake_group_message_event(
+        invalid_event = fake_group_message_event_v11(
             message=invalid_message, sender={"role": "owner"}
         )
         ctx.receive_event(bot, invalid_event)
@@ -167,7 +207,7 @@ async def test_set_mask_get_args(app: App, mocker: MockerFixture):
         ctx.should_rejected()
 
         image_message = Message(MessageSegment("image", {"url": "https://test"}))
-        image_event = fake_group_message_event(
+        image_event = fake_group_message_event_v11(
             message=image_message, sender={"role": "owner"}
         )
         ctx.receive_event(bot, image_event)
@@ -204,7 +244,7 @@ async def test_remove_mask(app: App):
     async with app.test_matcher(mask_cmd) as ctx:
         bot = ctx.create_bot(base=Bot)
         message = Message("/删除词云默认形状")
-        event = fake_group_message_event(message=message, sender={"role": "owner"})
+        event = fake_group_message_event_v11(message=message, sender={"role": "owner"})
 
         ctx.receive_event(bot, event)
         ctx.should_call_send(event, "词云默认形状已删除", True)
@@ -216,7 +256,7 @@ async def test_remove_mask(app: App):
     async with app.test_matcher(mask_cmd) as ctx:
         bot = ctx.create_bot(base=Bot)
         message = Message("/删除词云形状")
-        event = fake_group_message_event(message=message, sender={"role": "owner"})
+        event = fake_group_message_event_v11(message=message, sender={"role": "owner"})
 
         ctx.receive_event(bot, event)
         ctx.should_call_send(event, "群 10000 的词云形状已删除", True)

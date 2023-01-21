@@ -3,17 +3,23 @@ from datetime import time
 from nonebug import App
 from pytest_mock import MockerFixture
 
-from .utils import fake_group_message_event
+from .utils import (
+    fake_channel_message_event_v12,
+    fake_group_message_event_v11,
+    fake_group_message_event_v12,
+)
 
 
 async def test_enable_schedule(app: App):
     from nonebot.adapters.onebot.v11 import Bot, Message
+    from nonebot.adapters.onebot.v12 import Bot as BotV12
+    from nonebot.adapters.onebot.v12 import Message as MessageV12
 
     from nonebot_plugin_wordcloud import schedule_cmd, schedule_service
 
     async with app.test_matcher(schedule_cmd) as ctx:
         bot = ctx.create_bot(base=Bot)
-        event = fake_group_message_event(
+        event = fake_group_message_event_v11(
             message=Message("/开启词云每日定时发送"), sender={"role": "admin"}
         )
         ctx.receive_event(bot, event)
@@ -24,7 +30,7 @@ async def test_enable_schedule(app: App):
 
     async with app.test_matcher(schedule_cmd) as ctx:
         bot = ctx.create_bot(base=Bot)
-        event = fake_group_message_event(
+        event = fake_group_message_event_v11(
             message=Message("/开启词云每日定时发送 10:00"), sender={"role": "admin"}
         )
 
@@ -36,13 +42,36 @@ async def test_enable_schedule(app: App):
 
     async with app.test_matcher(schedule_cmd) as ctx:
         bot = ctx.create_bot(base=Bot)
-        event = fake_group_message_event(
+        event = fake_group_message_event_v11(
             message=Message("/开启词云每日定时发送 10:"), sender={"role": "admin"}
         )
 
         ctx.receive_event(bot, event)
         ctx.should_call_send(event, "请输入正确的时间，不然我没法理解呢！", True)
         ctx.should_finished()
+
+    # OneBot V12
+    async with app.test_matcher(schedule_cmd) as ctx:
+        bot = ctx.create_bot(base=BotV12, platform="qq")
+        event = fake_group_message_event_v12(message=MessageV12("/开启词云每日定时发送"))
+
+        ctx.receive_event(bot, event)
+        ctx.should_ignore_permission()
+        ctx.should_call_send(event, "已开启词云每日定时发送，发送时间为：22:00:00+08:00", True)
+        ctx.should_finished()
+
+    assert len(schedule_service.schedules) == 2
+
+    async with app.test_matcher(schedule_cmd) as ctx:
+        bot = ctx.create_bot(base=BotV12, platform="qq")
+        event = fake_channel_message_event_v12(message=MessageV12("/开启词云每日定时发送 09:00"))
+
+        ctx.receive_event(bot, event)
+        ctx.should_ignore_permission()
+        ctx.should_call_send(event, "已开启词云每日定时发送，发送时间为：09:00:00+08:00", True)
+        ctx.should_finished()
+
+    assert len(schedule_service.schedules) == 3
 
 
 async def test_disable_schedule(app: App):
@@ -54,7 +83,12 @@ async def test_disable_schedule(app: App):
     from nonebot_plugin_wordcloud.model import Schedule
 
     async with create_session() as session:
-        schedule = Schedule(bot_id="test", group_id="10000", time=time(14, 0))
+        schedule = Schedule(
+            bot_id="test",
+            platform="qq",
+            group_id="10000",
+            time=time(14, 0),
+        )
         session.add(schedule)
         await session.commit()
 
@@ -63,7 +97,7 @@ async def test_disable_schedule(app: App):
 
     async with app.test_matcher(schedule_cmd) as ctx:
         bot = ctx.create_bot(base=Bot)
-        event = fake_group_message_event(
+        event = fake_group_message_event_v11(
             message=Message("/关闭词云每日定时发送"), sender={"role": "admin"}
         )
         ctx.receive_event(bot, event)
@@ -87,7 +121,7 @@ async def test_schedule_status(app: App):
 
     async with app.test_matcher(schedule_cmd) as ctx:
         bot = ctx.create_bot(base=Bot)
-        event = fake_group_message_event(
+        event = fake_group_message_event_v11(
             message=Message("/词云每日定时发送状态"), sender={"role": "admin"}
         )
         ctx.receive_event(bot, event)
@@ -95,13 +129,13 @@ async def test_schedule_status(app: App):
         ctx.should_finished()
 
     async with create_session() as session:
-        schedule = Schedule(bot_id="test", group_id="10000")
+        schedule = Schedule(bot_id="test", platform="qq", group_id="10000")
         session.add(schedule)
         await session.commit()
 
     async with app.test_matcher(schedule_cmd) as ctx:
         bot = ctx.create_bot(base=Bot)
-        event = fake_group_message_event(
+        event = fake_group_message_event_v11(
             message=Message("/词云每日定时发送状态"), sender={"role": "admin"}
         )
         ctx.receive_event(bot, event)
@@ -109,13 +143,15 @@ async def test_schedule_status(app: App):
         ctx.should_finished()
 
     async with create_session() as session:
-        schedule = Schedule(bot_id="test2", group_id="10000", time=time(15, 0))
+        schedule = Schedule(
+            bot_id="test2", platform="qq", group_id="10000", time=time(15, 0)
+        )
         session.add(schedule)
         await session.commit()
 
     async with app.test_matcher(schedule_cmd) as ctx:
         bot = ctx.create_bot(base=Bot, self_id="test2")
-        event = fake_group_message_event(
+        event = fake_group_message_event_v11(
             message=Message("/词云每日定时发送状态"), sender={"role": "admin"}
         )
         ctx.receive_event(bot, event)
@@ -131,7 +167,7 @@ async def test_run_task(app: App, mocker: MockerFixture):
     from nonebot_plugin_wordcloud.model import Schedule
 
     async with create_session() as session:
-        schedule = Schedule(bot_id="test", group_id="10000")
+        schedule = Schedule(bot_id="test", platform="qq", group_id="10000")
         session.add(schedule)
         await session.commit()
 
@@ -167,7 +203,7 @@ async def test_run_task_without_data(app: App, mocker: MockerFixture):
     from nonebot_plugin_wordcloud.model import Schedule
 
     async with create_session() as session:
-        schedule = Schedule(bot_id="test", group_id="10000")
+        schedule = Schedule(bot_id="test", platform="qq", group_id="10000")
         session.add(schedule)
         await session.commit()
 
@@ -203,7 +239,9 @@ async def test_run_task_remove_schedule(app: App):
     from nonebot_plugin_wordcloud.schedule import schedule_service
 
     async with create_session() as session:
-        schedule = Schedule(bot_id="test", group_id="10000", time=time(15, 0))
+        schedule = Schedule(
+            bot_id="test", platform="qq", group_id="10000", time=time(15, 0)
+        )
         session.add(schedule)
         await session.commit()
 
