@@ -3,14 +3,24 @@ from typing import Dict, List, Optional, cast
 
 from apscheduler.job import Job
 from nonebot import get_bot
-from nonebot.adapters.onebot.v11 import Bot, Message, MessageSegment
+from nonebot.adapters.onebot.v11 import Bot as BotV11
+from nonebot.adapters.onebot.v11 import Message as MessageV11
+from nonebot.adapters.onebot.v11 import MessageSegment as MessageSegmentV11
+from nonebot.adapters.onebot.v12 import Bot as BotV12
+from nonebot.adapters.onebot.v12 import Message as MessageV12
+from nonebot.adapters.onebot.v12 import MessageSegment as MessageSegmentV12
 from nonebot.log import logger
 from nonebot_plugin_apscheduler import scheduler
-from nonebot_plugin_chatrecorder import get_message_records
+from nonebot_plugin_chatrecorder import get_messages_plain_text
 from nonebot_plugin_datastore import create_session
 from sqlmodel import select
 
-from .utils import get_datetime_now_with_timezone, get_time_with_scheduler_timezone
+from .utils import (
+    get_datetime_now_with_timezone,
+    get_mask_key,
+    get_time_with_scheduler_timezone,
+    send_message,
+)
 
 try:
     from zoneinfo import ZoneInfo
@@ -84,37 +94,73 @@ class Scheduler:
             logger.info(f"开始发送每日词云，时间为 {time if time else '默认时间'}")
             for schedule in schedules:
                 bot = get_bot(schedule.bot_id)
-                bot = cast(Bot, bot)
+                if not isinstance(bot, (BotV11, BotV12)):
+                    logger.warning(f"机器人 {schedule.bot_id} 不是 OneBot 协议，跳过")
+                    continue
 
                 dt = get_datetime_now_with_timezone()
                 start = dt.replace(hour=0, minute=0, second=0, microsecond=0)
                 stop = dt
-                messages = await get_message_records(
-                    group_ids=[schedule.group_id],
-                    exclude_user_ids=[bot.self_id],
+                messages = await get_messages_plain_text(
+                    platforms=[schedule.platform],
+                    group_ids=[schedule.group_id] if schedule.group_id else None,
+                    guild_ids=[schedule.guild_id] if schedule.guild_id else None,
+                    channel_ids=[schedule.channel_id] if schedule.channel_id else None,
+                    types=["message"],
                     time_start=start.astimezone(ZoneInfo("UTC")),
                     time_stop=stop.astimezone(ZoneInfo("UTC")),
-                    plain_text=True,
                 )
-                image = await get_wordcloud(messages, schedule.group_id)
-                if image:
-                    await bot.send_group_msg(
-                        group_id=int(schedule.group_id),
-                        message=Message(MessageSegment.image(image)),
+                mask_key = get_mask_key(
+                    schedule.platform,
+                    group_id=schedule.group_id,
+                    guild_id=schedule.guild_id,
+                )
+                image = await get_wordcloud(messages, mask_key)
+                if not image:
+                    await send_message(
+                        bot,
+                        "今天没有足够的数据生成词云",
+                        schedule.group_id,
+                        schedule.guild_id,
+                        schedule.channel_id,
                     )
-                else:
-                    await bot.send_group_msg(
-                        group_id=int(schedule.group_id),
-                        message="今天没有足够的数据生成词云",
-                    )
+                    continue
 
-    async def get_schedule(self, bot_id: str, group_id: str) -> Optional[time]:
+                if isinstance(bot, BotV11) and schedule.group_id:
+                    message = MessageV11(MessageSegmentV11.image(image))
+                else:
+                    result = await bot.upload_file(
+                        type="data", name="wordcloud.png", data=image.getvalue()
+                    )
+                    file_id = result["file_id"]
+                    message = MessageV12(MessageSegmentV12.image(file_id))
+
+                await send_message(
+                    bot,
+                    message,
+                    schedule.group_id,
+                    schedule.guild_id,
+                    schedule.channel_id,
+                )
+
+    async def get_schedule(
+        self,
+        bot_id: str,
+        platfrom: str,
+        *,
+        group_id: Optional[str] = None,
+        guild_id: Optional[str] = None,
+        channel_id: Optional[str] = None,
+    ) -> Optional[time]:
         """获取定时任务时间"""
         async with create_session() as session:
             statement = (
                 select(Schedule)
                 .where(Schedule.bot_id == bot_id)
+                .where(Schedule.platform == platfrom)
                 .where(Schedule.group_id == group_id)
+                .where(Schedule.guild_id == guild_id)
+                .where(Schedule.channel_id == channel_id)
             )
             results = await session.exec(statement)  # type: ignore
             schedule = results.one_or_none()
@@ -130,7 +176,14 @@ class Scheduler:
                     return plugin_config.wordcloud_default_schedule_time
 
     async def add_schedule(
-        self, bot_id: str, group_id: str, time: Optional[time] = None
+        self,
+        bot_id: str,
+        platfrom: str,
+        *,
+        time: Optional[time] = None,
+        group_id: Optional[str] = None,
+        guild_id: Optional[str] = None,
+        channel_id: Optional[str] = None,
     ):
         """添加定时任务
 
@@ -144,25 +197,46 @@ class Scheduler:
             statement = (
                 select(Schedule)
                 .where(Schedule.bot_id == bot_id)
+                .where(Schedule.platform == platfrom)
                 .where(Schedule.group_id == group_id)
+                .where(Schedule.guild_id == guild_id)
+                .where(Schedule.channel_id == channel_id)
             )
             results = await session.exec(statement)  # type: ignore
             schedule = results.one_or_none()
             if schedule:
                 schedule.time = time
             else:
-                schedule = Schedule(bot_id=bot_id, group_id=group_id, time=time)
+                schedule = Schedule(
+                    bot_id=bot_id,
+                    platform=platfrom,
+                    time=time,
+                    group_id=group_id,
+                    guild_id=guild_id,
+                    channel_id=channel_id,
+                )
                 session.add(schedule)
             await session.commit()
         await self.update()
 
-    async def remove_schedule(self, bot_id: str, group_id: str):
+    async def remove_schedule(
+        self,
+        bot_id: str,
+        platfrom: str,
+        *,
+        group_id: Optional[str] = None,
+        guild_id: Optional[str] = None,
+        channel_id: Optional[str] = None,
+    ):
         """删除定时任务"""
         async with create_session() as session:
             statement = (
                 select(Schedule)
                 .where(Schedule.bot_id == bot_id)
+                .where(Schedule.platform == platfrom)
                 .where(Schedule.group_id == group_id)
+                .where(Schedule.guild_id == guild_id)
+                .where(Schedule.channel_id == channel_id)
             )
             results = await session.exec(statement)  # type: ignore
             schedule = results.first()

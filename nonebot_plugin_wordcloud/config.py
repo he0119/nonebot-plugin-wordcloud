@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Optional
 
 from nonebot import get_driver
-from nonebot_plugin_datastore import PluginData
+from nonebot_plugin_datastore import get_plugin_data
 from pydantic import BaseModel, Extra, root_validator
 
 try:
@@ -11,7 +11,7 @@ try:
 except ImportError:
     from backports.zoneinfo import ZoneInfo  # type: ignore
 
-DATA = PluginData("wordcloud")
+plugin_data = get_plugin_data()
 
 
 class Config(BaseModel, extra=Extra.ignore):
@@ -57,8 +57,8 @@ class Config(BaseModel, extra=Extra.ignore):
     def get_mask_path(self, key: Optional[str] = None) -> Path:
         """获取 mask 文件路径"""
         if key is None:
-            return DATA.data_dir / "mask.png"
-        return DATA.data_dir / f"mask-{key}.png"
+            return plugin_data.data_dir / "mask.png"
+        return plugin_data.data_dir / f"mask-{key}.png"
 
 
 global_config = get_driver().config
