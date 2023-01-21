@@ -210,8 +210,10 @@ async def handle_get_messages_group_message(
     stop: datetime = Arg(),
     my: bool = Arg(),
 ):
+    platform = "qq" if isinstance(bot, BotV11) else bot.platform
     # 将时间转换到 UTC 时区
     state["messages"] = await get_messages_plain_text(
+        platforms=[platform],
         user_ids=[str(event.user_id)] if my else None,  # 是否只查询自己的记录
         group_ids=[str(event.group_id)],
         types=["message"],  # 排除机器人自己发的消息
@@ -244,6 +246,7 @@ async def handle_get_messages_channel_message(
     my: bool = Arg(),
 ):
     state["messages"] = await get_messages_plain_text(
+        platforms=[bot.platform],
         user_ids=[event.user_id] if my else None,
         guild_ids=[event.guild_id],
         channel_ids=[event.channel_id],
