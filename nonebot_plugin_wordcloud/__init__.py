@@ -55,8 +55,12 @@ __plugin_meta__ = PluginMetadata(
 获取本周词云
 /本周词云
 获取本月词云
+/上周词云
+获取上周词云
 /本月词云
 获取年度词云
+/上月词云
+获取上月词云
 /年度词云
 
 历史词云(支持 ISO8601 格式的日期与时间，如 2022-02-22T22:22:22)
@@ -93,7 +97,9 @@ wordcloud_cmd = wordcloud.command(
         "今日词云",
         "昨日词云",
         "本周词云",
+        "上周词云",
         "本月词云",
+        "上月词云",
         "年度词云",
         "历史词云",
         "我的今日词云",
@@ -155,10 +161,24 @@ async def handle_first_receive(
             hour=0, minute=0, second=0, microsecond=0
         ) - timedelta(days=dt.weekday())
         state["stop"] = dt
+    elif command == "上周词云":
+        dt = get_datetime_now_with_timezone()
+        state["stop"] = dt.replace(
+            hour=0, minute=0, second=0, microsecond=0
+        ) - timedelta(days=dt.weekday())
+        state["start"] = state["stop"] - timedelta(days=7)
     elif command == "本月词云":
         dt = get_datetime_now_with_timezone()
         state["start"] = dt.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         state["stop"] = dt
+    elif command == "上月词云":
+        dt = get_datetime_now_with_timezone()
+        state["stop"] = dt.replace(
+            day=1, hour=0, minute=0, second=0, microsecond=0
+        ) - timedelta(microseconds=1)
+        state["start"] = state["stop"].replace(
+            day=1, hour=0, minute=0, second=0, microsecond=0
+        )
     elif command == "年度词云":
         dt = get_datetime_now_with_timezone()
         state["start"] = dt.replace(

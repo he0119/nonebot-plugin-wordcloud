@@ -1606,32 +1606,33 @@ nonebot2 = ">=2.0.0-rc.1,<3.0.0"
 
 [[package]]
 name = "nonebot2"
-version = "2.0.0rc2"
+version = "2.0.0rc3"
 description = "An asynchronous python bot framework."
 category = "main"
 optional = false
 python-versions = ">=3.8,<4.0"
 files = [
-    {file = "nonebot2-2.0.0rc2-py3-none-any.whl", hash = "sha256:ec09a1df5b33371d13b80cbe21b975bbf3e6b2caa5d690fac924b1c6aaae6c70"},
-    {file = "nonebot2-2.0.0rc2.tar.gz", hash = "sha256:86c037ec773f458081e9a1b4515bbea6fcc4718fe4612e78f3ad6b6d20c18510"},
+    {file = "nonebot2-2.0.0rc3-py3-none-any.whl", hash = "sha256:6596e9837e95e99a6cfa7c4e21d75a54a5f3529d34f30454136ebfef6aa374f4"},
+    {file = "nonebot2-2.0.0rc3.tar.gz", hash = "sha256:a16da07b7c764d536cbdf9bcb86eb7cc21b1d254c966552ec5d20e0cb303cec2"},
 ]
 
 [package.dependencies]
-fastapi = ">=0.87.0,<1.0.0"
+fastapi = {version = ">=0.87.0,<0.89.0 || >0.89.0,<1.0.0", optional = true, markers = "extra == \"fastapi\" or extra == \"all\""}
 httpx = {version = ">=0.20.0,<1.0.0", extras = ["http2"], optional = true, markers = "extra == \"httpx\" or extra == \"all\""}
 loguru = ">=0.6.0,<0.7.0"
 pydantic = {version = ">=1.10.0,<2.0.0", extras = ["dotenv"]}
 pygtrie = ">=2.4.1,<3.0.0"
 tomlkit = ">=0.10.0,<1.0.0"
 typing-extensions = ">=3.10.0,<5.0.0"
-uvicorn = {version = ">=0.20.0,<1.0.0", extras = ["standard"]}
+uvicorn = {version = ">=0.20.0,<1.0.0", extras = ["standard"], optional = true, markers = "extra == \"quart\" or extra == \"fastapi\" or extra == \"all\""}
 yarl = ">=1.7.2,<2.0.0"
 
 [package.extras]
 aiohttp = ["aiohttp[speedups] (>=3.7.4,<4.0.0)"]
-all = ["Quart (>=0.18.0,<1.0.0)", "aiohttp[speedups] (>=3.7.4,<4.0.0)", "httpx[http2] (>=0.20.0,<1.0.0)", "websockets (>=10.0,<11.0)"]
+all = ["Quart (>=0.18.0,<1.0.0)", "aiohttp[speedups] (>=3.7.4,<4.0.0)", "fastapi (>=0.87.0,!=0.89.0,<1.0.0)", "httpx[http2] (>=0.20.0,<1.0.0)", "uvicorn[standard] (>=0.20.0,<1.0.0)", "websockets (>=10.0,<11.0)"]
+fastapi = ["fastapi (>=0.87.0,!=0.89.0,<1.0.0)", "uvicorn[standard] (>=0.20.0,<1.0.0)"]
 httpx = ["httpx[http2] (>=0.20.0,<1.0.0)"]
-quart = ["Quart (>=0.18.0,<1.0.0)"]
+quart = ["Quart (>=0.18.0,<1.0.0)", "uvicorn[standard] (>=0.20.0,<1.0.0)"]
 websockets = ["websockets (>=10.0,<11.0)"]
 
 [[package]]
@@ -2061,14 +2062,14 @@ six = ">=1.5"
 
 [[package]]
 name = "python-dotenv"
-version = "0.21.0"
+version = "0.21.1"
 description = "Read key-value pairs from a .env file and set them as environment variables"
 category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "python-dotenv-0.21.0.tar.gz", hash = "sha256:b77d08274639e3d34145dfa6c7008e66df0f04b7be7a75fd0d5292c191d79045"},
-    {file = "python_dotenv-0.21.0-py3-none-any.whl", hash = "sha256:1684eb44636dd462b66c3ee016599815514527ad99965de77f43e0944634a7e5"},
+    {file = "python-dotenv-0.21.1.tar.gz", hash = "sha256:1c93de8f636cde3ce377292818d0e440b6e45a82f215c3744979151fa8151c49"},
+    {file = "python_dotenv-0.21.1-py3-none-any.whl", hash = "sha256:41e12e0318bebc859fcc4d97d4db8d20ad21721a6aa5047dd59f090391cb549a"},
 ]
 
 [package.extras]
@@ -2905,4 +2906,4 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8"
-content-hash = "04ad6a2c9fd949dda194e3116fbcb62c68acbe424eaefad3a705fad2657d2a2b"
+content-hash = "a7e7cee9d23916136c0d654de48327846eacd891b4c6e56b1e7723a97cda79a7"
