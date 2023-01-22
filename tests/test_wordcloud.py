@@ -315,6 +315,35 @@ async def test_wordcloud(app: App, mocker: MockerFixture, message_record: None):
         ["10:1-3", "11:1-3"], "qq-group-10000"
     )
 
+    # 测试上周词云
+    mocked_datetime_now_last_week_wordcloud = mocker.patch(
+        "nonebot_plugin_wordcloud.get_datetime_now_with_timezone",
+        return_value=datetime(2022, 1, 5, 2, tzinfo=ZoneInfo("Asia/Shanghai")),
+    )
+
+    mocked_get_wordcloud_last_week_wordcloud = mocker.patch(
+        "nonebot_plugin_wordcloud.get_wordcloud",
+        return_value=FAKE_IMAGE[0],
+    )
+
+    async with app.test_matcher(wordcloud_cmd) as ctx:
+        bot = ctx.create_bot(base=Bot)
+        event = fake_group_message_event_v11(message=Message("/上周词云"))
+
+        ctx.receive_event(bot, event)
+        ctx.should_call_send(
+            event,
+            MessageSegment.image(FAKE_IMAGE[1]),
+            True,
+            at_sender=False,
+        )
+        ctx.should_finished()
+
+    mocked_datetime_now_last_week_wordcloud.assert_called_once_with()
+    mocked_get_wordcloud_last_week_wordcloud.assert_called_once_with(
+        ["10:1-2", "11:1-2"], "qq-group-10000"
+    )
+
     # 测试本月词云
     mocked_datetime_now_month_wordcloud = mocker.patch(
         "nonebot_plugin_wordcloud.get_datetime_now_with_timezone",
@@ -342,6 +371,34 @@ async def test_wordcloud(app: App, mocker: MockerFixture, message_record: None):
     mocked_datetime_now_month_wordcloud.assert_called_once_with()
     mocked_get_wordcloud_month_wordcloud.assert_called_once_with(
         ["10:2-1", "11:2-1"], "qq-group-10000"
+    )
+    # 测试上月词云
+    mocked_datetime_now_last_month_wordcloud = mocker.patch(
+        "nonebot_plugin_wordcloud.get_datetime_now_with_timezone",
+        return_value=datetime(2022, 2, 7, 2, tzinfo=ZoneInfo("Asia/Shanghai")),
+    )
+
+    mocked_get_wordcloud_last_month_wordcloud = mocker.patch(
+        "nonebot_plugin_wordcloud.get_wordcloud",
+        return_value=FAKE_IMAGE[0],
+    )
+
+    async with app.test_matcher(wordcloud_cmd) as ctx:
+        bot = ctx.create_bot(base=Bot)
+        event = fake_group_message_event_v11(message=Message("/上月词云"))
+
+        ctx.receive_event(bot, event)
+        ctx.should_call_send(
+            event,
+            MessageSegment.image(FAKE_IMAGE[1]),
+            True,
+            at_sender=False,
+        )
+        ctx.should_finished()
+
+    mocked_datetime_now_last_month_wordcloud.assert_called_once_with()
+    mocked_get_wordcloud_last_month_wordcloud.assert_called_once_with(
+        ["10:1-2", "11:1-2", "10:1-3", "11:1-3"], "qq-group-10000"
     )
 
     # 测试年度词云

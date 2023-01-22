@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 ### Added
 
 - 支持 OneBot 12 适配器
+- 添加 `上周词云` 和 `上月词云`
 
 ## [0.3.1] - 2022-12-27
 
