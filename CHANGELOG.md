@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 ## [Unreleased]
 
+### Fixed
+
+- 修复 OneBot 适配器依赖问题
+
 ## [0.4.1] - 2023-01-23
 
 ### Fixed
