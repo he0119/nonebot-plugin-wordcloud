@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 ## [Unreleased]
 
+### Fixed
+
+- 修复迁移脚本没有给之前的数据设置默认值的问题
+
 ## [0.4.0] - 2023-01-22
 
 ### Added
