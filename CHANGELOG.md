@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 ## [Unreleased]
 
+### Fixed
+
+- 修复 GROUP BY 在 PostgreSQL 上的用法错误
+
 ## [0.4.2] - 2023-01-23
 
 ### Fixed
