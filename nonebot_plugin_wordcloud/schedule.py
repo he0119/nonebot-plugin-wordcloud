@@ -56,16 +56,17 @@ class Scheduler:
         """更新定时任务"""
         async with create_session() as session:
             statement = (
-                select(Schedule).group_by(Schedule.time).where(Schedule.time != None)
+                select(Schedule.time)  # type: ignore
+                .group_by(Schedule.time)
+                .where(Schedule.time != None)
             )
-            schedules: List[Schedule] = await session.exec(statement)  # type: ignore
-            for schedule in schedules:
-                schedule.time = cast(time, schedule.time)
-                time_str = schedule.time.isoformat()
+            schedule_times: List[time] = await session.exec(statement)  # type: ignore
+            for schedule_time in schedule_times:
+                time_str = schedule_time.isoformat()
                 if time_str not in self.schedules:
                     # 转换到 APScheduler 的时区，因为数据库中的时间是 UTC 时间
                     scheduler_time = get_time_with_scheduler_timezone(
-                        schedule.time.replace(tzinfo=ZoneInfo("UTC"))
+                        schedule_time.replace(tzinfo=ZoneInfo("UTC"))
                     )
                     self.schedules[time_str] = scheduler.add_job(
                         self.run_task,
@@ -73,7 +74,7 @@ class Scheduler:
                         hour=scheduler_time.hour,
                         minute=scheduler_time.minute,
                         second=scheduler_time.second,
-                        args=(schedule.time,),
+                        args=(schedule_time,),
                     )
                     logger.debug(f"已添加每日词云定时发送任务，发送时间：{time_str} UTC")
 
