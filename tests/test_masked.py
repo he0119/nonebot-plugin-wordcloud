@@ -75,6 +75,7 @@ async def test_masked_group(app: App, mocker: MockerFixture):
     mocked_random.assert_called()
 
     """测试自定义图片形状"""
+    from nonebot import get_driver
     from nonebot.adapters.onebot.v11 import Bot, Message, MessageSegment
     from nonebot.adapters.onebot.v12 import Bot as BotV12
     from nonebot.adapters.onebot.v12 import Message as MessageV12
@@ -82,9 +83,23 @@ async def test_masked_group(app: App, mocker: MockerFixture):
 
     from nonebot_plugin_wordcloud import mask_cmd, plugin_data
 
+    config = get_driver().config
+
     mocked_download = mocker.patch("nonebot_plugin_wordcloud.plugin_data.download_file")
     mocked_download.return_value = (Path(__file__).parent / "mask.png").read_bytes()
 
+    async with app.test_matcher(mask_cmd) as ctx:
+        bot = ctx.create_bot(base=Bot)
+        message = Message("/设置词云默认形状") + MessageSegment(
+            "image", {"url": "https://test"}
+        )
+        event = fake_group_message_event_v11(message=message, sender={"role": "owner"})
+
+        ctx.receive_event(bot, event)
+        ctx.should_call_send(event, "仅超级用户可设置词云默认形状", True)
+        ctx.should_finished()
+
+    config.superusers = {"10"}
     async with app.test_matcher(mask_cmd) as ctx:
         bot = ctx.create_bot(base=Bot)
         message = Message("/设置词云默认形状") + MessageSegment(
@@ -154,9 +169,12 @@ async def test_masked_group(app: App, mocker: MockerFixture):
 
 async def test_set_mask_get_args(app: App, mocker: MockerFixture):
     """测试自定义图片形状，需要额外获取图片时的情况"""
+    from nonebot import get_driver
     from nonebot.adapters.onebot.v11 import Bot, Message, MessageSegment
 
     from nonebot_plugin_wordcloud import mask_cmd, plugin_data
+
+    get_driver().config.superusers = {"10"}
 
     mocked_download = mocker.patch("nonebot_plugin_wordcloud.plugin_data.download_file")
     mocked_download.return_value = (Path(__file__).parent / "mask.png").read_bytes()
@@ -226,6 +244,7 @@ async def test_set_mask_get_args(app: App, mocker: MockerFixture):
 async def test_remove_mask(app: App):
     import shutil
 
+    from nonebot import get_driver
     from nonebot.adapters.onebot.v11 import Bot, Message
 
     from nonebot_plugin_wordcloud import mask_cmd, plugin_data
@@ -240,6 +259,17 @@ async def test_remove_mask(app: App):
 
     assert mask_default_path.exists()
     assert mask_group_path.exists()
+
+    async with app.test_matcher(mask_cmd) as ctx:
+        bot = ctx.create_bot(base=Bot)
+        message = Message("/删除词云默认形状")
+        event = fake_group_message_event_v11(message=message, sender={"role": "owner"})
+
+        ctx.receive_event(bot, event)
+        ctx.should_call_send(event, "仅超级用户可删除词云默认形状", True)
+        ctx.should_finished()
+
+    get_driver().config.superusers = {"10"}
 
     async with app.test_matcher(mask_cmd) as ctx:
         bot = ctx.create_bot(base=Bot)

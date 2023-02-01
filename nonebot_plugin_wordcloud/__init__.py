@@ -76,8 +76,9 @@ __plugin_meta__ = PluginMetadata(
 
 自定义词云形状
 /设置词云形状
-/设置词云默认形状
 /删除词云形状
+仅超级用户可设置默认词云形状
+/设置词云默认形状
 /删除词云默认形状
 
 设置定时发送每日词云
@@ -353,15 +354,19 @@ async def _(
         msg = f"频道 {event.guild_id}"
 
     if command == "设置词云默认形状":
+        if not await SUPERUSER(bot, event):
+            await mask_cmd.finish("仅超级用户可设置词云默认形状")
         state["default"] = True
         state["mask_key"] = "default"
-    elif command == "设置词云形状":
-        state["default"] = False
-        state["mask_key"] = mask_key
     elif command == "删除词云默认形状":
+        if not await SUPERUSER(bot, event):
+            await mask_cmd.finish("仅超级用户可删除词云默认形状")
         mask_path = plugin_config.get_mask_path()
         mask_path.unlink(missing_ok=True)
         await mask_cmd.finish("词云默认形状已删除")
+    elif command == "设置词云形状":
+        state["default"] = False
+        state["mask_key"] = mask_key
     elif command == "删除词云形状":
         mask_path = plugin_config.get_mask_path(mask_key)
         mask_path.unlink(missing_ok=True)
