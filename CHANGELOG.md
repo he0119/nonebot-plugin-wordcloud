@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 ### Fixed
 
 - 修复 GROUP BY 在 PostgreSQL 上的用法错误
+- 设置/删除词云默认形状的权限调整为仅超级用户
 
 ## [0.4.2] - 2023-01-23
 
