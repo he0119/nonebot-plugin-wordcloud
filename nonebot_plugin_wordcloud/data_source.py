@@ -1,4 +1,7 @@
+import asyncio
+import concurrent.futures
 import re
+from functools import partial
 from io import BytesIO
 from typing import Dict, List, Optional
 
@@ -10,7 +13,6 @@ from PIL import Image
 from wordcloud import WordCloud
 
 from .config import global_config, plugin_config
-from .utils import run_sync
 
 
 def pre_precess(msg: str) -> str:
@@ -57,8 +59,7 @@ def get_mask(key: Optional[str] = None):
         return np.array(Image.open(mask_path))
 
 
-@run_sync
-def get_wordcloud(
+def _get_wordcloud(
     messages: List[str], mask_key: Optional[str] = None
 ) -> Optional[BytesIO]:
     # 过滤掉命令
@@ -83,3 +84,13 @@ def get_wordcloud(
         return image_bytes
     except ValueError:
         pass
+
+
+async def get_wordcloud(
+    messages: List[str], mask_key: Optional[str] = None
+) -> Optional[BytesIO]:
+    loop = asyncio.get_running_loop()
+    pfunc = partial(_get_wordcloud, messages, mask_key)
+    with concurrent.futures.ProcessPoolExecutor() as pool:
+        result = await loop.run_in_executor(pool, pfunc)
+    return result

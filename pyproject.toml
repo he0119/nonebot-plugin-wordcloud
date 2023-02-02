@@ -20,7 +20,6 @@ tzdata = "*"
 "backports.zoneinfo" = { version = "^0.2.1", markers = "python_version < '3.9'" }
 emoji = ">=1.6.3,<3.0.0"
 nonebot-plugin-apscheduler = "^0.2.0"
-typing-extensions = ">=3.10.0"
 
 [tool.poetry.group.dev.dependencies]
 black = "*"
@@ -35,6 +34,10 @@ gevent = "^22.10.2"
 
 [tool.nonebot]
 plugins = ["nonebot_plugin_wordcloud"]
+adapters = [
+    {name = "OneBot V12", module_name = "nonebot.adapters.onebot.v12", project_link = "nonebot-adapter-onebot", desc = "OneBot V12 协议"},
+    {name = "OneBot V11", module_name = "nonebot.adapters.onebot.v11", project_link = "nonebot-adapter-onebot", desc = "OneBot V11 协议"},
+]
 
 [tool.black]
 line-length = 88
