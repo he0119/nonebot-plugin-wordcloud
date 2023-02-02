@@ -1,7 +1,5 @@
 import asyncio
 import concurrent.futures
-import multiprocessing
-import platform
 import re
 from functools import partial
 from io import BytesIO
