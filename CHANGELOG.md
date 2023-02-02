@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 ## [Unreleased]
 
+## [0.4.4] - 2023-02-02
+
 ### Fixed
 
 - 通过每次关闭线程池修复内存泄漏问题
@@ -189,7 +191,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 - 可以使用的版本。
 
-[unreleased]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.4.3...HEAD
+[unreleased]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.4.4...HEAD
+[0.4.4]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.4.3...v0.4.4
 [0.4.3]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.4.2...v0.4.3
 [0.4.2]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.4.1...v0.4.2
 [0.4.1]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.4.0...v0.4.1
