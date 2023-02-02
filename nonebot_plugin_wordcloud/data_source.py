@@ -6,11 +6,11 @@ import jieba
 import jieba.analyse
 import numpy as np
 from emoji import replace_emoji
-from nonebot.utils import run_sync
 from PIL import Image
 from wordcloud import WordCloud
 
 from .config import global_config, plugin_config
+from .utils import run_sync
 
 
 def pre_precess(msg: str) -> str:

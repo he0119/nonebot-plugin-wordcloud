@@ -1,5 +1,8 @@
+import asyncio
+import concurrent.futures
 from datetime import datetime, time
-from typing import Optional, Union
+from functools import partial, wraps
+from typing import Callable, Coroutine, Optional, TypeVar, Union
 
 from nonebot.adapters import Bot
 from nonebot.adapters.onebot.v11 import Bot as BotV11
@@ -7,6 +10,7 @@ from nonebot.adapters.onebot.v11 import Message as MessageV11
 from nonebot.adapters.onebot.v12 import Bot as BotV12
 from nonebot.adapters.onebot.v12 import Message as MessageV12
 from nonebot_plugin_apscheduler import scheduler
+from typing_extensions import ParamSpec
 
 from .config import plugin_config
 
@@ -14,6 +18,9 @@ try:
     from zoneinfo import ZoneInfo
 except ImportError:
     from backports.zoneinfo import ZoneInfo  # type: ignore
+
+P = ParamSpec("P")
+R = TypeVar("R")
 
 
 def get_datetime_now_with_timezone() -> datetime:
@@ -99,3 +106,21 @@ def get_mask_key(
         return f"{platform}-group-{group_id}"
     else:
         return f"{platform}-guild-{guild_id}"
+
+
+def run_sync(call: Callable[P, R]) -> Callable[P, Coroutine[None, None, R]]:
+    """一个用于包装 sync function 为 async function 的装饰器（进程池）
+
+    参数:
+        call: 被装饰的同步函数
+    """
+
+    @wraps(call)
+    async def _wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
+        loop = asyncio.get_running_loop()
+        pfunc = partial(call, *args, **kwargs)
+        with concurrent.futures.ProcessPoolExecutor() as pool:
+            result = await loop.run_in_executor(pool, pfunc)
+        return result
+
+    return _wrapper
