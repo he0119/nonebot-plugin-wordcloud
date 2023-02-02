@@ -1,4 +1,7 @@
+import asyncio
+import concurrent.futures
 import re
+from functools import partial
 from io import BytesIO
 from typing import Dict, List, Optional
 
@@ -6,7 +9,6 @@ import jieba
 import jieba.analyse
 import numpy as np
 from emoji import replace_emoji
-from nonebot.utils import run_sync
 from PIL import Image
 from wordcloud import WordCloud
 
@@ -57,8 +59,7 @@ def get_mask(key: Optional[str] = None):
         return np.array(Image.open(mask_path))
 
 
-@run_sync
-def get_wordcloud(
+def _get_wordcloud(
     messages: List[str], mask_key: Optional[str] = None
 ) -> Optional[BytesIO]:
     # 过滤掉命令
@@ -83,3 +84,12 @@ def get_wordcloud(
         return image_bytes
     except ValueError:
         pass
+
+
+async def get_wordcloud(
+    messages: List[str], mask_key: Optional[str] = None
+) -> Optional[BytesIO]:
+    loop = asyncio.get_running_loop()
+    pfunc = partial(_get_wordcloud, messages, mask_key)
+    with concurrent.futures.ThreadPoolExecutor() as pool:
+        return await loop.run_in_executor(pool, pfunc)

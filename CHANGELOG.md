@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 ## [Unreleased]
 
+### Fixed
+
+- 通过每次关闭线程池修复内存泄漏问题
+
 ## [0.4.3] - 2023-02-01
 
 ### Fixed

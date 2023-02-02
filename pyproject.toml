@@ -34,6 +34,10 @@ gevent = "^22.10.2"
 
 [tool.nonebot]
 plugins = ["nonebot_plugin_wordcloud"]
+adapters = [
+    {name = "OneBot V12", module_name = "nonebot.adapters.onebot.v12", project_link = "nonebot-adapter-onebot", desc = "OneBot V12 协议"},
+    {name = "OneBot V11", module_name = "nonebot.adapters.onebot.v11", project_link = "nonebot-adapter-onebot", desc = "OneBot V11 协议"},
+]
 
 [tool.black]
 line-length = 88
