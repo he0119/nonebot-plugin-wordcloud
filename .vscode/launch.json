@@ -8,7 +8,9 @@
             "name": "Pytest",
             "type": "python",
             "request": "launch",
-            "module": "pytest"
+            "module": "pytest",
+            "args": ["-s"],
+            "justMyCode": false,
         }
     ]
 }

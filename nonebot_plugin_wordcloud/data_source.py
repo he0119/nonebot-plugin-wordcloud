@@ -1,5 +1,7 @@
 import asyncio
 import concurrent.futures
+import multiprocessing
+import platform
 import re
 from functools import partial
 from io import BytesIO
@@ -91,6 +93,10 @@ async def get_wordcloud(
 ) -> Optional[BytesIO]:
     loop = asyncio.get_running_loop()
     pfunc = partial(_get_wordcloud, messages, mask_key)
-    with concurrent.futures.ProcessPoolExecutor() as pool:
-        result = await loop.run_in_executor(pool, pfunc)
-    return result
+    if platform.system() == "Windows":
+        return await loop.run_in_executor(None, pfunc)
+    else:
+        with concurrent.futures.ProcessPoolExecutor(
+            mp_context=multiprocessing.get_context("fork")
+        ) as pool:
+            return await loop.run_in_executor(pool, pfunc)
