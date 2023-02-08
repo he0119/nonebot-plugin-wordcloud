@@ -23,6 +23,9 @@ _✨ NoneBot 词云插件 ✨_
   <a href="https://codecov.io/gh/he0119/nonebot-plugin-wordcloud">
     <img src="https://codecov.io/gh/he0119/nonebot-plugin-wordcloud/branch/main/graph/badge.svg?token=e2ECtMI91C"/>
   </a>
+  <a href="https://jq.qq.com/?_wv=1027&k=7zQUpiGp">
+    <img src="https://img.shields.io/badge/QQ%E7%BE%A4-730374631-orange?style=flat-square" alt="QQ Chat Group">
+  </a>
 </p>
 
 ## 使用方式
