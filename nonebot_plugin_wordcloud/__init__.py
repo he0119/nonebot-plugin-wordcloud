@@ -1,6 +1,7 @@
 """ 词云
 """
 import re
+from base64 import b64decode
 from datetime import datetime, timedelta
 from io import BytesIO
 from typing import List, Tuple, Union, cast
@@ -293,7 +294,7 @@ async def handle_send_message(
         await wordcloud_cmd.finish(MessageSegmentV11.image(image), at_sender=my)
     else:
         resp = await bot.upload_file(
-            type="data", name="wordcloud", data=image.getvalue()
+            type="data", name="wordcloud.png", data=image.getvalue()
         )
         file_id = resp["file_id"]
         await wordcloud_cmd.finish(MessageSegmentV12.image(file_id), at_sender=my)
@@ -401,7 +402,9 @@ async def handle_get_image_v12(
 ):
     file_id = image.data["file_id"]
     result = await bot.get_file(type="data", file_id=file_id)
-    state["image_bytes"] = result["data"]
+    data = result["data"]
+    # json 中的数据为 base64 编码的字符串
+    state["image_bytes"] = b64decode(data) if isinstance(data, str) else data
 
 
 @mask_cmd.handle()

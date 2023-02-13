@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 ## [Unreleased]
 
+### Fixed
+
+- 修复 OneBot 12 协议下下载图片出错的问题
+
 ## [0.4.4] - 2023-02-02
 
 ### Fixed
