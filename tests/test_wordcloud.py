@@ -591,7 +591,7 @@ async def test_wordcloud(app: App, mocker: MockerFixture, message_record: None):
         ctx.receive_event(bot, event)
         ctx.should_call_api(
             "upload_file",
-            {"type": "data", "name": "wordcloud", "data": FAKE_IMAGE[0].getvalue()},
+            {"type": "data", "name": "wordcloud.png", "data": FAKE_IMAGE[0].getvalue()},
             {"file_id": "test"},
         )
         ctx.should_call_send(
@@ -624,7 +624,7 @@ async def test_wordcloud(app: App, mocker: MockerFixture, message_record: None):
         ctx.receive_event(bot, event)
         ctx.should_call_api(
             "upload_file",
-            {"type": "data", "name": "wordcloud", "data": FAKE_IMAGE[0].getvalue()},
+            {"type": "data", "name": "wordcloud.png", "data": FAKE_IMAGE[0].getvalue()},
             {"file_id": "test"},
         )
         ctx.should_call_send(
@@ -656,7 +656,7 @@ async def test_wordcloud(app: App, mocker: MockerFixture, message_record: None):
         ctx.receive_event(bot, event)
         ctx.should_call_api(
             "upload_file",
-            {"type": "data", "name": "wordcloud", "data": FAKE_IMAGE[0].getvalue()},
+            {"type": "data", "name": "wordcloud.png", "data": FAKE_IMAGE[0].getvalue()},
             {"file_id": "test"},
         )
         ctx.should_call_send(
