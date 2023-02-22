@@ -14,7 +14,7 @@ async def test_colormap(app: App, mocker: MockerFixture):
     from nonebot_plugin_wordcloud.config import plugin_config
     from nonebot_plugin_wordcloud.data_source import get_wordcloud
 
-    plugin_config.wordcloud_colormap = "Pastel1"
+    mocker.patch.object(plugin_config, "wordcloud_colormap", "Pastel1")
 
     mocked_random = mocker.patch("wordcloud.wordcloud.Random")
     mocked_random.return_value = random.Random(0)

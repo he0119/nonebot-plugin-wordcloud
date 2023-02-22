@@ -1,7 +1,14 @@
+import random
+import shutil
 from pathlib import Path
 
+from nonebot import get_driver
+from nonebot.adapters.onebot.v11 import Bot, Message, MessageSegment
+from nonebot.adapters.onebot.v12 import Bot as BotV12
+from nonebot.adapters.onebot.v12 import Message as MessageV12
+from nonebot.adapters.onebot.v12 import MessageSegment as MessageSegmentV12
 from nonebug import App
-from PIL import Image
+from PIL import Image, ImageChops
 from pytest_mock import MockerFixture
 
 from .utils import (
@@ -13,15 +20,10 @@ from .utils import (
 
 async def test_masked(app: App, mocker: MockerFixture):
     """测试自定义图片形状"""
-    import random
-    import shutil
-
-    from PIL import ImageChops
-
     from nonebot_plugin_wordcloud.config import plugin_config, plugin_data
     from nonebot_plugin_wordcloud.data_source import get_wordcloud
 
-    plugin_config.wordcloud_background_color = "white"
+    mocker.patch.object(plugin_config, "wordcloud_background_color", "white")
 
     mask_path = Path(__file__).parent / "mask.png"
     shutil.copy(mask_path, plugin_data.data_dir / "mask.png")
@@ -45,15 +47,10 @@ async def test_masked(app: App, mocker: MockerFixture):
 
 async def test_masked_group(app: App, mocker: MockerFixture):
     """测试不同群的自定义图片形状"""
-    import random
-    import shutil
-
-    from PIL import ImageChops
-
     from nonebot_plugin_wordcloud.config import plugin_config, plugin_data
     from nonebot_plugin_wordcloud.data_source import get_wordcloud
 
-    plugin_config.wordcloud_background_color = "white"
+    mocker.patch.object(plugin_config, "wordcloud_background_color", "white")
 
     mask_path = Path(__file__).parent / "mask.png"
     shutil.copy(mask_path, plugin_data.data_dir / "mask-10000.png")
@@ -74,13 +71,9 @@ async def test_masked_group(app: App, mocker: MockerFixture):
 
     mocked_random.assert_called()
 
-    """测试自定义图片形状"""
-    from nonebot import get_driver
-    from nonebot.adapters.onebot.v11 import Bot, Message, MessageSegment
-    from nonebot.adapters.onebot.v12 import Bot as BotV12
-    from nonebot.adapters.onebot.v12 import Message as MessageV12
-    from nonebot.adapters.onebot.v12 import MessageSegment as MessageSegmentV12
 
+async def test_set_mask_default(app: App, mocker: MockerFixture):
+    """测试自定义图片形状"""
     from nonebot_plugin_wordcloud import mask_cmd, plugin_data
 
     config = get_driver().config
@@ -99,7 +92,8 @@ async def test_masked_group(app: App, mocker: MockerFixture):
         ctx.should_call_send(event, "仅超级用户可设置词云默认形状", True)
         ctx.should_finished()
 
-    config.superusers = {"10"}
+    mocker.patch.object(config, "superusers", {"10"})
+
     async with app.test_matcher(mask_cmd) as ctx:
         bot = ctx.create_bot(base=Bot)
         message = Message("/设置词云默认形状") + MessageSegment(
@@ -114,6 +108,16 @@ async def test_masked_group(app: App, mocker: MockerFixture):
     mocked_download.assert_called_once_with("https://test", "masked", cache=True)
     assert plugin_data.exists("mask.png")
 
+
+async def test_set_mask(app: App, mocker: MockerFixture):
+    """测试自定义图片形状"""
+    from nonebot_plugin_wordcloud import mask_cmd, plugin_data
+
+    mocked_download = mocker.patch("nonebot_plugin_wordcloud.plugin_data.download_file")
+    mocked_download.return_value = (Path(__file__).parent / "mask.png").read_bytes()
+
+    assert not plugin_data.exists("mask-qq-group-10000.png")
+
     async with app.test_matcher(mask_cmd) as ctx:
         bot = ctx.create_bot(base=Bot)
         message = Message("/设置词云形状") + MessageSegment("image", {"url": "https://test"})
@@ -123,15 +127,17 @@ async def test_masked_group(app: App, mocker: MockerFixture):
         ctx.should_call_send(event, "群 10000 的词云形状设置成功", True)
         ctx.should_finished()
 
-    mocked_download.assert_has_calls(
-        [
-            mocker.call("https://test", "masked", cache=True),
-            mocker.call("https://test", "masked", cache=True),
-        ]  # type: ignore
-    )
+    mocked_download.assert_called_once_with("https://test", "masked", cache=True)
     assert plugin_data.exists("mask-qq-group-10000.png")
 
-    # OneBot v12
+
+async def test_set_mask_v12(app: App):
+    """测试自定义图片形状 OneBot v12"""
+    from nonebot_plugin_wordcloud import mask_cmd, plugin_data
+
+    assert not plugin_data.exists("mask-qq-group-10000.png")
+    assert not plugin_data.exists("mask-qq-guild-10000.png")
+
     async with app.test_matcher(mask_cmd) as ctx:
         bot = ctx.create_bot(base=BotV12, platform="qq")
         message = MessageV12("/设置词云形状") + MessageSegmentV12.image("test")
@@ -148,6 +154,7 @@ async def test_masked_group(app: App, mocker: MockerFixture):
         ctx.should_call_send(event, "群 10000 的词云形状设置成功", True)
 
     assert plugin_data.exists("mask-qq-group-10000.png")
+    assert not plugin_data.exists("mask-qq-guild-10000.png")
 
     async with app.test_matcher(mask_cmd) as ctx:
         bot = ctx.create_bot(base=BotV12, platform="qq")
@@ -164,17 +171,16 @@ async def test_masked_group(app: App, mocker: MockerFixture):
         )
         ctx.should_call_send(event, "频道 10000 的词云形状设置成功", True)
 
+    assert plugin_data.exists("mask-qq-group-10000.png")
     assert plugin_data.exists("mask-qq-guild-10000.png")
 
 
-async def test_set_mask_get_args(app: App, mocker: MockerFixture):
+async def test_set_default_mask_get_args(app: App, mocker: MockerFixture):
     """测试自定义图片形状，需要额外获取图片时的情况"""
-    from nonebot import get_driver
-    from nonebot.adapters.onebot.v11 import Bot, Message, MessageSegment
-
     from nonebot_plugin_wordcloud import mask_cmd, plugin_data
 
-    get_driver().config.superusers = {"10"}
+    config = get_driver().config
+    mocker.patch.object(config, "superusers", {"10"})
 
     mocked_download = mocker.patch("nonebot_plugin_wordcloud.plugin_data.download_file")
     mocked_download.return_value = (Path(__file__).parent / "mask.png").read_bytes()
@@ -207,6 +213,14 @@ async def test_set_mask_get_args(app: App, mocker: MockerFixture):
     mocked_download.assert_called_once_with("https://test", "masked", cache=True)
     assert plugin_data.exists("mask.png")
 
+
+async def test_set_mask_get_args(app: App, mocker: MockerFixture):
+    """测试自定义图片形状，需要额外获取图片时的情况"""
+    from nonebot_plugin_wordcloud import mask_cmd, plugin_data
+
+    mocked_download = mocker.patch("nonebot_plugin_wordcloud.plugin_data.download_file")
+    mocked_download.return_value = (Path(__file__).parent / "mask.png").read_bytes()
+
     async with app.test_matcher(mask_cmd) as ctx:
         bot = ctx.create_bot(base=Bot)
         message = Message("/设置词云形状")
@@ -232,21 +246,12 @@ async def test_set_mask_get_args(app: App, mocker: MockerFixture):
         ctx.should_call_send(image_event, "群 10000 的词云形状设置成功", True)
         ctx.should_finished()
 
-    mocked_download.assert_has_calls(
-        [
-            mocker.call("https://test", "masked", cache=True),
-            mocker.call("https://test", "masked", cache=True),
-        ]  # type: ignore
-    )
+    mocked_download.assert_called_once_with("https://test", "masked", cache=True)
     assert plugin_data.exists("mask-qq-group-10000.png")
 
 
-async def test_remove_mask(app: App):
-    import shutil
-
-    from nonebot import get_driver
-    from nonebot.adapters.onebot.v11 import Bot, Message
-
+async def test_remove_default_mask(app: App, mocker: MockerFixture):
+    """移除默认形状"""
     from nonebot_plugin_wordcloud import mask_cmd, plugin_data
 
     mask_path = Path(__file__).parent / "mask.png"
@@ -269,7 +274,7 @@ async def test_remove_mask(app: App):
         ctx.should_call_send(event, "仅超级用户可删除词云默认形状", True)
         ctx.should_finished()
 
-    get_driver().config.superusers = {"10"}
+    mocker.patch.object(get_driver().config, "superusers", {"10"})
 
     async with app.test_matcher(mask_cmd) as ctx:
         bot = ctx.create_bot(base=Bot)
@@ -283,6 +288,21 @@ async def test_remove_mask(app: App):
     assert not mask_default_path.exists()
     assert mask_group_path.exists()
 
+
+async def test_remove_mask(app: App, mocker: MockerFixture):
+    from nonebot_plugin_wordcloud import mask_cmd, plugin_data
+
+    mask_path = Path(__file__).parent / "mask.png"
+
+    mask_default_path = plugin_data.data_dir / "mask.png"
+    mask_group_path = plugin_data.data_dir / "mask-qq-group-10000.png"
+
+    shutil.copy(mask_path, mask_default_path)
+    shutil.copy(mask_path, mask_group_path)
+
+    assert mask_default_path.exists()
+    assert mask_group_path.exists()
+
     async with app.test_matcher(mask_cmd) as ctx:
         bot = ctx.create_bot(base=Bot)
         message = Message("/删除词云形状")
@@ -292,5 +312,5 @@ async def test_remove_mask(app: App):
         ctx.should_call_send(event, "群 10000 的词云形状已删除", True)
         ctx.should_finished()
 
-    assert not mask_default_path.exists()
+    assert mask_default_path.exists()
     assert not mask_group_path.exists()
