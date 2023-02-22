@@ -6,11 +6,16 @@ try:
 except ImportError:
     from backports.zoneinfo import ZoneInfo  # type: ignore
 
+import random
 from io import BytesIO
 
 import pytest
+from nonebot.adapters.onebot.v11 import Bot, Message, MessageSegment
+from nonebot.adapters.onebot.v12 import Bot as BotV12
+from nonebot.adapters.onebot.v12 import Message as MessageV12
+from nonebot.adapters.onebot.v12 import MessageSegment as MessageSegmentV12
 from nonebug import App
-from PIL import Image
+from PIL import Image, ImageChops
 from pytest_mock import MockerFixture
 
 from .utils import fake_channel_message_event_v12, fake_group_message_event_v11
@@ -25,8 +30,6 @@ FAKE_IMAGE = (
 
 @pytest.fixture
 async def message_record(app: App):
-    from nonebot.adapters.onebot.v11 import Message
-    from nonebot.adapters.onebot.v12 import Message as MessageV12
     from nonebot_plugin_chatrecorder import serialize_message
     from nonebot_plugin_chatrecorder.model import MessageRecord
     from nonebot_plugin_datastore import create_session
@@ -99,10 +102,6 @@ async def message_record(app: App):
 
 async def test_get_wordcloud(app: App, mocker: MockerFixture):
     """测试生成词云"""
-    import random
-
-    from PIL import ImageChops
-
     from nonebot_plugin_wordcloud.data_source import get_wordcloud
 
     mocked_random = mocker.patch("wordcloud.wordcloud.Random")
@@ -124,8 +123,6 @@ async def test_get_wordcloud(app: App, mocker: MockerFixture):
 
 async def test_wordcloud_cmd(app: App):
     """测试输出帮助信息与没有数据的情况"""
-    from nonebot.adapters.onebot.v11 import Bot, Message
-
     from nonebot_plugin_wordcloud import __plugin_meta__, wordcloud_cmd
 
     async with app.test_matcher(wordcloud_cmd) as ctx:
@@ -156,12 +153,8 @@ async def test_wordcloud_cmd(app: App):
         ctx.should_finished()
 
 
-async def test_wordcloud(app: App, mocker: MockerFixture, message_record: None):
-    """测试词云"""
-    from nonebot.adapters.onebot.v11 import Bot, Message, MessageSegment
-    from nonebot.adapters.onebot.v12 import Bot as BotV12
-    from nonebot.adapters.onebot.v12 import Message as MessageV12
-    from nonebot.adapters.onebot.v12 import MessageSegment as MessageSegmentV12
+async def test_today_wordcloud(app: App, mocker: MockerFixture, message_record: None):
+    """测试今日词云"""
     from nonebot_plugin_chatrecorder import get_messages_plain_text
 
     from nonebot_plugin_wordcloud import wordcloud_cmd
@@ -170,13 +163,12 @@ async def test_wordcloud(app: App, mocker: MockerFixture, message_record: None):
     messages = await get_messages_plain_text()
     assert len(messages) == 9
 
-    # 测试今日词云
-    mocked_datetime_now_today_wordcloud = mocker.patch(
+    mocked_datetime_now = mocker.patch(
         "nonebot_plugin_wordcloud.get_datetime_now_with_timezone",
         return_value=datetime(2022, 1, 2, 23, tzinfo=ZoneInfo("Asia/Shanghai")),
     )
 
-    mocked_get_wordcloud_today_wordcloud = mocker.patch(
+    mocked_get_wordcloud = mocker.patch(
         "nonebot_plugin_wordcloud.get_wordcloud",
         return_value=FAKE_IMAGE[0],
     )
@@ -194,18 +186,22 @@ async def test_wordcloud(app: App, mocker: MockerFixture, message_record: None):
         )
         ctx.should_finished()
 
-    mocked_datetime_now_today_wordcloud.assert_called_once_with()
-    mocked_get_wordcloud_today_wordcloud.assert_called_once_with(
-        ["10:1-2", "11:1-2"], "qq-group-10000"
-    )
+    mocked_datetime_now.assert_called_once_with()
+    mocked_get_wordcloud.assert_called_once_with(["10:1-2", "11:1-2"], "qq-group-10000")
 
-    # 测试我的今日词云
-    mocked_datetime_now_my_today_wordcloud = mocker.patch(
+
+async def test_my_today_wordcloud(
+    app: App, mocker: MockerFixture, message_record: None
+):
+    """测试我的今日词云"""
+    from nonebot_plugin_wordcloud import wordcloud_cmd
+
+    mocked_datetime_now = mocker.patch(
         "nonebot_plugin_wordcloud.get_datetime_now_with_timezone",
         return_value=datetime(2022, 1, 2, 23, tzinfo=ZoneInfo("Asia/Shanghai")),
     )
 
-    mocked_get_wordcloud_my_today_wordcloud = mocker.patch(
+    mocked_get_wordcloud = mocker.patch(
         "nonebot_plugin_wordcloud.get_wordcloud",
         return_value=FAKE_IMAGE[0],
     )
@@ -223,18 +219,22 @@ async def test_wordcloud(app: App, mocker: MockerFixture, message_record: None):
         )
         ctx.should_finished()
 
-    mocked_datetime_now_my_today_wordcloud.assert_called_once_with()
-    mocked_get_wordcloud_my_today_wordcloud.assert_called_once_with(
-        ["10:1-2"], "qq-group-10000"
-    )
+    mocked_datetime_now.assert_called_once_with()
+    mocked_get_wordcloud.assert_called_once_with(["10:1-2"], "qq-group-10000")
 
-    # 测试昨日词云
-    mocked_datetime_now_yesterday_wordcloud = mocker.patch(
+
+async def test_yesterday_wordcloud(
+    app: App, mocker: MockerFixture, message_record: None
+):
+    """测试昨日词云"""
+    from nonebot_plugin_wordcloud import wordcloud_cmd
+
+    mocked_datetime_now = mocker.patch(
         "nonebot_plugin_wordcloud.get_datetime_now_with_timezone",
         return_value=datetime(2022, 1, 3, 2, tzinfo=ZoneInfo("Asia/Shanghai")),
     )
 
-    mocked_get_wordcloud_yesterday_wordcloud = mocker.patch(
+    mocked_get_wordcloud = mocker.patch(
         "nonebot_plugin_wordcloud.get_wordcloud",
         return_value=FAKE_IMAGE[0],
     )
@@ -252,18 +252,22 @@ async def test_wordcloud(app: App, mocker: MockerFixture, message_record: None):
         )
         ctx.should_finished()
 
-    mocked_datetime_now_yesterday_wordcloud.assert_called_once_with()
-    mocked_get_wordcloud_yesterday_wordcloud.assert_called_once_with(
-        ["10:1-2", "11:1-2"], "qq-group-10000"
-    )
+    mocked_datetime_now.assert_called_once_with()
+    mocked_get_wordcloud.assert_called_once_with(["10:1-2", "11:1-2"], "qq-group-10000")
 
-    # 测试我的昨日词云
-    mocked_datetime_now_my_yesterday_wordcloud = mocker.patch(
+
+async def test_my_yesterday_wordcloud(
+    app: App, mocker: MockerFixture, message_record: None
+):
+    """测试我的昨日词云"""
+    from nonebot_plugin_wordcloud import wordcloud_cmd
+
+    mocked_datetime_now = mocker.patch(
         "nonebot_plugin_wordcloud.get_datetime_now_with_timezone",
         return_value=datetime(2022, 1, 3, 2, tzinfo=ZoneInfo("Asia/Shanghai")),
     )
 
-    mocked_get_wordcloud_my_yesterday_wordcloud = mocker.patch(
+    mocked_get_wordcloud = mocker.patch(
         "nonebot_plugin_wordcloud.get_wordcloud",
         return_value=FAKE_IMAGE[0],
     )
@@ -281,18 +285,20 @@ async def test_wordcloud(app: App, mocker: MockerFixture, message_record: None):
         )
         ctx.should_finished()
 
-    mocked_datetime_now_my_yesterday_wordcloud.assert_called_once_with()
-    mocked_get_wordcloud_my_yesterday_wordcloud.assert_called_once_with(
-        ["10:1-2"], "qq-group-10000"
-    )
+    mocked_datetime_now.assert_called_once_with()
+    mocked_get_wordcloud.assert_called_once_with(["10:1-2"], "qq-group-10000")
 
-    # 测试本周词云
-    mocked_datetime_now_week_wordcloud = mocker.patch(
+
+async def test_week_wordcloud(app: App, mocker: MockerFixture, message_record: None):
+    """测试本周词云"""
+    from nonebot_plugin_wordcloud import wordcloud_cmd
+
+    mocked_datetime_now = mocker.patch(
         "nonebot_plugin_wordcloud.get_datetime_now_with_timezone",
         return_value=datetime(2022, 1, 5, 2, tzinfo=ZoneInfo("Asia/Shanghai")),
     )
 
-    mocked_get_wordcloud_week_wordcloud = mocker.patch(
+    mocked_get_wordcloud = mocker.patch(
         "nonebot_plugin_wordcloud.get_wordcloud",
         return_value=FAKE_IMAGE[0],
     )
@@ -310,18 +316,22 @@ async def test_wordcloud(app: App, mocker: MockerFixture, message_record: None):
         )
         ctx.should_finished()
 
-    mocked_datetime_now_week_wordcloud.assert_called_once_with()
-    mocked_get_wordcloud_week_wordcloud.assert_called_once_with(
-        ["10:1-3", "11:1-3"], "qq-group-10000"
-    )
+    mocked_datetime_now.assert_called_once_with()
+    mocked_get_wordcloud.assert_called_once_with(["10:1-3", "11:1-3"], "qq-group-10000")
 
-    # 测试上周词云
-    mocked_datetime_now_last_week_wordcloud = mocker.patch(
+
+async def test_last_week_wordcloud(
+    app: App, mocker: MockerFixture, message_record: None
+):
+    """测试上周词云"""
+    from nonebot_plugin_wordcloud import wordcloud_cmd
+
+    mocked_datetime_now = mocker.patch(
         "nonebot_plugin_wordcloud.get_datetime_now_with_timezone",
         return_value=datetime(2022, 1, 5, 2, tzinfo=ZoneInfo("Asia/Shanghai")),
     )
 
-    mocked_get_wordcloud_last_week_wordcloud = mocker.patch(
+    mocked_get_wordcloud = mocker.patch(
         "nonebot_plugin_wordcloud.get_wordcloud",
         return_value=FAKE_IMAGE[0],
     )
@@ -339,18 +349,20 @@ async def test_wordcloud(app: App, mocker: MockerFixture, message_record: None):
         )
         ctx.should_finished()
 
-    mocked_datetime_now_last_week_wordcloud.assert_called_once_with()
-    mocked_get_wordcloud_last_week_wordcloud.assert_called_once_with(
-        ["10:1-2", "11:1-2"], "qq-group-10000"
-    )
+    mocked_datetime_now.assert_called_once_with()
+    mocked_get_wordcloud.assert_called_once_with(["10:1-2", "11:1-2"], "qq-group-10000")
 
-    # 测试本月词云
-    mocked_datetime_now_month_wordcloud = mocker.patch(
+
+async def test_month_wordcloud(app: App, mocker: MockerFixture, message_record: None):
+    """测试本月词云"""
+    from nonebot_plugin_wordcloud import wordcloud_cmd
+
+    mocked_datetime_now = mocker.patch(
         "nonebot_plugin_wordcloud.get_datetime_now_with_timezone",
         return_value=datetime(2022, 2, 7, 2, tzinfo=ZoneInfo("Asia/Shanghai")),
     )
 
-    mocked_get_wordcloud_month_wordcloud = mocker.patch(
+    mocked_get_wordcloud = mocker.patch(
         "nonebot_plugin_wordcloud.get_wordcloud",
         return_value=FAKE_IMAGE[0],
     )
@@ -368,17 +380,22 @@ async def test_wordcloud(app: App, mocker: MockerFixture, message_record: None):
         )
         ctx.should_finished()
 
-    mocked_datetime_now_month_wordcloud.assert_called_once_with()
-    mocked_get_wordcloud_month_wordcloud.assert_called_once_with(
-        ["10:2-1", "11:2-1"], "qq-group-10000"
-    )
-    # 测试上月词云
-    mocked_datetime_now_last_month_wordcloud = mocker.patch(
+    mocked_datetime_now.assert_called_once_with()
+    mocked_get_wordcloud.assert_called_once_with(["10:2-1", "11:2-1"], "qq-group-10000")
+
+
+async def test_last_month_wordcloud(
+    app: App, mocker: MockerFixture, message_record: None
+):
+    """测试上月词云"""
+    from nonebot_plugin_wordcloud import wordcloud_cmd
+
+    mocked_datetime_now = mocker.patch(
         "nonebot_plugin_wordcloud.get_datetime_now_with_timezone",
         return_value=datetime(2022, 2, 7, 2, tzinfo=ZoneInfo("Asia/Shanghai")),
     )
 
-    mocked_get_wordcloud_last_month_wordcloud = mocker.patch(
+    mocked_get_wordcloud = mocker.patch(
         "nonebot_plugin_wordcloud.get_wordcloud",
         return_value=FAKE_IMAGE[0],
     )
@@ -396,18 +413,22 @@ async def test_wordcloud(app: App, mocker: MockerFixture, message_record: None):
         )
         ctx.should_finished()
 
-    mocked_datetime_now_last_month_wordcloud.assert_called_once_with()
-    mocked_get_wordcloud_last_month_wordcloud.assert_called_once_with(
+    mocked_datetime_now.assert_called_once_with()
+    mocked_get_wordcloud.assert_called_once_with(
         ["10:1-2", "11:1-2", "10:1-3", "11:1-3"], "qq-group-10000"
     )
 
-    # 测试年度词云
-    mocked_datetime_now_year_wordcloud = mocker.patch(
+
+async def test_year_wordcloud(app: App, mocker: MockerFixture, message_record: None):
+    """测试年度词云"""
+    from nonebot_plugin_wordcloud import wordcloud_cmd
+
+    mocked_datetime_now = mocker.patch(
         "nonebot_plugin_wordcloud.get_datetime_now_with_timezone",
         return_value=datetime(2022, 12, 1, 2, tzinfo=ZoneInfo("Asia/Shanghai")),
     )
 
-    mocked_get_wordcloud_year_wordcloud = mocker.patch(
+    mocked_get_wordcloud = mocker.patch(
         "nonebot_plugin_wordcloud.get_wordcloud",
         return_value=FAKE_IMAGE[0],
     )
@@ -425,18 +446,22 @@ async def test_wordcloud(app: App, mocker: MockerFixture, message_record: None):
         )
         ctx.should_finished()
 
-    mocked_datetime_now_year_wordcloud.assert_called_once_with()
-    mocked_get_wordcloud_year_wordcloud.assert_called_once_with(
+    mocked_datetime_now.assert_called_once_with()
+    mocked_get_wordcloud.assert_called_once_with(
         ["10:1-2", "11:1-2", "10:1-3", "11:1-3", "10:2-1", "11:2-1"], "qq-group-10000"
     )
 
-    # 测试我的年度词云
-    mocked_datetime_now_my_year_wordcloud = mocker.patch(
+
+async def test_my_year_wordcloud(app: App, mocker: MockerFixture, message_record: None):
+    """测试我的年度词云"""
+    from nonebot_plugin_wordcloud import wordcloud_cmd
+
+    mocked_datetime_now = mocker.patch(
         "nonebot_plugin_wordcloud.get_datetime_now_with_timezone",
         return_value=datetime(2022, 12, 1, 2, tzinfo=ZoneInfo("Asia/Shanghai")),
     )
 
-    mocked_get_wordcloud_my_year_wordcloud = mocker.patch(
+    mocked_get_wordcloud = mocker.patch(
         "nonebot_plugin_wordcloud.get_wordcloud",
         return_value=FAKE_IMAGE[0],
     )
@@ -454,13 +479,17 @@ async def test_wordcloud(app: App, mocker: MockerFixture, message_record: None):
         )
         ctx.should_finished()
 
-    mocked_datetime_now_my_year_wordcloud.assert_called_once_with()
-    mocked_get_wordcloud_my_year_wordcloud.assert_called_once_with(
+    mocked_datetime_now.assert_called_once_with()
+    mocked_get_wordcloud.assert_called_once_with(
         ["10:1-2", "10:1-3", "10:2-1"], "qq-group-10000"
     )
 
-    # 测试历史词云
-    mocked_get_wordcloud_history_wordcloud = mocker.patch(
+
+async def test_history_wordcloud(app: App, mocker: MockerFixture, message_record: None):
+    """测试历史词云"""
+    from nonebot_plugin_wordcloud import wordcloud_cmd
+
+    mocked_get_wordcloud = mocker.patch(
         "nonebot_plugin_wordcloud.get_wordcloud",
         return_value=FAKE_IMAGE[0],
     )
@@ -478,12 +507,16 @@ async def test_wordcloud(app: App, mocker: MockerFixture, message_record: None):
         )
         ctx.should_finished()
 
-    mocked_get_wordcloud_history_wordcloud.assert_called_once_with(
-        ["10:1-2", "11:1-2"], "qq-group-10000"
-    )
+    mocked_get_wordcloud.assert_called_once_with(["10:1-2", "11:1-2"], "qq-group-10000")
 
-    # 测试历史词云，有起始时间的情况
-    mocked_get_wordcloud_history_wordcloud_start_stop = mocker.patch(
+
+async def test_history_wordcloud_start_stop(
+    app: App, mocker: MockerFixture, message_record: None
+):
+    """测试历史词云，有起始时间的情况"""
+    from nonebot_plugin_wordcloud import wordcloud_cmd
+
+    mocked_get_wordcloud = mocker.patch(
         "nonebot_plugin_wordcloud.get_wordcloud",
         return_value=FAKE_IMAGE[0],
     )
@@ -503,12 +536,18 @@ async def test_wordcloud(app: App, mocker: MockerFixture, message_record: None):
         )
         ctx.should_finished()
 
-    mocked_get_wordcloud_history_wordcloud_start_stop.assert_called_once_with(
+    mocked_get_wordcloud.assert_called_once_with(
         ["10:1-3", "11:1-3", "10:2-1", "11:2-1"], "qq-group-10000"
     )
 
-    # 测试历史词云，获取起始时间参数的情况
-    mocked_get_wordcloud_history_wordcloud_start_stop_get_args = mocker.patch(
+
+async def test_history_wordcloud_start_stop_get_args(
+    app: App, mocker: MockerFixture, message_record: None
+):
+    """测试历史词云，获取起始时间参数的情况"""
+    from nonebot_plugin_wordcloud import wordcloud_cmd
+
+    mocked_get_wordcloud = mocker.patch(
         "nonebot_plugin_wordcloud.get_wordcloud",
         return_value=FAKE_IMAGE[0],
     )
@@ -541,11 +580,15 @@ async def test_wordcloud(app: App, mocker: MockerFixture, message_record: None):
         )
         ctx.should_finished()
 
-    mocked_get_wordcloud_history_wordcloud_start_stop_get_args.assert_called_once_with(
+    mocked_get_wordcloud.assert_called_once_with(
         ["10:1-2", "11:1-2", "10:1-3", "11:1-3", "10:2-1", "11:2-1"], "qq-group-10000"
     )
 
-    # 测试历史词云，输入的日期无效
+
+async def test_history_wordcloud_invalid_input(app: App):
+    """测试历史词云，输入的日期无效"""
+    from nonebot_plugin_wordcloud import wordcloud_cmd
+
     async with app.test_matcher(wordcloud_cmd) as ctx:
         bot = ctx.create_bot(base=Bot)
         event = fake_group_message_event_v11(message=Message("/历史词云 2022-13-01"))
@@ -574,13 +617,18 @@ async def test_wordcloud(app: App, mocker: MockerFixture, message_record: None):
         ctx.should_call_send(event, "请输入正确的日期，不然我没法理解呢！", True)
         ctx.should_finished()
 
-    # OneBot 12
-    mocked_datetime_now_today_wordcloud_v12 = mocker.patch(
+
+async def test_today_wordcloud_v12(
+    app: App, mocker: MockerFixture, message_record: None
+):
+    from nonebot_plugin_wordcloud import wordcloud_cmd
+
+    mocked_datetime_now = mocker.patch(
         "nonebot_plugin_wordcloud.get_datetime_now_with_timezone",
         return_value=datetime(2022, 1, 2, 23, tzinfo=ZoneInfo("Asia/Shanghai")),
     )
 
-    mocked_get_wordcloud_today_wordcloud_v12 = mocker.patch(
+    mocked_get_wordcloud = mocker.patch(
         "nonebot_plugin_wordcloud.get_wordcloud",
         return_value=FAKE_IMAGE[0],
     )
@@ -602,17 +650,23 @@ async def test_wordcloud(app: App, mocker: MockerFixture, message_record: None):
         )
         ctx.should_finished()
 
-    mocked_datetime_now_today_wordcloud_v12.assert_called_once_with()
-    mocked_get_wordcloud_today_wordcloud_v12.assert_called_once_with(
+    mocked_datetime_now.assert_called_once_with()
+    mocked_get_wordcloud.assert_called_once_with(
         ["v12-10:1-2", "v12-11:1-2"], "test-guild-10000"
     )
 
-    mocked_datetime_now_my_today_wordcloud_v12 = mocker.patch(
+
+async def test_my_today_wordcloud_v12(
+    app: App, mocker: MockerFixture, message_record: None
+):
+    from nonebot_plugin_wordcloud import wordcloud_cmd
+
+    mocked_datetime_now = mocker.patch(
         "nonebot_plugin_wordcloud.get_datetime_now_with_timezone",
         return_value=datetime(2022, 1, 2, 23, tzinfo=ZoneInfo("Asia/Shanghai")),
     )
 
-    mocked_get_wordcloud_my_today_wordcloud_v12 = mocker.patch(
+    mocked_get_wordcloud = mocker.patch(
         "nonebot_plugin_wordcloud.get_wordcloud",
         return_value=FAKE_IMAGE[0],
     )
@@ -635,17 +689,21 @@ async def test_wordcloud(app: App, mocker: MockerFixture, message_record: None):
         )
         ctx.should_finished()
 
-    mocked_datetime_now_my_today_wordcloud_v12.assert_called_once_with()
-    mocked_get_wordcloud_my_today_wordcloud_v12.assert_called_once_with(
-        ["v12-10:1-2"], "test-guild-10000"
-    )
+    mocked_datetime_now.assert_called_once_with()
+    mocked_get_wordcloud.assert_called_once_with(["v12-10:1-2"], "test-guild-10000")
 
-    mocked_datetime_now_today_wordcloud_v12_qq = mocker.patch(
+
+async def test_today_wordcloud_qq_group_v12(
+    app: App, mocker: MockerFixture, message_record: None
+):
+    from nonebot_plugin_wordcloud import wordcloud_cmd
+
+    mocked_datetime_now = mocker.patch(
         "nonebot_plugin_wordcloud.get_datetime_now_with_timezone",
         return_value=datetime(2022, 1, 2, 23, tzinfo=ZoneInfo("Asia/Shanghai")),
     )
 
-    mocked_get_wordcloud_today_wordcloud_v12_qq = mocker.patch(
+    mocked_get_wordcloud = mocker.patch(
         "nonebot_plugin_wordcloud.get_wordcloud",
         return_value=FAKE_IMAGE[0],
     )
@@ -667,7 +725,5 @@ async def test_wordcloud(app: App, mocker: MockerFixture, message_record: None):
         )
         ctx.should_finished()
 
-    mocked_datetime_now_today_wordcloud_v12_qq.assert_called_once_with()
-    mocked_get_wordcloud_today_wordcloud_v12_qq.assert_called_once_with(
-        [], "qq-guild-10000"
-    )
+    mocked_datetime_now.assert_called_once_with()
+    mocked_get_wordcloud.assert_called_once_with([], "qq-guild-10000")
