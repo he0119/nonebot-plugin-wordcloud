@@ -20,7 +20,7 @@ except ImportError:
         ),
     ],
 )
-async def test_default_schedule_time(app: App, default_config: Dict):
+async def test_default_schedule_time(app: App, default_config: Dict[str, str]):
     """测试设置默认定时发送时间"""
     from nonebot_plugin_wordcloud.config import Config
 
@@ -49,7 +49,9 @@ async def test_default_schedule_time(app: App, default_config: Dict):
         ),
     ],
 )
-async def test_default_schedule_time_with_timezone(app: App, default_config: Dict):
+async def test_default_schedule_time_with_timezone(
+    app: App, default_config: Dict[str, str]
+):
     """测试设置默认定时发送时间，同时设置时区"""
     from nonebot_plugin_wordcloud.config import Config
 

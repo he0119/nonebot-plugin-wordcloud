@@ -1,8 +1,13 @@
 from datetime import time
 from io import BytesIO
 
+from nonebot.adapters.onebot.v11 import Bot, Message, MessageSegment
+from nonebot.adapters.onebot.v12 import Bot as BotV12
+from nonebot.adapters.onebot.v12 import Message as MessageV12
+from nonebot.adapters.onebot.v12 import MessageSegment as MessageSegmentV12
 from nonebug import App
 from pytest_mock import MockerFixture
+from sqlmodel import select
 
 from .utils import (
     fake_channel_message_event_v12,
@@ -12,10 +17,6 @@ from .utils import (
 
 
 async def test_enable_schedule(app: App):
-    from nonebot.adapters.onebot.v11 import Bot, Message
-    from nonebot.adapters.onebot.v12 import Bot as BotV12
-    from nonebot.adapters.onebot.v12 import Message as MessageV12
-
     from nonebot_plugin_wordcloud import schedule_cmd, schedule_service
 
     async with app.test_matcher(schedule_cmd) as ctx:
@@ -76,9 +77,7 @@ async def test_enable_schedule(app: App):
 
 
 async def test_disable_schedule(app: App):
-    from nonebot.adapters.onebot.v11 import Bot, Message
     from nonebot_plugin_datastore import create_session
-    from sqlmodel import select
 
     from nonebot_plugin_wordcloud import schedule_cmd, schedule_service
     from nonebot_plugin_wordcloud.model import Schedule
@@ -114,7 +113,6 @@ async def test_disable_schedule(app: App):
 
 
 async def test_schedule_status(app: App):
-    from nonebot.adapters.onebot.v11 import Bot, Message
     from nonebot_plugin_datastore import create_session
 
     from nonebot_plugin_wordcloud import schedule_cmd
@@ -161,10 +159,6 @@ async def test_schedule_status(app: App):
 
 
 async def test_run_task_group(app: App, mocker: MockerFixture):
-    from nonebot.adapters.onebot.v11 import Bot, Message, MessageSegment
-    from nonebot.adapters.onebot.v12 import Bot as BotV12
-    from nonebot.adapters.onebot.v12 import Message as MessageV12
-    from nonebot.adapters.onebot.v12 import MessageSegment as MessageSegmentV12
     from nonebot_plugin_datastore import create_session
 
     from nonebot_plugin_wordcloud import schedule_service
@@ -228,7 +222,6 @@ async def test_run_task_group(app: App, mocker: MockerFixture):
 
 
 async def test_run_task_channel(app: App, mocker: MockerFixture):
-    from nonebot.adapters.onebot.v12 import Bot, Message, MessageSegment
     from nonebot_plugin_datastore import create_session
 
     from nonebot_plugin_wordcloud import schedule_service
@@ -245,7 +238,7 @@ async def test_run_task_channel(app: App, mocker: MockerFixture):
         "nonebot_plugin_wordcloud.schedule.get_messages_plain_text",
         return_value=["test"],
     )
-    mocked_bot = mocker.AsyncMock(spec=Bot)
+    mocked_bot = mocker.AsyncMock(spec=BotV12)
     mocked_bot.send_message = mocker.AsyncMock()
     mocked_bot.upload_file = mocker.AsyncMock(return_value={"file_id": "test"})
     mocked_get_bot = mocker.patch(
@@ -265,7 +258,7 @@ async def test_run_task_channel(app: App, mocker: MockerFixture):
         group_id=None,
         guild_id="10000",
         channel_id="100000",
-        message=Message(MessageSegment.image("test")),
+        message=MessageV12(MessageSegmentV12.image("test")),
     )
 
     # 机器人类型不是 V11/V12
@@ -291,7 +284,6 @@ async def test_run_task_channel(app: App, mocker: MockerFixture):
 
 
 async def test_run_task_without_data(app: App, mocker: MockerFixture):
-    from nonebot.adapters.onebot.v11 import Bot, Message
     from nonebot_plugin_datastore import create_session
 
     from nonebot_plugin_wordcloud import schedule_service
@@ -327,7 +319,6 @@ async def test_run_task_without_data(app: App, mocker: MockerFixture):
 
 
 async def test_run_task_without_data_channel(app: App, mocker: MockerFixture):
-    from nonebot.adapters.onebot.v12 import Bot, Message
     from nonebot_plugin_datastore import create_session
 
     from nonebot_plugin_wordcloud import schedule_service
@@ -344,7 +335,7 @@ async def test_run_task_without_data_channel(app: App, mocker: MockerFixture):
         "nonebot_plugin_wordcloud.schedule.get_messages_plain_text",
         return_value=["test"],
     )
-    mocked_bot = mocker.AsyncMock(spec=Bot)
+    mocked_bot = mocker.AsyncMock(spec=BotV12)
     mocked_bot.send_message = mocker.AsyncMock()
     mocked_get_bot = mocker.patch(
         "nonebot_plugin_wordcloud.schedule.get_bot", return_value=mocked_bot
@@ -363,7 +354,7 @@ async def test_run_task_without_data_channel(app: App, mocker: MockerFixture):
         group_id=None,
         guild_id="10000",
         channel_id="100000",
-        message=Message("今天没有足够的数据生成词云"),
+        message=MessageV12("今天没有足够的数据生成词云"),
     )
 
 
