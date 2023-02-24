@@ -11,6 +11,14 @@
             "module": "pytest",
             "args": ["-s"],
             "justMyCode": false,
+        },
+        {
+            "name": "Pytest - single test",
+            "type": "python",
+            "request": "launch",
+            "module": "pytest",
+            "args": ["-s", "-k", "test_history_wordcloud_start_stop_get_args"],
+            "justMyCode": false,
         }
     ]
 }
