@@ -24,7 +24,7 @@ nonebot-plugin-apscheduler = "^0.2.0"
 [tool.poetry.group.dev.dependencies]
 black = "*"
 isort = "*"
-nonebug = "^0.3.0"
+nonebug = "^0.3.1"
 pytest-cov = "^4.0.0"
 pytest-xdist = "^3.1.0"
 pytest-mock = "^3.7.0"
