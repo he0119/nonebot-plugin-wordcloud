@@ -1,10 +1,9 @@
-import shutil
 from pathlib import Path
 
 import nonebot
 import pytest
 from nonebug import NONEBOT_INIT_KWARGS, App
-from sqlmodel import text
+from sqlalchemy import delete
 
 
 def pytest_configure(config: pytest.Config) -> None:
@@ -30,20 +29,14 @@ async def app(tmp_path: Path):
 
     yield App()
 
+    from nonebot_plugin_chatrecorder.model import MessageRecord
+
+    from nonebot_plugin_wordcloud.model import Schedule
+
     # 清理数据
-    async with create_session() as session:
-        await session.execute(
-            text("DROP TABLE IF EXISTS nonebot_plugin_wordcloud_schedule")
-        )
-        await session.execute(
-            text("DROP TABLE IF EXISTS nonebot_plugin_wordcloud_alembic_version")
-        )
-        await session.execute(
-            text("DROP TABLE IF EXISTS nonebot_plugin_chatrecorder_messagerecord")
-        )
-        await session.execute(
-            text("DROP TABLE IF EXISTS nonebot_plugin_chatrecorder_alembic_version")
-        )
+    async with create_session() as session, session.begin():
+        await session.execute(delete(MessageRecord))
+        await session.execute(delete(Schedule))
 
     keys = [key for key in schedule_service.schedules.keys() if key != "default"]
     for key in keys:
