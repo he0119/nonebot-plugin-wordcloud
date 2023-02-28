@@ -8,9 +8,9 @@ Create Date: 2023-01-19 20:03:34.480753
 from typing import List, cast
 
 import sqlalchemy as sa
-import sqlmodel
 from alembic import op
-from sqlmodel import Session, select
+from sqlalchemy import select
+from sqlalchemy.orm import Session
 
 from nonebot_plugin_wordcloud.model import Schedule
 
@@ -25,8 +25,7 @@ def set_default_platform() -> None:
     """设置默认值为 qq"""
     connection = op.get_bind()
     with Session(connection) as session:
-        schedules = session.exec(select(Schedule)).all()
-        schedules = cast(List[Schedule], schedules)
+        schedules = session.scalars(select(Schedule)).all()
         for schedule in schedules:
             schedule.platform = "qq"
         session.add_all(schedules)
@@ -38,15 +37,9 @@ def upgrade() -> None:
     with op.batch_alter_table(
         "nonebot_plugin_wordcloud_schedule", schema=None
     ) as batch_op:
-        batch_op.add_column(
-            sa.Column("platform", sqlmodel.sql.sqltypes.AutoString(), nullable=True)
-        )
-        batch_op.add_column(
-            sa.Column("guild_id", sqlmodel.sql.sqltypes.AutoString(), nullable=True)
-        )
-        batch_op.add_column(
-            sa.Column("channel_id", sqlmodel.sql.sqltypes.AutoString(), nullable=True)
-        )
+        batch_op.add_column(sa.Column("platform", sa.String(), nullable=True))
+        batch_op.add_column(sa.Column("guild_id", sa.String(), nullable=True))
+        batch_op.add_column(sa.Column("channel_id", sa.String(), nullable=True))
         batch_op.alter_column("group_id", existing_type=sa.VARCHAR(), nullable=True)
         batch_op.drop_constraint("unique_schedule", type_="unique")
         batch_op.create_unique_constraint(

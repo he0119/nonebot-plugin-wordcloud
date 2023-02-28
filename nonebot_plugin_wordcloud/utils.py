@@ -1,5 +1,5 @@
 from datetime import datetime, time
-from typing import Optional, Union
+from typing import Any, Optional, Union
 
 from nonebot.adapters import Bot
 from nonebot.adapters.onebot.v11 import Bot as BotV11
@@ -80,13 +80,16 @@ async def send_message(
         if isinstance(message, str):
             message = MessageV12(message)
         if isinstance(message, MessageV12):
-            await bot.send_message(
-                detail_type="group" if group_id else "channel",
-                group_id=group_id,  # type: ignore
-                guild_id=guild_id,  # type: ignore
-                channel_id=channel_id,  # type: ignore
-                message=message,
-            )
+            params: Any = {"message": message}
+            if group_id:
+                params["detail_type"] = "group"
+                params["group_id"] = group_id
+            else:
+                params["detail_type"] = "channel"
+                params["guild_id"] = guild_id
+                params["channel_id"] = channel_id
+
+            await bot.send_message(**params)
 
 
 def get_mask_key(

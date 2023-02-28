@@ -7,7 +7,7 @@ from nonebot.adapters.onebot.v12 import Message as MessageV12
 from nonebot.adapters.onebot.v12 import MessageSegment as MessageSegmentV12
 from nonebug import App
 from pytest_mock import MockerFixture
-from sqlmodel import select
+from sqlalchemy import select
 
 from .utils import (
     fake_channel_message_event_v12,
@@ -106,7 +106,7 @@ async def test_disable_schedule(app: App):
 
     async with create_session() as session:
         statement = select(Schedule)
-        results = await session.exec(statement)  # type: ignore
+        results = await session.scalars(statement)
         assert len(results.all()) == 0
 
     assert len(schedule_service.schedules) == 2
@@ -213,11 +213,9 @@ async def test_run_task_group(app: App, mocker: MockerFixture):
     mocked_get_messages_plain_text_v12.assert_called_once()
     mocked_get_wordcloud_v12.assert_called_once_with(["test"], "qq-group-10000")
     mocked_bot_v12.send_message.assert_called_once_with(
+        message=MessageV12(MessageSegmentV12.image("test")),
         detail_type="group",
         group_id="10000",
-        guild_id=None,
-        channel_id=None,
-        message=MessageV12(MessageSegmentV12.image("test")),
     )
 
 
@@ -254,11 +252,10 @@ async def test_run_task_channel(app: App, mocker: MockerFixture):
     mocked_get_messages_plain_text.assert_called_once()
     mocked_get_wordcloud_v12.assert_called_once_with(["test"], "qq-guild-10000")
     mocked_bot.send_message.assert_called_once_with(
+        message=MessageV12(MessageSegmentV12.image("test")),
         detail_type="channel",
-        group_id=None,
         guild_id="10000",
         channel_id="100000",
-        message=MessageV12(MessageSegmentV12.image("test")),
     )
 
     # 机器人类型不是 V11/V12
@@ -350,11 +347,10 @@ async def test_run_task_without_data_channel(app: App, mocker: MockerFixture):
     mocked_get_messages_plain_text.assert_called_once()
     mocked_get_wordcloud.assert_called_once_with(["test"], "qq-guild-10000")
     mocked_bot.send_message.assert_called_once_with(
+        message=MessageV12("今天没有足够的数据生成词云"),
         detail_type="channel",
-        group_id=None,
         guild_id="10000",
         channel_id="100000",
-        message=MessageV12("今天没有足够的数据生成词云"),
     )
 
 
