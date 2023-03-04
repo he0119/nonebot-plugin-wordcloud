@@ -13,7 +13,7 @@ documentation = "https://github.com/he0119/nonebot-plugin-wordcloud#readme"
 python = "^3.8"
 nonebot2 = { version = "^2.0.0-rc.1", extras = ["fastapi"] }
 nonebot-adapter-onebot = "^2.2.0"
-nonebot-plugin-chatrecorder = { git = "https://github.com/he0119/nonebot-plugin-chatrecorder.git", branch = "change/sqlalchemy" }
+nonebot-plugin-chatrecorder = { git = "https://github.com/noneplugin/nonebot-plugin-chatrecorder", branch = "main" }
 wordcloud = "^1.8.1"
 jieba = "^0.42.1"
 tzdata = "*"
@@ -35,8 +35,8 @@ gevent = "^22.10.2"
 [tool.nonebot]
 plugins = ["nonebot_plugin_wordcloud"]
 adapters = [
-    {name = "OneBot V12", module_name = "nonebot.adapters.onebot.v12", project_link = "nonebot-adapter-onebot", desc = "OneBot V12 协议"},
-    {name = "OneBot V11", module_name = "nonebot.adapters.onebot.v11", project_link = "nonebot-adapter-onebot", desc = "OneBot V11 协议"},
+  { name = "OneBot V12", module_name = "nonebot.adapters.onebot.v12", project_link = "nonebot-adapter-onebot", desc = "OneBot V12 协议" },
+  { name = "OneBot V11", module_name = "nonebot.adapters.onebot.v11", project_link = "nonebot-adapter-onebot", desc = "OneBot V11 协议" },
 ]
 
 [tool.black]

@@ -56,14 +56,14 @@ trio = ["trio (>=0.16,<0.22)"]
 
 [[package]]
 name = "apscheduler"
-version = "3.10.0"
+version = "3.10.1"
 description = "In-process task scheduler with Cron-like capabilities"
 category = "main"
 optional = false
 python-versions = ">=3.6"
 files = [
-    {file = "APScheduler-3.10.0-py3-none-any.whl", hash = "sha256:575299f20073c60a2cc9d4fa5906024cdde33c5c0ce6087c4e3c14be3b50fdd4"},
-    {file = "APScheduler-3.10.0.tar.gz", hash = "sha256:a49fc23269218416f0e41890eea7a75ed6b284f10630dcfe866ab659621a3696"},
+    {file = "APScheduler-3.10.1-py3-none-any.whl", hash = "sha256:e813ad5ada7aff36fb08cdda746b520531eaac7757832abc204868ba78e0c8f6"},
+    {file = "APScheduler-3.10.1.tar.gz", hash = "sha256:0293937d8f6051a0f493359440c1a1b93e882c57daf0197afeff0e727777b96e"},
 ]
 
 [package.dependencies]
@@ -1579,40 +1579,39 @@ develop = false
 
 [package.dependencies]
 nonebot-adapter-onebot = "^2.2.0"
-nonebot-plugin-datastore = {git = "https://github.com/he0119/nonebot-plugin-datastore.git", branch = "change/sqlalchemy2"}
+nonebot-plugin-datastore = "^0.6.0a0"
 nonebot2 = {version = "^2.0.0-rc.1", extras = ["fastapi"]}
 
 [package.source]
 type = "git"
-url = "https://github.com/he0119/nonebot-plugin-chatrecorder.git"
-reference = "change/sqlalchemy"
-resolved_reference = "2cc68ca61e70b20d385cb88da6f6d55757528205"
+url = "https://github.com/noneplugin/nonebot-plugin-chatrecorder"
+reference = "main"
+resolved_reference = "7d435f2286bea0e7a2b2b613396259b03459b880"
 
 [[package]]
 name = "nonebot-plugin-datastore"
-version = "0.5.10"
+version = "0.6.0a2"
 description = "适用于 Nonebot2 的数据存储插件"
 category = "main"
 optional = false
-python-versions = "^3.8"
-files = []
-develop = false
+python-versions = ">=3.8,<4.0"
+files = [
+    {file = "nonebot_plugin_datastore-0.6.0a2-py3-none-any.whl", hash = "sha256:1e0095065c6213a875ed1d939dd21f2dde0d20e399f83ecdc0532d89fc93e2ae"},
+    {file = "nonebot_plugin_datastore-0.6.0a2.tar.gz", hash = "sha256:a27d5dfdab4899d3b30e407575ee15b6b70385ee38d8d7c2ab4bf87e7dc29326"},
+]
 
 [package.dependencies]
 aiosqlite = ">=0.17,<0.19"
-alembic = "^1.9.1"
-nonebot-plugin-localstore = ">=0.2.0,!=0.3.0,!=0.4.0,<0.5.0"
-nonebot2 = {version = "^2.0.0-rc.1", extras = ["httpx"]}
-sqlalchemy = "^2.0.3"
+alembic = ">=1.9.1,<2.0.0"
+nonebot-plugin-localstore = ">=0.2.0,<0.3.0 || >0.3.0,<0.4.0 || >0.4.0,<0.5.0"
+nonebot2 = {version = ">=2.0.0-rc.1,<3.0.0", extras = ["httpx"]}
+sqlalchemy = ">=2.0.3,<3.0.0"
 
 [package.extras]
+all = ["anyio (>=3.6)", "click (>=8.0)", "pyyaml (>=6.0,<7.0)", "rtoml (>=0.9.0,<0.10.0)", "typing-extensions (>=4.4)"]
 cli = ["anyio (>=3.6)", "click (>=8.0)", "typing-extensions (>=4.4)"]
-
-[package.source]
-type = "git"
-url = "https://github.com/he0119/nonebot-plugin-datastore.git"
-reference = "change/sqlalchemy2"
-resolved_reference = "42061fb17381f12cd7227cce384ddba5322009e6"
+toml = ["rtoml (>=0.9.0,<0.10.0)"]
+yaml = ["pyyaml (>=6.0,<7.0)"]
 
 [[package]]
 name = "nonebot-plugin-localstore"
@@ -1835,14 +1834,14 @@ tests = ["check-manifest", "coverage", "defusedxml", "markdown2", "olefile", "pa
 
 [[package]]
 name = "platformdirs"
-version = "3.0.0"
+version = "3.1.0"
 description = "A small Python package for determining appropriate platform-specific dirs, e.g. a \"user data dir\"."
 category = "dev"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "platformdirs-3.0.0-py3-none-any.whl", hash = "sha256:b1d5eb14f221506f50d6604a561f4c5786d9e80355219694a1b244bcd96f4567"},
-    {file = "platformdirs-3.0.0.tar.gz", hash = "sha256:8a1228abb1ef82d788f74139988b137e78692984ec7b08eaa6c65f1723af28f9"},
+    {file = "platformdirs-3.1.0-py3-none-any.whl", hash = "sha256:13b08a53ed71021350c9e300d4ea8668438fb0046ab3937ac9a29913a1a1350a"},
+    {file = "platformdirs-3.1.0.tar.gz", hash = "sha256:accc3665857288317f32c7bebb5a8e482ba717b474f3fc1d18ca7f9214be0cef"},
 ]
 
 [package.extras]
@@ -1979,14 +1978,14 @@ diagrams = ["jinja2", "railroad-diagrams"]
 
 [[package]]
 name = "pytest"
-version = "7.2.1"
+version = "7.2.2"
 description = "pytest: simple powerful testing with Python"
 category = "dev"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "pytest-7.2.1-py3-none-any.whl", hash = "sha256:c7c6ca206e93355074ae32f7403e8ea12163b1163c976fee7d4d84027c162be5"},
-    {file = "pytest-7.2.1.tar.gz", hash = "sha256:d45e0952f3727241918b8fd0f376f5ff6b301cc0777c6f9a556935c92d8a7d42"},
+    {file = "pytest-7.2.2-py3-none-any.whl", hash = "sha256:130328f552dcfac0b1cec75c12e3f005619dc5f874f0a06e8ff7263f0ee6225e"},
+    {file = "pytest-7.2.2.tar.gz", hash = "sha256:c99ab0c73aceb050f68929bc93af19ab6db0558791c6a0715723abe9d0ade9d4"},
 ]
 
 [package.dependencies]
@@ -2523,14 +2522,14 @@ test = ["Cython (>=0.29.32,<0.30.0)", "aiohttp", "flake8 (>=3.9.2,<3.10.0)", "my
 
 [[package]]
 name = "virtualenv"
-version = "20.19.0"
+version = "20.20.0"
 description = "Virtual Python Environment builder"
 category = "dev"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "virtualenv-20.19.0-py3-none-any.whl", hash = "sha256:54eb59e7352b573aa04d53f80fc9736ed0ad5143af445a1e539aada6eb947dd1"},
-    {file = "virtualenv-20.19.0.tar.gz", hash = "sha256:37a640ba82ed40b226599c522d411e4be5edb339a0c0de030c0dc7b646d61590"},
+    {file = "virtualenv-20.20.0-py3-none-any.whl", hash = "sha256:3c22fa5a7c7aa106ced59934d2c20a2ecb7f49b4130b8bf444178a16b880fa45"},
+    {file = "virtualenv-20.20.0.tar.gz", hash = "sha256:a8a4b8ca1e28f864b7514a253f98c1d62b64e31e77325ba279248c65fb4fcef4"},
 ]
 
 [package.dependencies]
@@ -2910,4 +2909,4 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8"
-content-hash = "e914ef45f023d977a2171f534d5edc8c4c06fd775a69812a63b1a44885a2dfd7"
+content-hash = "1c44323b2090d05a8e79a0a568ec0eff0bb99e0a37a6a360c09cddb139dec8f9"
