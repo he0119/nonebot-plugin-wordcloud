@@ -1,5 +1,5 @@
 from datetime import time
-from typing import Dict, List, Optional, cast
+from typing import Dict, Optional
 
 from apscheduler.job import Job
 from nonebot import get_bot
@@ -167,7 +167,6 @@ class Scheduler:
             results = await session.scalars(statement)
             schedule = results.one_or_none()
             if schedule:
-                schedule = cast(Schedule, schedule)
                 if schedule.time:
                     # 将时间转换为本地时间
                     local_time = time_astimezone(
