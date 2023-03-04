@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 ## [Unreleased]
 
+## [0.4.5] - 2023-03-04
+
 ### Fixed
 
 - 修复 OneBot 12 协议下下载图片出错的问题
@@ -195,7 +197,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 - 可以使用的版本。
 
-[unreleased]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.4.4...HEAD
+[unreleased]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.4.5...HEAD
+[0.4.5]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.4.4...v0.4.5
 [0.4.4]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.4.3...v0.4.4
 [0.4.3]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.4.2...v0.4.3
 [0.4.2]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.4.1...v0.4.2
