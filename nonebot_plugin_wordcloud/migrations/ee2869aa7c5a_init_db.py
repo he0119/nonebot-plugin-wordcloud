@@ -6,7 +6,6 @@ Create Date: 2023-01-18 20:35:39.707472
 
 """
 import sqlalchemy as sa
-import sqlmodel
 from alembic import op
 
 # revision identifiers, used by Alembic.
@@ -35,8 +34,8 @@ def upgrade() -> None:
         op.create_table(
             "nonebot_plugin_wordcloud_schedule",
             sa.Column("id", sa.Integer(), nullable=False),
-            sa.Column("bot_id", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-            sa.Column("group_id", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+            sa.Column("bot_id", sa.String(), nullable=False),
+            sa.Column("group_id", sa.String(), nullable=False),
             sa.Column("time", sa.Time(), nullable=True),
             sa.PrimaryKeyConstraint("id"),
             sa.UniqueConstraint("bot_id", "group_id", name="unique_schedule"),

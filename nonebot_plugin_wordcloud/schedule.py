@@ -1,5 +1,5 @@
 from datetime import time
-from typing import Dict, List, Optional, cast
+from typing import Dict, Optional
 
 from apscheduler.job import Job
 from nonebot import get_bot
@@ -13,7 +13,7 @@ from nonebot.log import logger
 from nonebot_plugin_apscheduler import scheduler
 from nonebot_plugin_chatrecorder import get_messages_plain_text
 from nonebot_plugin_datastore import create_session
-from sqlmodel import select
+from sqlalchemy import select
 
 from .utils import (
     get_datetime_now_with_timezone,
@@ -56,12 +56,13 @@ class Scheduler:
         """更新定时任务"""
         async with create_session() as session:
             statement = (
-                select(Schedule.time)  # type: ignore
+                select(Schedule.time)
                 .group_by(Schedule.time)
                 .where(Schedule.time != None)
             )
-            schedule_times: List[time] = await session.exec(statement)  # type: ignore
+            schedule_times = await session.scalars(statement)
             for schedule_time in schedule_times:
+                assert schedule_time is not None
                 time_str = schedule_time.isoformat()
                 if time_str not in self.schedules:
                     # 转换到 APScheduler 的时区，因为数据库中的时间是 UTC 时间
@@ -86,8 +87,8 @@ class Scheduler:
         """
         async with create_session() as session:
             statement = select(Schedule).where(Schedule.time == time)
-            results = await session.exec(statement)  # type: ignore
-            schedules: List[Schedule] = results.all()
+            results = await session.scalars(statement)
+            schedules = results.all()
             # 如果该时间没有需要执行的定时任务，且不是默认任务则从任务列表中删除该任务
             if time and not schedules:
                 self.schedules.pop(time.isoformat()).remove()
@@ -163,10 +164,9 @@ class Scheduler:
                 .where(Schedule.guild_id == guild_id)
                 .where(Schedule.channel_id == channel_id)
             )
-            results = await session.exec(statement)  # type: ignore
+            results = await session.scalars(statement)
             schedule = results.one_or_none()
             if schedule:
-                schedule = cast(Schedule, schedule)
                 if schedule.time:
                     # 将时间转换为本地时间
                     local_time = time_astimezone(
@@ -203,7 +203,7 @@ class Scheduler:
                 .where(Schedule.guild_id == guild_id)
                 .where(Schedule.channel_id == channel_id)
             )
-            results = await session.exec(statement)  # type: ignore
+            results = await session.scalars(statement)
             schedule = results.one_or_none()
             if schedule:
                 schedule.time = time
@@ -239,7 +239,7 @@ class Scheduler:
                 .where(Schedule.guild_id == guild_id)
                 .where(Schedule.channel_id == channel_id)
             )
-            results = await session.exec(statement)  # type: ignore
+            results = await session.scalars(statement)
             schedule = results.first()
             if schedule:
                 await session.delete(schedule)
