@@ -34,8 +34,8 @@ def upgrade() -> None:
         op.create_table(
             "nonebot_plugin_wordcloud_schedule",
             sa.Column("id", sa.Integer(), nullable=False),
-            sa.Column("bot_id", sa.String(), nullable=False),
-            sa.Column("group_id", sa.String(), nullable=False),
+            sa.Column("bot_id", sa.String(255), nullable=False),
+            sa.Column("group_id", sa.String(255), nullable=False),
             sa.Column("time", sa.Time(), nullable=True),
             sa.PrimaryKeyConstraint("id"),
             sa.UniqueConstraint("bot_id", "group_id", name="unique_schedule"),

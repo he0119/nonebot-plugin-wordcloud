@@ -439,9 +439,9 @@ async def _(
 ):
     command = commands[0]
 
-    group_id = None
-    guild_id = None
-    channel_id = None
+    group_id = ""
+    guild_id = ""
+    channel_id = ""
     if isinstance(event, GroupMessageEventV11):
         group_id = str(event.group_id)
         platform = "qq"

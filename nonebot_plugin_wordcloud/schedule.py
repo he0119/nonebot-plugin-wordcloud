@@ -182,9 +182,9 @@ class Scheduler:
         platfrom: str,
         *,
         time: Optional[time] = None,
-        group_id: Optional[str] = None,
-        guild_id: Optional[str] = None,
-        channel_id: Optional[str] = None,
+        group_id: str = "",
+        guild_id: str = "",
+        channel_id: str = "",
     ):
         """添加定时任务
 
