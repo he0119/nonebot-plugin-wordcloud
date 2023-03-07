@@ -1,7 +1,7 @@
 from datetime import time
 from typing import Optional
 
-from sqlalchemy import UniqueConstraint
+from sqlalchemy import String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from .config import plugin_data
@@ -19,14 +19,13 @@ class Schedule(plugin_data.Model):
             "channel_id",
             name="unique_schedule",
         ),
-        {"extend_existing": True},
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    bot_id: Mapped[str]
-    platform: Mapped[str]
-    group_id: Mapped[Optional[str]]
-    guild_id: Mapped[Optional[str]]
-    channel_id: Mapped[Optional[str]]
+    bot_id: Mapped[str] = mapped_column(String(255))
+    platform: Mapped[str] = mapped_column(String(255))
+    group_id: Mapped[str] = mapped_column(String(255), default="")
+    guild_id: Mapped[str] = mapped_column(String(255), default="")
+    channel_id: Mapped[str] = mapped_column(String(255), default="")
     time: Mapped[Optional["time"]]
     """ UTC 时间 """
