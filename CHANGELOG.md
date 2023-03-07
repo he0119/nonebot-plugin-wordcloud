@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 ## [Unreleased]
 
+## [0.4.6] - 2023-03-07
+
+### Fixed
+
+- 修复 UniqueConstraint 失效的问题
+- 修复无法在 PostgreSQL 与 MySQL 上使用的问题
+
 ## [0.4.5] - 2023-03-04
 
 ### Fixed
@@ -197,7 +204,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 - 可以使用的版本。
 
-[unreleased]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.4.5...HEAD
+[unreleased]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.4.6...HEAD
+[0.4.6]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.4.5...v0.4.6
 [0.4.5]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.4.4...v0.4.5
 [0.4.4]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.4.3...v0.4.4
 [0.4.3]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.4.2...v0.4.3
