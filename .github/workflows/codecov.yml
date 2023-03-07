@@ -22,6 +22,7 @@ jobs:
     env:
       OS: ${{ matrix.os }}
       PYTHON_VERSION: ${{ matrix.python-version }}
+      DB: sqlite
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -43,14 +44,99 @@ jobs:
         uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          env_vars: OS,PYTHON_VERSION
+          env_vars: OS,PYTHON_VERSION,DB
+  test-pg:
+    name: Test PostgreSQL
+    runs-on: ubuntu-latest
+    env:
+      OS: ubuntu-latest
+      PYTHON_VERSION: "3.10"
+      DB: postgresql
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Set timezone
+        uses: szenius/set-timezone@d1416e74a9a643cbf6c711905741e73e3a0c26b8
+        with:
+          timezoneLinux: "Asia/Shanghai"
+          timezoneMacos: "Asia/Shanghai"
+          timezoneWindows: "China Standard Time"
+      - name: Set up Python
+        uses: he0119/setup-python@main
+        with:
+          python-version: "3.10"
+      - name: Install dependencies
+        run: poetry install
+      - name: Run tests
+        run: |
+          sed -ie "s#sqlite+aiosqlite://#postgresql+asyncpg://postgres:postgres@localhost:5432/postgres#g" tests/conftest.py
+          sed -ie "s#StaticPool#NullPool#g" tests/conftest.py
+          poetry run pytest --cov=nonebot_plugin_wordcloud --cov-report xml
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          env_vars: OS,PYTHON_VERSION,DB
+  test-mysql:
+    name: Test MySQL
+    runs-on: ubuntu-latest
+    env:
+      OS: ubuntu-latest
+      PYTHON_VERSION: "3.10"
+      DB: mysql
+    services:
+      mysql:
+        image: mysql
+        env:
+          MYSQL_ROOT_PASSWORD: mysql
+          MYSQL_USER: mysql
+          MYSQL_PASSWORD: mysql
+          MYSQL_DATABASE: mysql
+        ports:
+          - 3306:3306
+        options: --health-cmd "mysqladmin ping -h localhost -umysql -pmysql" --health-interval 10s --health-timeout 5s --health-retries 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Set timezone
+        uses: szenius/set-timezone@d1416e74a9a643cbf6c711905741e73e3a0c26b8
+        with:
+          timezoneLinux: "Asia/Shanghai"
+          timezoneMacos: "Asia/Shanghai"
+          timezoneWindows: "China Standard Time"
+      - name: Set up Python
+        uses: he0119/setup-python@main
+        with:
+          python-version: "3.10"
+      - name: Install dependencies
+        run: poetry install
+      - name: Run tests
+        run: |
+          sed -ie "s#sqlite+aiosqlite://#mysql+aiomysql://mysql:mysql@localhost:3306/mysql#g" tests/conftest.py
+          sed -ie "s#StaticPool#NullPool#g" tests/conftest.py
+          poetry run pytest --cov=nonebot_plugin_wordcloud --cov-report xml
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          env_vars: OS,PYTHON_VERSION,DB
 
   check:
     if: always()
-    needs: test
+    needs: [test, test-pg, test-mysql]
     runs-on: ubuntu-latest
     steps:
-    - name: Decide whether the needed jobs succeeded or failed
-      uses: re-actors/alls-green@05ac9388f0aebcb5727afa17fcccfecd6f8ec5fe
-      with:
-        jobs: ${{ toJSON(needs) }}
+      - name: Decide whether the needed jobs succeeded or failed
+        uses: re-actors/alls-green@05ac9388f0aebcb5727afa17fcccfecd6f8ec5fe
+        with:
+          jobs: ${{ toJSON(needs) }}
