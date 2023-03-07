@@ -3,12 +3,13 @@ from pathlib import Path
 import nonebot
 import pytest
 from nonebug import NONEBOT_INIT_KWARGS, App
-from sqlalchemy import delete
+from sqlalchemy import StaticPool, delete
 
 
 def pytest_configure(config: pytest.Config) -> None:
     config.stash[NONEBOT_INIT_KWARGS] = {
-        "datastore_database_url": "sqlite+aiosqlite:///:memory:",
+        "datastore_database_url": "sqlite+aiosqlite://",
+        "datastore_engine_options": {"poolclass": StaticPool},
     }
 
 
