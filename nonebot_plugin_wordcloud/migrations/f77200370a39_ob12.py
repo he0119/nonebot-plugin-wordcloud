@@ -35,10 +35,10 @@ def upgrade() -> None:
     with op.batch_alter_table(
         "nonebot_plugin_wordcloud_schedule", schema=None
     ) as batch_op:
-        batch_op.add_column(sa.Column("platform", sa.String(255), nullable=True))
-        batch_op.add_column(sa.Column("guild_id", sa.String(255), nullable=True))
-        batch_op.add_column(sa.Column("channel_id", sa.String(255), nullable=True))
-        batch_op.alter_column("group_id", existing_type=sa.String(255), nullable=True)
+        batch_op.add_column(sa.Column("platform", sa.String(32), nullable=True))
+        batch_op.add_column(sa.Column("guild_id", sa.String(64), nullable=True))
+        batch_op.add_column(sa.Column("channel_id", sa.String(64), nullable=True))
+        batch_op.alter_column("group_id", existing_type=sa.String(64), nullable=True)
         batch_op.drop_constraint("unique_schedule", type_="unique")
         batch_op.create_unique_constraint(
             "unique_schedule",
@@ -48,7 +48,7 @@ def upgrade() -> None:
     with op.batch_alter_table(
         "nonebot_plugin_wordcloud_schedule", schema=None
     ) as batch_op:
-        batch_op.alter_column("platform", existing_type=sa.String(255), nullable=False)
+        batch_op.alter_column("platform", existing_type=sa.String(32), nullable=False)
 
     # ### end Alembic commands ###
 
@@ -60,7 +60,7 @@ def downgrade() -> None:
     ) as batch_op:
         batch_op.drop_constraint("unique_schedule", type_="unique")
         batch_op.create_unique_constraint("unique_schedule", ["bot_id", "group_id"])
-        batch_op.alter_column("group_id", existing_type=sa.String(255), nullable=False)
+        batch_op.alter_column("group_id", existing_type=sa.String(64), nullable=False)
         batch_op.drop_column("channel_id")
         batch_op.drop_column("guild_id")
         batch_op.drop_column("platform")

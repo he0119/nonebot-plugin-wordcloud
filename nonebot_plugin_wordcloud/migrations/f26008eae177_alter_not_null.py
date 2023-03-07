@@ -41,11 +41,9 @@ def upgrade() -> None:
     with op.batch_alter_table(
         "nonebot_plugin_wordcloud_schedule", schema=None
     ) as batch_op:
-        batch_op.alter_column("group_id", existing_type=sa.String(255), nullable=False)
-        batch_op.alter_column("guild_id", existing_type=sa.String(255), nullable=False)
-        batch_op.alter_column(
-            "channel_id", existing_type=sa.String(255), nullable=False
-        )
+        batch_op.alter_column("group_id", existing_type=sa.String(64), nullable=False)
+        batch_op.alter_column("guild_id", existing_type=sa.String(64), nullable=False)
+        batch_op.alter_column("channel_id", existing_type=sa.String(64), nullable=False)
 
     # ### end Alembic commands ###
 
@@ -55,8 +53,8 @@ def downgrade() -> None:
     with op.batch_alter_table(
         "nonebot_plugin_wordcloud_schedule", schema=None
     ) as batch_op:
-        batch_op.alter_column("channel_id", existing_type=sa.String(255), nullable=True)
-        batch_op.alter_column("guild_id", existing_type=sa.String(255), nullable=True)
-        batch_op.alter_column("group_id", existing_type=sa.String(255), nullable=True)
+        batch_op.alter_column("channel_id", existing_type=sa.String(64), nullable=True)
+        batch_op.alter_column("guild_id", existing_type=sa.String(64), nullable=True)
+        batch_op.alter_column("group_id", existing_type=sa.String(64), nullable=True)
 
     # ### end Alembic commands ###

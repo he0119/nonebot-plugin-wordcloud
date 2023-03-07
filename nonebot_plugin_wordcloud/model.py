@@ -22,10 +22,10 @@ class Schedule(plugin_data.Model):
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    bot_id: Mapped[str] = mapped_column(String(255))
-    platform: Mapped[str] = mapped_column(String(255))
-    group_id: Mapped[str] = mapped_column(String(255), default="")
-    guild_id: Mapped[str] = mapped_column(String(255), default="")
-    channel_id: Mapped[str] = mapped_column(String(255), default="")
+    bot_id: Mapped[str] = mapped_column(String(64))
+    platform: Mapped[str] = mapped_column(String(32))
+    group_id: Mapped[str] = mapped_column(String(64), default="")
+    guild_id: Mapped[str] = mapped_column(String(64), default="")
+    channel_id: Mapped[str] = mapped_column(String(64), default="")
     time: Mapped[Optional["time"]]
     """ UTC 时间 """

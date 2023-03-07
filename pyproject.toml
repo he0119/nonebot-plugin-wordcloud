@@ -13,7 +13,7 @@ documentation = "https://github.com/he0119/nonebot-plugin-wordcloud#readme"
 python = "^3.8"
 nonebot2 = { version = "^2.0.0-rc.1", extras = ["fastapi"] }
 nonebot-adapter-onebot = "^2.2.0"
-nonebot-plugin-chatrecorder = "^0.2.2"
+nonebot-plugin-chatrecorder = "^0.2.3"
 wordcloud = "^1.8.1"
 jieba = "^0.42.1"
 tzdata = "*"
