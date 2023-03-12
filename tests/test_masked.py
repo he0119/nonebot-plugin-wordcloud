@@ -31,7 +31,7 @@ async def test_masked(app: App, mocker: MockerFixture):
     mocked_random = mocker.patch("wordcloud.wordcloud.Random")
     mocked_random.return_value = random.Random(0)
 
-    image_byte = await get_wordcloud(["示例", "插件", "测试"])
+    image_byte = await get_wordcloud(["示例", "插件", "测试"], "")
 
     assert image_byte is not None
 
@@ -43,6 +43,42 @@ async def test_masked(app: App, mocker: MockerFixture):
     assert diff.getbbox() is None
 
     mocked_random.assert_called()
+
+
+async def test_masked_by_command(app: App, mocker: MockerFixture):
+    """测试自定义图片形状"""
+    from nonebot_plugin_wordcloud import wordcloud_cmd
+    from nonebot_plugin_wordcloud.config import plugin_config, plugin_data
+
+    mocker.patch.object(plugin_config, "wordcloud_background_color", "white")
+
+    mask_path = Path(__file__).parent / "mask.png"
+    shutil.copy(mask_path, plugin_data.data_dir / "mask.png")
+
+    mocked_random = mocker.patch("wordcloud.wordcloud.Random")
+    mocked_random.return_value = random.Random(0)
+
+    mocked_get_messages_plain_text = mocker.patch(
+        "nonebot_plugin_wordcloud.get_messages_plain_text",
+        return_value=["示例", "插件", "测试"],
+    )
+
+    test_image_path = Path(__file__).parent / "test_masked.png"
+    with test_image_path.open("rb") as f:
+        test_image = f.read()
+
+    async with app.test_matcher(wordcloud_cmd) as ctx:
+        bot = ctx.create_bot(base=Bot)
+        event = fake_group_message_event_v11(message=Message("/今日词云"))
+
+        ctx.receive_event(bot, event)
+        ctx.should_call_send(
+            event, MessageSegment.image(test_image), True, at_sender=False
+        )
+        ctx.should_finished()
+
+    mocked_random.assert_called()
+    mocked_get_messages_plain_text.assert_called_once()
 
 
 async def test_masked_group(app: App, mocker: MockerFixture):
