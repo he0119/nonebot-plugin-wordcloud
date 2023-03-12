@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 ## [Unreleased]
 
+## [0.4.7] - 2023-03-12
+
 ### Fixed
 
 - 修复默认词云形状无效的问题
@@ -208,7 +210,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 - 可以使用的版本。
 
-[unreleased]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.4.6...HEAD
+[unreleased]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.4.7...HEAD
+[0.4.7]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.4.6...v0.4.7
 [0.4.6]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.4.5...v0.4.6
 [0.4.5]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.4.4...v0.4.5
 [0.4.4]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.4.3...v0.4.4
