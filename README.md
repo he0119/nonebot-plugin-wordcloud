@@ -33,7 +33,9 @@ _✨ NoneBot 词云插件 ✨_
 插件依赖 [nonebot-plugin-chatrecorder](https://github.com/MeetWq/nonebot-plugin-chatrecorder) 提供消息存储。
 
 ### 指令
+
 1. 获取所有指令列表
+
 ```
 /词云
 ```
