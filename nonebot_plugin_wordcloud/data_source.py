@@ -52,16 +52,18 @@ def analyse_message(msg: str) -> Dict[str, float]:
     return {word: weight for word, weight in words}
 
 
-def get_mask(key: Optional[str] = None):
+def get_mask(key: str):
     """获取 mask"""
     mask_path = plugin_config.get_mask_path(key)
     if mask_path.exists():
         return np.array(Image.open(mask_path))
+    # 如果指定 mask 文件不存在，则尝试默认 mask
+    default_mask_path = plugin_config.get_mask_path()
+    if default_mask_path.exists():
+        return np.array(Image.open(default_mask_path))
 
 
-def _get_wordcloud(
-    messages: List[str], mask_key: Optional[str] = None
-) -> Optional[BytesIO]:
+def _get_wordcloud(messages: List[str], mask_key: str) -> Optional[BytesIO]:
     # 过滤掉命令
     command_start = tuple([i for i in global_config.command_start if i])
     message = " ".join([m for m in messages if not m.startswith(command_start)])
@@ -86,9 +88,7 @@ def _get_wordcloud(
         pass
 
 
-async def get_wordcloud(
-    messages: List[str], mask_key: Optional[str] = None
-) -> Optional[BytesIO]:
+async def get_wordcloud(messages: List[str], mask_key: str) -> Optional[BytesIO]:
     loop = asyncio.get_running_loop()
     pfunc = partial(_get_wordcloud, messages, mask_key)
     with concurrent.futures.ThreadPoolExecutor() as pool:

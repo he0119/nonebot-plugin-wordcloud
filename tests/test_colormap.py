@@ -19,7 +19,7 @@ async def test_colormap(app: App, mocker: MockerFixture):
     mocked_random = mocker.patch("wordcloud.wordcloud.Random")
     mocked_random.return_value = random.Random(0)
 
-    image_byte = await get_wordcloud(["天气"])
+    image_byte = await get_wordcloud(["天气"], "")
 
     assert image_byte is not None
 
