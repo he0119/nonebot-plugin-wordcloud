@@ -82,7 +82,7 @@ _✨ NoneBot 词云插件 ✨_
 
 - 类型: `str`
 - 默认: `None`
-- 说明: 结巴分词的 [停用词表](https://github.com/fxsjy/jieba#%E5%9F%BA%E4%BA%8E-tf-idf-%E7%AE%97%E6%B3%95%E7%9A%84%E5%85%B3%E9%94%AE%E8%AF%8D%E6%8A%BD%E5%8F%96) 位置
+- 说明: 结巴分词的 [停用词表](https://github.com/fxsjy/jieba#%E5%9F%BA%E4%BA%8E-tf-idf-%E7%AE%97%E6%B3%95%E7%9A%84%E5%85%B3%E9%94%AE%E8%AF%8D%E6%8A%BD%E5%8F%96) 位置, 用来屏蔽某些词语，例如：`wordcloud_stopwords_path="./wordcloud_extra_dict/stopword.txt"`，表示屏蔽*stopword.txt*中的词语（当前位置为项目根目录），格式参考[stop_words.txt](https://github.com/fxsjy/jieba/blob/master/extra_dict/stop_words.txt)
 
 ### wordcloud_userdict_path
 
