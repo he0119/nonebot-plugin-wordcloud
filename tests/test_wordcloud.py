@@ -727,3 +727,38 @@ async def test_today_wordcloud_qq_group_v12(
 
     mocked_datetime_now.assert_called_once_with()
     mocked_get_wordcloud.assert_called_once_with([], "qq-guild-10000")
+
+
+async def test_today_wordcloud_exclude_user_ids(
+    app: App, mocker: MockerFixture, message_record: None
+):
+    """测试今日词云，排除特定用户"""
+    from nonebot_plugin_wordcloud import plugin_config, wordcloud_cmd
+
+    mocker.patch.object(plugin_config, "wordcloud_exclude_user_ids", {10})
+
+    mocked_datetime_now = mocker.patch(
+        "nonebot_plugin_wordcloud.get_datetime_now_with_timezone",
+        return_value=datetime(2022, 1, 2, 23, tzinfo=ZoneInfo("Asia/Shanghai")),
+    )
+
+    mocked_get_wordcloud = mocker.patch(
+        "nonebot_plugin_wordcloud.get_wordcloud",
+        return_value=FAKE_IMAGE[0],
+    )
+
+    async with app.test_matcher(wordcloud_cmd) as ctx:
+        bot = ctx.create_bot(base=Bot)
+        event = fake_group_message_event_v11(message=Message("/今日词云"))
+
+        ctx.receive_event(bot, event)
+        ctx.should_call_send(
+            event,
+            MessageSegment.image(FAKE_IMAGE[1]),
+            True,
+            at_sender=False,
+        )
+        ctx.should_finished()
+
+    mocked_datetime_now.assert_called_once_with()
+    mocked_get_wordcloud.assert_called_once_with(["11:1-2"], "qq-group-10000")

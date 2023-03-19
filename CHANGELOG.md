@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 ### Added
 
 - 支持直接向词云传递参数
+- 支持排除特定用户
 
 ### Fixed
 
