@@ -175,7 +175,7 @@ async def test_set_mask_v12(app: App):
     assert not plugin_data.exists("mask-qq-guild-10000.png")
 
     async with app.test_matcher(mask_cmd) as ctx:
-        bot = ctx.create_bot(base=BotV12, platform="qq")
+        bot = ctx.create_bot(base=BotV12, platform="qq", impl="test")
         message = MessageV12("/设置词云形状") + MessageSegmentV12.image("test")
         event = fake_group_message_event_v12(message=message)
 
@@ -193,7 +193,7 @@ async def test_set_mask_v12(app: App):
     assert not plugin_data.exists("mask-qq-guild-10000.png")
 
     async with app.test_matcher(mask_cmd) as ctx:
-        bot = ctx.create_bot(base=BotV12, platform="qq")
+        bot = ctx.create_bot(base=BotV12, platform="qq", impl="test")
         message = MessageV12("/设置词云形状") + MessageSegmentV12.image("test")
         event = fake_channel_message_event_v12(message=message)
 

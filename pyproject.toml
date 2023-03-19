@@ -20,7 +20,7 @@ tzdata = "*"
 "backports.zoneinfo" = { version = "^0.2.1", python = "<3.9" }
 emoji = ">=1.6.3,<3.0.0"
 nonebot-plugin-apscheduler = "^0.2.0"
-nonebot-plugin-datastore = "^0.6.0a2"
+nonebot-plugin-datastore = "^0.6.0"
 
 [tool.poetry.group.dev.dependencies]
 black = "*"

@@ -633,7 +633,7 @@ async def test_today_wordcloud_v12(
         return_value=FAKE_IMAGE[0],
     )
     async with app.test_matcher(wordcloud_cmd) as ctx:
-        bot = ctx.create_bot(base=BotV12, platform="test")
+        bot = ctx.create_bot(base=BotV12, platform="test", impl="test")
         event = fake_channel_message_event_v12(message=MessageV12("/今日词云"))
 
         ctx.receive_event(bot, event)
@@ -672,7 +672,7 @@ async def test_my_today_wordcloud_v12(
     )
 
     async with app.test_matcher(wordcloud_cmd) as ctx:
-        bot = ctx.create_bot(base=BotV12, platform="test")
+        bot = ctx.create_bot(base=BotV12, platform="test", impl="test")
         event = fake_channel_message_event_v12(message=MessageV12("/我的今日词云"))
 
         ctx.receive_event(bot, event)
@@ -708,7 +708,7 @@ async def test_today_wordcloud_qq_group_v12(
         return_value=FAKE_IMAGE[0],
     )
     async with app.test_matcher(wordcloud_cmd) as ctx:
-        bot = ctx.create_bot(base=BotV12, platform="qq")
+        bot = ctx.create_bot(base=BotV12, platform="qq", impl="test")
         event = fake_channel_message_event_v12(message=MessageV12("/今日词云"))
 
         ctx.receive_event(bot, event)
