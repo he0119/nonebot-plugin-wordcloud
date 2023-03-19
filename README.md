@@ -107,3 +107,9 @@ _✨ NoneBot 词云插件 ✨_
 - 类型: `Dict[str, Any]`
 - 默认: `{}`
 - 说明: 向 [WordCloud](https://amueller.github.io/word_cloud/generated/wordcloud.WordCloud.html#wordcloud.WordCloud) 传递的参数。拥有最高优先级，将会覆盖以上词云的配置项。
+
+### wordcloud_exclude_user_ids
+
+- 类型: `Set[str]`
+- 默认: `set()`
+- 说明: 排除的用户 ID 列表（全局，不区分平台）。
