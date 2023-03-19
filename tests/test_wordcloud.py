@@ -735,7 +735,7 @@ async def test_today_wordcloud_exclude_user_ids(
     """测试今日词云，排除特定用户"""
     from nonebot_plugin_wordcloud import plugin_config, wordcloud_cmd
 
-    mocker.patch.object(plugin_config, "wordcloud_exclude_user_ids", {10})
+    mocker.patch.object(plugin_config, "wordcloud_exclude_user_ids", {"10"})
 
     mocked_datetime_now = mocker.patch(
         "nonebot_plugin_wordcloud.get_datetime_now_with_timezone",
