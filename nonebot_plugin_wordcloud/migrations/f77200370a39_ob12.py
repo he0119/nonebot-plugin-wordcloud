@@ -8,9 +8,8 @@ Create Date: 2023-01-19 20:03:34.480753
 import sqlalchemy as sa
 from alembic import op
 from sqlalchemy import select
+from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import Session
-
-from nonebot_plugin_wordcloud.model import Schedule
 
 # revision identifiers, used by Alembic.
 revision = "f77200370a39"
@@ -21,8 +20,10 @@ depends_on = None
 
 def set_default_platform() -> None:
     """设置默认值为 qq"""
-    connection = op.get_bind()
-    with Session(connection) as session:
+    Base = automap_base()
+    Base.prepare(autoload_with=op.get_bind())
+    Schedule = Base.classes.nonebot_plugin_wordcloud_schedule
+    with Session(op.get_bind()) as session:
         schedules = session.scalars(select(Schedule)).all()
         for schedule in schedules:
             schedule.platform = "qq"

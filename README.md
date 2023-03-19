@@ -101,3 +101,9 @@ _✨ NoneBot 词云插件 ✨_
 - 类型: `str`
 - 默认: `22:00`
 - 说明: 默认定时发送时间，当开启词云每日定时发送时没有提供具体时间，将会在这个时间发送每日词云
+
+### wordcloud_options
+
+- 类型: `Dict[str, Any]`
+- 默认: `{}`
+- 说明: 向 [WordCloud](https://amueller.github.io/word_cloud/generated/wordcloud.WordCloud.html#wordcloud.WordCloud) 传递的参数。拥有最高优先级，将会覆盖以上词云的配置项。
