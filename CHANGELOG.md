@@ -7,9 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 ## [Unreleased]
 
+## [0.4.8] - 2023-03-19
+
 ### Added
 
 - 支持直接向词云传递参数
+- 支持排除特定用户
 
 ### Fixed
 
@@ -218,7 +221,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 - 可以使用的版本。
 
-[unreleased]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.4.7...HEAD
+[unreleased]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.4.8...HEAD
+[0.4.8]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.4.7...v0.4.8
 [0.4.7]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.4.6...v0.4.7
 [0.4.6]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.4.5...v0.4.6
 [0.4.5]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.4.4...v0.4.5

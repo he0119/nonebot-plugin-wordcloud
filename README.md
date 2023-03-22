@@ -97,6 +97,38 @@ _✨ NoneBot 词云插件 ✨_
 
 * WordCloud 参数
 
-| 配置项            | 类型               | 默认 | 说明                                                                                                                                                            |
-| :---------------- | :----------------- | ---- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| wordcloud_options | `Dict[str, Any]` | { } | 向[WordCloud](https://amueller.github.io/word_cloud/generated/wordcloud.WordCloud.html#wordcloud.WordCloud) 传递的参数。拥有最高优先级，将会覆盖以上词云的配置项。 |
+### wordcloud_stopwords_path
+
+- 类型: `str`
+- 默认: `None`
+- 说明: 结巴分词的 [停用词表](https://github.com/fxsjy/jieba#%E5%9F%BA%E4%BA%8E-tf-idf-%E7%AE%97%E6%B3%95%E7%9A%84%E5%85%B3%E9%94%AE%E8%AF%8D%E6%8A%BD%E5%8F%96) 位置
+
+### wordcloud_userdict_path
+
+- 类型: `str`
+- 默认: `None`
+- 说明: 结巴分词的 [自定义词典](https://github.com/fxsjy/jieba#%E8%BD%BD%E5%85%A5%E8%AF%8D%E5%85%B8) 位置
+
+### wordcloud_timezone
+
+- 类型: `str`
+- 默认: `None`
+- 说明: 用户自定义的 [时区](https://docs.python.org/zh-cn/3/library/zoneinfo.html)，留空则使用系统时区，时区列表可参考：[时区列表](https://timezonedb.com/time-zones)，比如说：`Asia/Shanghai`
+
+### wordcloud_default_schedule_time
+
+- 类型: `str`
+- 默认: `22:00`
+- 说明: 默认定时发送时间，当开启词云每日定时发送时没有提供具体时间，将会在这个时间发送每日词云
+
+### wordcloud_options
+
+- 类型: `Dict[str, Any]`
+- 默认: `{}`
+- 说明: 向 [WordCloud](https://amueller.github.io/word_cloud/generated/wordcloud.WordCloud.html#wordcloud.WordCloud) 传递的参数。拥有最高优先级，将会覆盖以上词云的配置项。
+
+### wordcloud_exclude_user_ids
+
+- 类型: `Set[str]`
+- 默认: `set()`
+- 说明: 排除的用户 ID 列表（全局，不区分平台）。

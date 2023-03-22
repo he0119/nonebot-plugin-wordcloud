@@ -241,6 +241,7 @@ async def handle_get_messages_group_message(
         types=["message"],  # 排除机器人自己发的消息
         time_start=start.astimezone(ZoneInfo("UTC")),
         time_stop=stop.astimezone(ZoneInfo("UTC")),
+        exclude_user_ids=plugin_config.wordcloud_exclude_user_ids,
     )
     state["mask_key"] = (
         get_mask_key("qq", group_id=event.group_id)
@@ -275,6 +276,7 @@ async def handle_get_messages_channel_message(
         types=["message"],
         time_start=start.astimezone(ZoneInfo("UTC")),
         time_stop=stop.astimezone(ZoneInfo("UTC")),
+        exclude_user_ids=plugin_config.wordcloud_exclude_user_ids,
     )
     state["mask_key"] = get_mask_key(bot.platform, guild_id=event.guild_id)
 

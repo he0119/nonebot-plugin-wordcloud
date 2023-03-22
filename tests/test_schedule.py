@@ -54,7 +54,7 @@ async def test_enable_schedule(app: App):
 
     # OneBot V12
     async with app.test_matcher(schedule_cmd) as ctx:
-        bot = ctx.create_bot(base=BotV12, platform="qq")
+        bot = ctx.create_bot(base=BotV12, platform="qq", impl="test")
         event = fake_group_message_event_v12(message=MessageV12("/开启词云每日定时发送"))
 
         ctx.receive_event(bot, event)
@@ -65,7 +65,7 @@ async def test_enable_schedule(app: App):
     assert len(schedule_service.schedules) == 2
 
     async with app.test_matcher(schedule_cmd) as ctx:
-        bot = ctx.create_bot(base=BotV12, platform="qq")
+        bot = ctx.create_bot(base=BotV12, platform="qq", impl="test")
         event = fake_channel_message_event_v12(message=MessageV12("/开启词云每日定时发送 09:00"))
 
         ctx.receive_event(bot, event)
