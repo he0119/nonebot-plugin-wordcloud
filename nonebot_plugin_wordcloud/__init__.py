@@ -137,10 +137,11 @@ async def handle_first_receive(
     commands: Tuple[str, ...] = Command(),
     args: Message = CommandArg(),
 ):
-    command = commands[0].removesuffix("词云")  # 去除后缀
+    command = commands[0][:-2]  # 去除后缀
 
     state["my"] = command.startswith("我的")
-    command = command.removeprefix("我的")  # 尝试去除前缀“我的”（不抛出异常）
+    if state["my"]:
+        command = command[2:]
 
     dt = get_datetime_now_with_timezone()
     if command == "今日":
