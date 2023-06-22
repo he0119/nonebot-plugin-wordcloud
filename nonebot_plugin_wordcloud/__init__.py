@@ -150,19 +150,29 @@ async def handle_first_receive(
         state["stop"] = dt.replace(hour=0, minute=0, second=0, microsecond=0)
         state["start"] = state["stop"] - timedelta(days=1)
     elif command == "本周":
-        state["start"] = dt.replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=dt.weekday())
+        state["start"] = dt.replace(
+            hour=0, minute=0, second=0, microsecond=0
+        ) - timedelta(days=dt.weekday())
         state["stop"] = dt
     elif command == "上周":
-        state["stop"] = dt.replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=dt.weekday())
+        state["stop"] = dt.replace(
+            hour=0, minute=0, second=0, microsecond=0
+        ) - timedelta(days=dt.weekday())
         state["start"] = state["stop"] - timedelta(days=7)
     elif command == "本月":
         state["start"] = dt.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         state["stop"] = dt
     elif command == "上月":
-        state["stop"] = dt.replace(day=1, hour=0, minute=0, second=0, microsecond=0) - timedelta(microseconds=1)
-        state["start"] = state["stop"].replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        state["stop"] = dt.replace(
+            day=1, hour=0, minute=0, second=0, microsecond=0
+        ) - timedelta(microseconds=1)
+        state["start"] = state["stop"].replace(
+            day=1, hour=0, minute=0, second=0, microsecond=0
+        )
     elif command == "年度":
-        state["start"] = dt.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
+        state["start"] = dt.replace(
+            month=1, day=1, hour=0, minute=0, second=0, microsecond=0
+        )
         state["stop"] = dt
     elif command == "历史":
         plaintext = args.extract_plain_text().strip()
@@ -220,8 +230,7 @@ async def handle_get_messages_group_message(
         exclude_user_ids=plugin_config.wordcloud_exclude_user_ids,
     )
     state["mask_key"] = get_mask_key(
-        "qq" if isinstance(bot, BotV11) else bot.platform,
-        group_id=event.group_id
+        "qq" if isinstance(bot, BotV11) else bot.platform, group_id=event.group_id
     )
 
 
@@ -440,9 +449,7 @@ async def _(
             channel_id=channel_id,
         )
         await schedule_cmd.finish(
-            f"词云每日定时发送已开启，发送时间为：{schedule_time}"
-            if schedule_time
-            else "词云每日定时发送未开启"
+            f"词云每日定时发送已开启，发送时间为：{schedule_time}" if schedule_time else "词云每日定时发送未开启"
         )
     elif command == "开启词云每日定时发送":
         schedule_time = None

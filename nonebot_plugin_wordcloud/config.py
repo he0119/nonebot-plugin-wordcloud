@@ -41,14 +41,20 @@ class Config(BaseModel, extra=Extra.ignore):
 
         default_schedule_time = (
             time.fromisoformat(wordcloud_default_schedule_time)
-            if (wordcloud_default_schedule_time := values.get("wordcloud_default_schedule_time"))
+            if (
+                wordcloud_default_schedule_time := values.get(
+                    "wordcloud_default_schedule_time"
+                )
+            )
             else time(22, 0, 0)
         )
 
         default_schedule_time = (
             default_schedule_time.replace(tzinfo=ZoneInfo(wordcloud_timezone))
             if (wordcloud_timezone := values.get("wordcloud_timezone"))
-            else default_schedule_time.replace(tzinfo=datetime.now().astimezone().tzinfo)
+            else default_schedule_time.replace(
+                tzinfo=datetime.now().astimezone().tzinfo
+            )
         )
         values["wordcloud_default_schedule_time"] = default_schedule_time
         return values

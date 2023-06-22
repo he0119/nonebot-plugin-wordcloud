@@ -93,6 +93,5 @@ def _get_wordcloud(messages: List[str], mask_key: str) -> Optional[BytesIO]:
 async def get_wordcloud(messages: List[str], mask_key: str) -> Optional[BytesIO]:
     loop = asyncio.get_running_loop()
     return await loop.run_in_executor(
-        executor=None,
-        func=partial(_get_wordcloud, messages, mask_key)
+        executor=None, func=partial(_get_wordcloud, messages, mask_key)
     )
