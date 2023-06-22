@@ -145,64 +145,44 @@ async def handle_first_receive(
     commands: Tuple[str, ...] = Command(),
     args: Message = CommandArg(),
 ):
-    command = commands[0]
+    command = commands[0].removesuffix("词云")  # 去除后缀
 
-    if command.startswith("我的"):
-        state["my"] = True
-        command = command[2:]
-    else:
-        state["my"] = False
+    state["my"] = command.startswith("我的")
+    command = command.removeprefix("我的")  # 尝试去除前缀“我的”（不抛出异常）
 
-    if command == "今日词云":
-        dt = get_datetime_now_with_timezone()
+    dt = get_datetime_now_with_timezone()
+    if command == "今日":
         state["start"] = dt.replace(hour=0, minute=0, second=0, microsecond=0)
         state["stop"] = dt
-    elif command == "昨日词云":
-        dt = get_datetime_now_with_timezone()
+    elif command == "昨日":
         state["stop"] = dt.replace(hour=0, minute=0, second=0, microsecond=0)
         state["start"] = state["stop"] - timedelta(days=1)
-    elif command == "本周词云":
-        dt = get_datetime_now_with_timezone()
-        state["start"] = dt.replace(
-            hour=0, minute=0, second=0, microsecond=0
-        ) - timedelta(days=dt.weekday())
+    elif command == "本周":
+        state["start"] = dt.replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=dt.weekday())
         state["stop"] = dt
-    elif command == "上周词云":
-        dt = get_datetime_now_with_timezone()
-        state["stop"] = dt.replace(
-            hour=0, minute=0, second=0, microsecond=0
-        ) - timedelta(days=dt.weekday())
+    elif command == "上周":
+        state["stop"] = dt.replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=dt.weekday())
         state["start"] = state["stop"] - timedelta(days=7)
-    elif command == "本月词云":
-        dt = get_datetime_now_with_timezone()
+    elif command == "本月":
         state["start"] = dt.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         state["stop"] = dt
-    elif command == "上月词云":
-        dt = get_datetime_now_with_timezone()
-        state["stop"] = dt.replace(
-            day=1, hour=0, minute=0, second=0, microsecond=0
-        ) - timedelta(microseconds=1)
-        state["start"] = state["stop"].replace(
-            day=1, hour=0, minute=0, second=0, microsecond=0
-        )
-    elif command == "年度词云":
-        dt = get_datetime_now_with_timezone()
-        state["start"] = dt.replace(
-            month=1, day=1, hour=0, minute=0, second=0, microsecond=0
-        )
+    elif command == "上月":
+        state["stop"] = dt.replace(day=1, hour=0, minute=0, second=0, microsecond=0) - timedelta(microseconds=1)
+        state["start"] = state["stop"].replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    elif command == "年度":
+        state["start"] = dt.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
         state["stop"] = dt
-    elif command == "历史词云":
+    elif command == "历史":
         plaintext = args.extract_plain_text().strip()
-        match = re.match(r"^(.+?)(?:~(.+))?$", plaintext)
-        if match:
-            start = match.group(1)
-            stop = match.group(2)
+        if match := re.match(r"^(.+?)(?:~(.+))?$", plaintext):
+            start = match[1]
+            stop = match[2]
             try:
                 state["start"] = get_datetime_fromisoformat_with_timezone(start)
                 if stop:
                     state["stop"] = get_datetime_fromisoformat_with_timezone(stop)
                 else:
-                    # 如果没有指定结束日期，则认为是指查询这一天的词云
+                    # 如果没有指定结束日期，则认为是所给日期的当天的词云
                     state["start"] = state["start"].replace(
                         hour=0, minute=0, second=0, microsecond=0
                     )
@@ -210,9 +190,8 @@ async def handle_first_receive(
             except ValueError:
                 await wordcloud_cmd.finish("请输入正确的日期，不然我没法理解呢！")
     else:
-        plaintext = args.extract_plain_text()
         # 当完整匹配词云的时候才输出帮助信息
-        if not plaintext:
+        if not args.extract_plain_text():
             await wordcloud_cmd.finish(__plugin_meta__.usage)
         else:
             await wordcloud_cmd.finish()
@@ -236,6 +215,7 @@ async def handle_get_messages_group_message(
     stop: datetime = Arg(),
     my: bool = Arg(),
 ):
+    """获取群聊相关数据"""
     platform = "qq" if isinstance(bot, BotV11) else bot.platform
     # 将时间转换到 UTC 时区
     state["messages"] = await get_messages_plain_text(
@@ -247,10 +227,9 @@ async def handle_get_messages_group_message(
         time_stop=stop.astimezone(ZoneInfo("UTC")),
         exclude_user_ids=plugin_config.wordcloud_exclude_user_ids,
     )
-    state["mask_key"] = (
-        get_mask_key("qq", group_id=event.group_id)
-        if isinstance(bot, BotV11)
-        else get_mask_key(bot.platform, group_id=event.group_id)
+    state["mask_key"] = get_mask_key(
+        "qq" if isinstance(bot, BotV11) else bot.platform,
+        group_id=event.group_id
     )
 
 
@@ -272,6 +251,7 @@ async def handle_get_messages_channel_message(
     stop: datetime = Arg(),
     my: bool = Arg(),
 ):
+    """获取频道相关数据"""
     state["messages"] = await get_messages_plain_text(
         platforms=[bot.platform],
         user_ids=[event.user_id] if my else None,
@@ -292,8 +272,8 @@ async def handle_send_message(
     mask_key: str = Arg(),
     my: bool = Arg(),
 ):
-    image = await get_wordcloud(messages, mask_key)
-    if not image:
+    """发送词云"""
+    if not (image := await get_wordcloud(messages, mask_key)):
         await wordcloud_cmd.finish("没有足够的数据生成词云", at_sender=my)
 
     if isinstance(bot, BotV11):
@@ -346,8 +326,6 @@ async def _(
     args: Message = CommandArg(),
     commands: Tuple[str, ...] = Command(),
 ):
-    command = commands[0]
-
     if isinstance(event, GroupMessageEventV11):
         mask_key = get_mask_key("qq", group_id=event.group_id)
         msg = f"群 {event.group_id}"
@@ -360,7 +338,7 @@ async def _(
         mask_key = get_mask_key(bot.platform, guild_id=event.guild_id)
         msg = f"频道 {event.guild_id}"
 
-    if command == "设置词云默认形状":
+    if (command := commands[0]) == "设置词云默认形状":
         if not await SUPERUSER(bot, event):
             await mask_cmd.finish("仅超级用户可设置词云默认形状")
         state["default"] = True
@@ -445,9 +423,9 @@ async def _(
 ):
     command = commands[0]
 
-    group_id = ""
-    guild_id = ""
-    channel_id = ""
+    group_id: str = ""
+    guild_id: str = ""
+    channel_id: str = ""
     if isinstance(event, GroupMessageEventV11):
         group_id = str(event.group_id)
         platform = "qq"
@@ -469,10 +447,11 @@ async def _(
             guild_id=guild_id,
             channel_id=channel_id,
         )
-        if schedule_time:
-            await schedule_cmd.finish(f"词云每日定时发送已开启，发送时间为：{schedule_time}")
-        else:
-            await schedule_cmd.finish("词云每日定时发送未开启")
+        await schedule_cmd.finish(
+            f"词云每日定时发送已开启，发送时间为：{schedule_time}"
+            if schedule_time
+            else "词云每日定时发送未开启"
+        )
     elif command == "开启词云每日定时发送":
         schedule_time = None
         if time_str := args.extract_plain_text().strip():
@@ -488,12 +467,11 @@ async def _(
             guild_id=guild_id,
             channel_id=channel_id,
         )
-        if schedule_time:
-            await schedule_cmd.finish(f"已开启词云每日定时发送，发送时间为：{schedule_time}")
-        else:
-            await schedule_cmd.finish(
-                f"已开启词云每日定时发送，发送时间为：{plugin_config.wordcloud_default_schedule_time}"
-            )
+        schedule_cmd.finish(
+            f"已开启词云每日定时发送，发送时间为：{schedule_time}"
+            if schedule_time
+            else f"已开启词云每日定时发送，发送时间为：{plugin_config.wordcloud_default_schedule_time}"
+        )
     elif command == "关闭词云每日定时发送":
         await schedule_service.remove_schedule(
             bot.self_id,
