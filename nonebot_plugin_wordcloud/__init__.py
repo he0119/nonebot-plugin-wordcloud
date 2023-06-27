@@ -34,7 +34,7 @@ require("nonebot_plugin_datastore")
 from nonebot_plugin_chatrecorder import get_messages_plain_text
 from nonebot_plugin_datastore.db import post_db_init
 
-from .config import plugin_config, plugin_data
+from .config import Config, plugin_config, plugin_data
 from .data_source import get_wordcloud
 from .schedule import schedule_service
 from .utils import (
@@ -87,6 +87,10 @@ __plugin_meta__ = PluginMetadata(
 /开启词云每日定时发送
 /开启词云每日定时发送 23:59
 /关闭词云每日定时发送""",
+    homepage="https://github.com/he0119/nonebot-plugin-wordcloud",
+    type="application",
+    supported_adapters={"~onebot.v11", "~onebot.v12"},
+    config=Config,
 )
 
 wordcloud = CommandGroup("词云")
