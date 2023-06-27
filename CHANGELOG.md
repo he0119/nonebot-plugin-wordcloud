@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 ## [Unreleased]
 
+## [0.4.9] - 2023-06-27
+
+### Added
+
+- 适配最新插件元数据
+
 ## [0.4.8] - 2023-03-19
 
 ### Added
@@ -221,7 +227,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 - 可以使用的版本。
 
-[unreleased]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.4.8...HEAD
+[unreleased]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.4.9...HEAD
+[0.4.9]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.4.8...v0.4.9
 [0.4.8]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.4.7...v0.4.8
 [0.4.7]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.4.6...v0.4.7
 [0.4.6]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.4.5...v0.4.6
