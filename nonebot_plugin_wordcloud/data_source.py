@@ -1,4 +1,5 @@
 import asyncio
+import concurrent.futures
 import contextlib
 import re
 from functools import partial
@@ -92,6 +93,6 @@ def _get_wordcloud(messages: List[str], mask_key: str) -> Optional[BytesIO]:
 
 async def get_wordcloud(messages: List[str], mask_key: str) -> Optional[BytesIO]:
     loop = asyncio.get_running_loop()
-    return await loop.run_in_executor(
-        executor=None, func=partial(_get_wordcloud, messages, mask_key)
-    )
+    pfunc = partial(_get_wordcloud, messages, mask_key)
+    with concurrent.futures.ThreadPoolExecutor() as pool:
+        return await loop.run_in_executor(pool, pfunc)
