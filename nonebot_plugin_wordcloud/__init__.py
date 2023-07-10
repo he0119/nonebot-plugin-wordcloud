@@ -467,7 +467,7 @@ async def _(
             guild_id=guild_id,
             channel_id=channel_id,
         )
-        schedule_cmd.finish(
+        await schedule_cmd.finish(
             f"已开启词云每日定时发送，发送时间为：{schedule_time}"
             if schedule_time
             else f"已开启词云每日定时发送，发送时间为：{plugin_config.wordcloud_default_schedule_time}"
