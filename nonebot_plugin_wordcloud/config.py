@@ -39,21 +39,23 @@ class Config(BaseModel, extra=Extra.ignore):
                 Path(__file__).parent / "SourceHanSans.otf"
             )
 
-        if wordcloud_default_schedule_time := values.get(
-            "wordcloud_default_schedule_time"
-        ):
-            default_schedule_time = time.fromisoformat(wordcloud_default_schedule_time)
-        else:
-            default_schedule_time = time(22, 0, 0)
-
-        if wordcloud_timezone := values.get("wordcloud_timezone"):
-            default_schedule_time = default_schedule_time.replace(
-                tzinfo=ZoneInfo(wordcloud_timezone)
+        default_schedule_time = (
+            time.fromisoformat(wordcloud_default_schedule_time)
+            if (
+                wordcloud_default_schedule_time := values.get(
+                    "wordcloud_default_schedule_time"
+                )
             )
-        else:
-            default_schedule_time = default_schedule_time.replace(
+            else time(22, 0, 0)
+        )
+
+        default_schedule_time = (
+            default_schedule_time.replace(tzinfo=ZoneInfo(wordcloud_timezone))
+            if (wordcloud_timezone := values.get("wordcloud_timezone"))
+            else default_schedule_time.replace(
                 tzinfo=datetime.now().astimezone().tzinfo
             )
+        )
         values["wordcloud_default_schedule_time"] = default_schedule_time
         return values
 

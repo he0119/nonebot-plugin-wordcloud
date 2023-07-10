@@ -93,7 +93,7 @@ class Scheduler:
             if time and not schedules:
                 self.schedules.pop(time.isoformat()).remove()
                 return
-            logger.info(f"开始发送每日词云，时间为 {time if time else '默认时间'}")
+            logger.info(f"开始发送每日词云，时间为 {time or '默认时间'}")
             for schedule in schedules:
                 bot = get_bot(schedule.bot_id)
                 if not isinstance(bot, (BotV11, BotV12)):
@@ -117,8 +117,7 @@ class Scheduler:
                     group_id=schedule.group_id,
                     guild_id=schedule.guild_id,
                 )
-                image = await get_wordcloud(messages, mask_key)
-                if not image:
+                if not (image := await get_wordcloud(messages, mask_key)):
                     await send_message(
                         bot,
                         "今天没有足够的数据生成词云",
@@ -165,14 +164,12 @@ class Scheduler:
                 .where(Schedule.channel_id == channel_id)
             )
             results = await session.scalars(statement)
-            schedule = results.one_or_none()
-            if schedule:
+            if schedule := results.one_or_none():
                 if schedule.time:
                     # 将时间转换为本地时间
-                    local_time = time_astimezone(
+                    return time_astimezone(
                         schedule.time.replace(tzinfo=ZoneInfo("UTC"))
                     )
-                    return local_time
                 else:
                     return plugin_config.wordcloud_default_schedule_time
 
@@ -204,8 +201,7 @@ class Scheduler:
                 .where(Schedule.channel_id == channel_id)
             )
             results = await session.scalars(statement)
-            schedule = results.one_or_none()
-            if schedule:
+            if schedule := results.one_or_none():
                 schedule.time = time
             else:
                 schedule = Schedule(
@@ -240,8 +236,7 @@ class Scheduler:
                 .where(Schedule.channel_id == channel_id)
             )
             results = await session.scalars(statement)
-            schedule = results.first()
-            if schedule:
+            if schedule := results.first():
                 await session.delete(schedule)
                 await session.commit()
 

@@ -1,5 +1,6 @@
 import asyncio
 import concurrent.futures
+import contextlib
 import re
 from functools import partial
 from io import BytesIO
@@ -19,11 +20,11 @@ def pre_precess(msg: str) -> str:
     """对消息进行预处理"""
     # 去除网址
     # https://stackoverflow.com/a/17773849/9212748
-    msg = re.sub(
-        r"(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})",
-        "",
-        msg,
+    url_regex = re.compile(
+        r"(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]"
+        r"+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})"
     )
+    msg = url_regex.sub("", msg)
 
     # 去除 \u200b
     msg = re.sub(r"\u200b", "", msg)
@@ -49,7 +50,7 @@ def analyse_message(msg: str) -> Dict[str, float]:
     # 基于 TF-IDF 算法的关键词抽取
     # 返回所有关键词，因为设置了数量其实也只是 tags[:topK]，不如交给词云库处理
     words = jieba.analyse.extract_tags(msg, topK=0, withWeight=True)
-    return {word: weight for word, weight in words}
+    return dict(words)
 
 
 def get_mask(key: str):
@@ -65,8 +66,8 @@ def get_mask(key: str):
 
 def _get_wordcloud(messages: List[str], mask_key: str) -> Optional[BytesIO]:
     # 过滤掉命令
-    command_start = tuple([i for i in global_config.command_start if i])
-    message = " ".join([m for m in messages if not m.startswith(command_start)])
+    command_start = tuple(i for i in global_config.command_start if i)
+    message = " ".join(m for m in messages if not m.startswith(command_start))
     # 预处理
     message = pre_precess(message)
     # 分析消息。分词，并统计词频
@@ -82,14 +83,12 @@ def _get_wordcloud(messages: List[str], mask_key: str) -> Optional[BytesIO]:
     )
     wordcloud_options.setdefault("colormap", plugin_config.wordcloud_colormap)
     wordcloud_options.setdefault("mask", get_mask(mask_key))
-    try:
+    with contextlib.suppress(ValueError):
         wordcloud = WordCloud(**wordcloud_options)
         image = wordcloud.generate_from_frequencies(frequency).to_image()
         image_bytes = BytesIO()
         image.save(image_bytes, format="PNG")
         return image_bytes
-    except ValueError:
-        pass
 
 
 async def get_wordcloud(messages: List[str], mask_key: str) -> Optional[BytesIO]:
