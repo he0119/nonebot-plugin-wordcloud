@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 ## [Unreleased]
 
+### Fixed
+
+- 修复定时发送的词云没有排除指定用户的问题
+
 ## [0.4.9] - 2023-06-27
 
 ### Added
