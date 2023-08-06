@@ -111,6 +111,7 @@ class Scheduler:
                     types=["message"],
                     time_start=start.astimezone(ZoneInfo("UTC")),
                     time_stop=stop.astimezone(ZoneInfo("UTC")),
+                    exclude_user_ids=plugin_config.wordcloud_exclude_user_ids,
                 )
                 mask_key = get_mask_key(
                     schedule.platform,
