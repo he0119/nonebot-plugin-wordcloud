@@ -94,5 +94,7 @@ def _get_wordcloud(messages: List[str], mask_key: str) -> Optional[BytesIO]:
 async def get_wordcloud(messages: List[str], mask_key: str) -> Optional[BytesIO]:
     loop = asyncio.get_running_loop()
     pfunc = partial(_get_wordcloud, messages, mask_key)
+    # 虽然不知道具体是哪里泄漏了，但是通过每次关闭线程池可以避免这个问题
+    # https://github.com/he0119/nonebot-plugin-wordcloud/issues/99
     with concurrent.futures.ThreadPoolExecutor() as pool:
         return await loop.run_in_executor(pool, pfunc)
