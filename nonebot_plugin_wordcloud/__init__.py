@@ -27,15 +27,14 @@ from nonebot_plugin_session import Session, SessionIdType, SessionLevel, extract
 
 from .config import Config, plugin_config, plugin_data
 from .data_source import get_wordcloud
-
-# from .schedule import schedule_service
+from .schedule import schedule_service
 from .utils import (
     get_datetime_fromisoformat_with_timezone,
     get_datetime_now_with_timezone,
     get_time_fromisoformat_with_timezone,
 )
 
-# post_db_init(schedule_service.update)
+post_db_init(schedule_service.update)
 
 __plugin_meta__ = PluginMetadata(
     name="词云",
@@ -354,75 +353,37 @@ def parse_image(key: str):
 #         await mask_cmd.finish(f"{msg} 的词云形状设置成功")
 
 
-# schedule_cmd = wordcloud.command(
-#     "schedule",
-#     aliases={"词云每日定时发送状态", "开启词云每日定时发送", "关闭词云每日定时发送"},
-#     permission=SUPERUSER | GROUP_OWNER | GROUP_ADMIN,
-# )
+schedule_cmd = wordcloud.command(
+    "schedule", aliases={"词云每日定时发送状态", "开启词云每日定时发送", "关闭词云每日定时发送"}, permission=SUPERUSER
+)
 
 
-# @schedule_cmd.handle()
-# async def _(
-#     bot: Union[BotV11, BotV12],
-#     event: Union[GroupMessageEventV11, GroupMessageEventV12, ChannelMessageEvent],
-#     commands: Tuple[str, ...] = Command(),
-#     args: Message = CommandArg(),
-# ):
-#     command = commands[0]
+@schedule_cmd.handle()
+async def _(
+    target: saa.PlatformTarget = Depends(saa.get_target),
+    commands: Tuple[str, ...] = Command(),
+    args: Message = CommandArg(),
+):
+    command = commands[0]
 
-#     group_id: str = ""
-#     guild_id: str = ""
-#     channel_id: str = ""
-#     if isinstance(event, GroupMessageEventV11):
-#         group_id = str(event.group_id)
-#         platform = "qq"
-#     elif isinstance(event, GroupMessageEventV12):
-#         bot = cast(BotV12, bot)
-#         group_id = event.group_id
-#         platform = bot.platform
-#     else:
-#         bot = cast(BotV12, bot)
-#         guild_id = event.guild_id
-#         channel_id = event.channel_id
-#         platform = bot.platform
-
-#     if command == "词云每日定时发送状态":
-#         schedule_time = await schedule_service.get_schedule(
-#             bot.self_id,
-#             platform,
-#             group_id=group_id,
-#             guild_id=guild_id,
-#             channel_id=channel_id,
-#         )
-#         await schedule_cmd.finish(
-#             f"词云每日定时发送已开启，发送时间为：{schedule_time}" if schedule_time else "词云每日定时发送未开启"
-#         )
-#     elif command == "开启词云每日定时发送":
-#         schedule_time = None
-#         if time_str := args.extract_plain_text().strip():
-#             try:
-#                 schedule_time = get_time_fromisoformat_with_timezone(time_str)
-#             except ValueError:
-#                 await schedule_cmd.finish("请输入正确的时间，不然我没法理解呢！")
-#         await schedule_service.add_schedule(
-#             bot.self_id,
-#             platform,
-#             time=schedule_time,
-#             group_id=group_id,
-#             guild_id=guild_id,
-#             channel_id=channel_id,
-#         )
-#         await schedule_cmd.finish(
-#             f"已开启词云每日定时发送，发送时间为：{schedule_time}"
-#             if schedule_time
-#             else f"已开启词云每日定时发送，发送时间为：{plugin_config.wordcloud_default_schedule_time}"
-#         )
-#     elif command == "关闭词云每日定时发送":
-#         await schedule_service.remove_schedule(
-#             bot.self_id,
-#             platform,
-#             group_id=group_id,
-#             guild_id=guild_id,
-#             channel_id=channel_id,
-#         )
-#         await schedule_cmd.finish("已关闭词云每日定时发送")
+    if command == "词云每日定时发送状态":
+        schedule_time = await schedule_service.get_schedule(target)
+        await schedule_cmd.finish(
+            f"词云每日定时发送已开启，发送时间为：{schedule_time}" if schedule_time else "词云每日定时发送未开启"
+        )
+    elif command == "开启词云每日定时发送":
+        schedule_time = None
+        if time_str := args.extract_plain_text().strip():
+            try:
+                schedule_time = get_time_fromisoformat_with_timezone(time_str)
+            except ValueError:
+                await schedule_cmd.finish("请输入正确的时间，不然我没法理解呢！")
+        await schedule_service.add_schedule(target, time=schedule_time)
+        await schedule_cmd.finish(
+            f"已开启词云每日定时发送，发送时间为：{schedule_time}"
+            if schedule_time
+            else f"已开启词云每日定时发送，发送时间为：{plugin_config.wordcloud_default_schedule_time}"
+        )
+    elif command == "关闭词云每日定时发送":
+        await schedule_service.remove_schedule(target)
+        await schedule_cmd.finish("已关闭词云每日定时发送")

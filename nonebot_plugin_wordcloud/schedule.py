@@ -1,26 +1,16 @@
 from datetime import time
 from typing import Dict, Optional
 
+import nonebot_plugin_saa as saa
 from apscheduler.job import Job
-from nonebot import get_bot
-from nonebot.adapters.onebot.v11 import Bot as BotV11
-from nonebot.adapters.onebot.v11 import Message as MessageV11
-from nonebot.adapters.onebot.v11 import MessageSegment as MessageSegmentV11
-from nonebot.adapters.onebot.v12 import Bot as BotV12
-from nonebot.adapters.onebot.v12 import Message as MessageV12
-from nonebot.adapters.onebot.v12 import MessageSegment as MessageSegmentV12
 from nonebot.log import logger
 from nonebot_plugin_apscheduler import scheduler
 from nonebot_plugin_chatrecorder import get_messages_plain_text
 from nonebot_plugin_datastore import create_session
+from nonebot_plugin_session import SessionIdType
 from sqlalchemy import select
 
-from .utils import (
-    get_datetime_now_with_timezone,
-    get_mask_key,
-    get_time_with_scheduler_timezone,
-    send_message,
-)
+from .utils import get_datetime_now_with_timezone, get_time_with_scheduler_timezone
 
 try:
     from zoneinfo import ZoneInfo
@@ -30,7 +20,9 @@ except ImportError:
 from .config import plugin_config
 from .data_source import get_wordcloud
 from .model import Schedule
-from .utils import time_astimezone
+from .utils import target_to_session, time_astimezone
+
+saa.enable_auto_select_bot()
 
 
 class Scheduler:
@@ -95,75 +87,34 @@ class Scheduler:
                 return
             logger.info(f"开始发送每日词云，时间为 {time or '默认时间'}")
             for schedule in schedules:
-                bot = get_bot(schedule.bot_id)
-                if not isinstance(bot, (BotV11, BotV12)):
-                    logger.warning(f"机器人 {schedule.bot_id} 不是 OneBot 协议，跳过")
-                    continue
-
+                target = schedule.saa_target
+                group_session = target_to_session(target)
                 dt = get_datetime_now_with_timezone()
                 start = dt.replace(hour=0, minute=0, second=0, microsecond=0)
                 stop = dt
                 messages = await get_messages_plain_text(
-                    platforms=[schedule.platform],
-                    group_ids=[schedule.group_id] if schedule.group_id else None,
-                    guild_ids=[schedule.guild_id] if schedule.guild_id else None,
-                    channel_ids=[schedule.channel_id] if schedule.channel_id else None,
+                    session=group_session,
+                    id_type=SessionIdType.GROUP,
+                    include_bot_id=False,
+                    include_bot_type=False,
                     types=["message"],
-                    time_start=start.astimezone(ZoneInfo("UTC")),
-                    time_stop=stop.astimezone(ZoneInfo("UTC")),
-                    exclude_user_ids=plugin_config.wordcloud_exclude_user_ids,
+                    time_start=start,
+                    time_stop=stop,
+                    exclude_id1s=plugin_config.wordcloud_exclude_user_ids,
                 )
-                mask_key = get_mask_key(
-                    schedule.platform,
-                    group_id=schedule.group_id,
-                    guild_id=schedule.guild_id,
+                mask_key = group_session.get_id(
+                    SessionIdType.GROUP, include_bot_type=False, include_bot_id=False
                 )
                 if not (image := await get_wordcloud(messages, mask_key)):
-                    await send_message(
-                        bot,
-                        "今天没有足够的数据生成词云",
-                        schedule.group_id,
-                        schedule.guild_id,
-                        schedule.channel_id,
-                    )
+                    await saa.Text("今天没有足够的数据生成词云").send_to(target)
                     continue
 
-                if isinstance(bot, BotV11) and schedule.group_id:
-                    message = MessageV11(MessageSegmentV11.image(image))
-                else:
-                    result = await bot.upload_file(
-                        type="data", name="wordcloud.png", data=image.getvalue()
-                    )
-                    file_id = result["file_id"]
-                    message = MessageV12(MessageSegmentV12.image(file_id))
+                await saa.Image(image).send_to(target)
 
-                await send_message(
-                    bot,
-                    message,
-                    schedule.group_id,
-                    schedule.guild_id,
-                    schedule.channel_id,
-                )
-
-    async def get_schedule(
-        self,
-        bot_id: str,
-        platfrom: str,
-        *,
-        group_id: Optional[str] = None,
-        guild_id: Optional[str] = None,
-        channel_id: Optional[str] = None,
-    ) -> Optional[time]:
+    async def get_schedule(self, target: saa.PlatformTarget) -> Optional[time]:
         """获取定时任务时间"""
         async with create_session() as session:
-            statement = (
-                select(Schedule)
-                .where(Schedule.bot_id == bot_id)
-                .where(Schedule.platform == platfrom)
-                .where(Schedule.group_id == group_id)
-                .where(Schedule.guild_id == guild_id)
-                .where(Schedule.channel_id == channel_id)
-            )
+            statement = select(Schedule).where(Schedule.target == target.dict())
             results = await session.scalars(statement)
             if schedule := results.one_or_none():
                 if schedule.time:
@@ -175,14 +126,7 @@ class Scheduler:
                     return plugin_config.wordcloud_default_schedule_time
 
     async def add_schedule(
-        self,
-        bot_id: str,
-        platfrom: str,
-        *,
-        time: Optional[time] = None,
-        group_id: str = "",
-        guild_id: str = "",
-        channel_id: str = "",
+        self, target: saa.PlatformTarget, *, time: Optional[time] = None
     ):
         """添加定时任务
 
@@ -193,51 +137,22 @@ class Scheduler:
             time = time_astimezone(time, ZoneInfo("UTC"))
 
         async with create_session() as session:
-            statement = (
-                select(Schedule)
-                .where(Schedule.bot_id == bot_id)
-                .where(Schedule.platform == platfrom)
-                .where(Schedule.group_id == group_id)
-                .where(Schedule.guild_id == guild_id)
-                .where(Schedule.channel_id == channel_id)
-            )
+            statement = select(Schedule).where(Schedule.target == target.dict())
             results = await session.scalars(statement)
             if schedule := results.one_or_none():
                 schedule.time = time
             else:
-                schedule = Schedule(
-                    bot_id=bot_id,
-                    platform=platfrom,
-                    time=time,
-                    group_id=group_id,
-                    guild_id=guild_id,
-                    channel_id=channel_id,
-                )
+                schedule = Schedule(time=time, target=target.dict())
                 session.add(schedule)
             await session.commit()
         await self.update()
 
-    async def remove_schedule(
-        self,
-        bot_id: str,
-        platfrom: str,
-        *,
-        group_id: Optional[str] = None,
-        guild_id: Optional[str] = None,
-        channel_id: Optional[str] = None,
-    ):
+    async def remove_schedule(self, target: saa.PlatformTarget):
         """删除定时任务"""
         async with create_session() as session:
-            statement = (
-                select(Schedule)
-                .where(Schedule.bot_id == bot_id)
-                .where(Schedule.platform == platfrom)
-                .where(Schedule.group_id == group_id)
-                .where(Schedule.guild_id == guild_id)
-                .where(Schedule.channel_id == channel_id)
-            )
+            statement = select(Schedule).where(Schedule.target == target.dict())
             results = await session.scalars(statement)
-            if schedule := results.first():
+            if schedule := results.one_or_none():
                 await session.delete(schedule)
                 await session.commit()
 
