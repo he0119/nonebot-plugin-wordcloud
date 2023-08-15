@@ -1,13 +1,12 @@
 """ 词云
 """
 import re
-from base64 import b64decode
 from datetime import datetime, timedelta
 from io import BytesIO
-from typing import Tuple, Union, cast
+from typing import Tuple, Union
 
 from nonebot import CommandGroup, require
-from nonebot.adapters import Message, MessageSegment
+from nonebot.adapters import Message
 from nonebot.matcher import Matcher
 from nonebot.params import Arg, Command, CommandArg, Depends
 from nonebot.permission import SUPERUSER
@@ -19,13 +18,29 @@ require("nonebot_plugin_apscheduler")
 require("nonebot_plugin_chatrecorder")
 require("nonebot_plugin_datastore")
 require("nonebot_plugin_saa")
+require("nonebot_plugin_alconna")
+import nonebot_plugin_alconna as alc
 import nonebot_plugin_saa as saa
+from nonebot_plugin_alconna import (
+    Alconna,
+    AlconnaArg,
+    AlconnaMatch,
+    AlconnaMatcher,
+    AlconnaQuery,
+    Args,
+    Match,
+    Option,
+    Query,
+    image_fetch,
+    on_alconna,
+    store_true,
+)
 from nonebot_plugin_chatrecorder import __plugin_meta__ as chatrecorder_meta
 from nonebot_plugin_chatrecorder.record import get_messages_plain_text
 from nonebot_plugin_datastore.db import post_db_init
 from nonebot_plugin_session import Session, SessionIdType, SessionLevel, extract_session
 
-from .config import Config, plugin_config, plugin_data
+from .config import Config, plugin_config
 from .data_source import get_wordcloud
 from .schedule import schedule_service
 from .utils import (
@@ -232,129 +247,101 @@ async def handle_wordcloud(
     await saa.Image(image, "wordcloud.png").finish()
 
 
-def parse_image(key: str):
-    """处理图片，并将结果存入 state 中"""
-
-    async def _key_parser(
-        matcher: Matcher,
-        state: T_State,
-        input: Union[MessageSegment, Message] = Arg(key),
-    ):
-        if isinstance(input, MessageSegment):
-            return
-
-        images = input["image"]
-        if not images:
-            await matcher.reject_arg(key, "请发送一张图片，不然我没法理解呢！")
-        else:
-            state[key] = images[0]
-
-    return _key_parser
+set_mask_cmd = on_alconna(
+    Alconna(
+        "设置词云形状",
+        Option("--default", default=False, action=store_true),
+        Args["img?", alc.Image],
+    ),
+    permission=SUPERUSER,
+)
+set_mask_cmd.shortcut(
+    "设置默认词云形状",
+    {
+        "prefix": True,
+        "command": "设置词云形状",
+        "args": ["--default"],
+    },
+)
 
 
-# mask_cmd = wordcloud.command(
-#     "mask",
-#     aliases={
-#         "设置词云形状",
-#         "设置词云默认形状",
-#         "删除词云形状",
-#         "删除词云默认形状",
-#     },
-#     permission=SUPERUSER | GROUP_OWNER | GROUP_ADMIN,
-# )
+@set_mask_cmd.handle()
+async def _(
+    matcher: AlconnaMatcher,
+    session: Session = Depends(extract_session),
+    img: Match[bytes] = AlconnaMatch("img", image_fetch),
+):
+    if session.level not in [SessionLevel.LEVEL2, SessionLevel.LEVEL3]:
+        await wordcloud_cmd.finish("请在群组中使用！")
+
+    if img.available:
+        matcher.set_path_arg("img", img.result)
 
 
-# @mask_cmd.handle()
-# async def _(
-#     bot: Union[BotV11, BotV12],
-#     event: Union[GroupMessageEventV11, GroupMessageEventV12, ChannelMessageEvent],
-#     state: T_State,
-#     args: Message = CommandArg(),
-#     commands: Tuple[str, ...] = Command(),
-# ):
-#     if isinstance(event, GroupMessageEventV11):
-#         mask_key = get_mask_key("qq", group_id=event.group_id)
-#         msg = f"群 {event.group_id}"
-#     elif isinstance(event, GroupMessageEventV12):
-#         bot = cast(BotV12, bot)
-#         mask_key = get_mask_key(bot.platform, group_id=event.group_id)
-#         msg = f"群 {event.group_id}"
-#     else:
-#         bot = cast(BotV12, bot)
-#         mask_key = get_mask_key(bot.platform, guild_id=event.guild_id)
-#         msg = f"频道 {event.guild_id}"
-
-#     if (command := commands[0]) == "设置词云默认形状":
-#         if not await SUPERUSER(bot, event):
-#             await mask_cmd.finish("仅超级用户可设置词云默认形状")
-#         state["default"] = True
-#         state["mask_key"] = "default"
-#     elif command == "删除词云默认形状":
-#         if not await SUPERUSER(bot, event):
-#             await mask_cmd.finish("仅超级用户可删除词云默认形状")
-#         mask_path = plugin_config.get_mask_path()
-#         mask_path.unlink(missing_ok=True)
-#         await mask_cmd.finish("词云默认形状已删除")
-#     elif command == "设置词云形状":
-#         state["default"] = False
-#         state["mask_key"] = mask_key
-#     elif command == "删除词云形状":
-#         mask_path = plugin_config.get_mask_path(mask_key)
-#         mask_path.unlink(missing_ok=True)
-#         await mask_cmd.finish(f"{msg} 的词云形状已删除")
-
-#     if images := args["image"]:
-#         state["image"] = images[0]
-
-#     state["msg"] = msg
+@set_mask_cmd.got_path("img", "请发送一张图片作为词云形状", image_fetch)
+async def handle_save_mask(
+    img: bytes = AlconnaArg("img"),
+    session: Session = Depends(extract_session),
+    default: Query[bool] = AlconnaQuery("default.value", default=False),
+):
+    mask_key = session.get_id(
+        SessionIdType.GROUP, include_bot_type=False, include_bot_id=False
+    )
+    mask = Image.open(BytesIO(img))
+    if default.result:
+        mask.save(plugin_config.get_mask_path(), format="PNG")
+        await set_mask_cmd.finish("词云默认形状设置成功")
+    else:
+        mask.save(plugin_config.get_mask_path(mask_key), format="PNG")
+        await set_mask_cmd.finish(f"词云形状设置成功")
 
 
-# @mask_cmd.got(
-#     "image",
-#     prompt="请发送一张图片作为词云形状",
-#     parameterless=[Depends(parse_image("image"))],
-# )
-# async def handle_get_image_v11(
-#     bot: BotV11, state: T_State, image: MessageSegment = Arg()
-# ):
-#     state["image_bytes"] = await plugin_data.download_file(
-#         image.data["url"], "masked", cache=True
-#     )
+delete_mask_cmd = on_alconna(
+    Alconna(
+        "删除词云形状",
+        Option("--default", default=False, action=store_true),
+    ),
+    permission=SUPERUSER,
+)
+delete_mask_cmd.shortcut(
+    "删除默认词云形状",
+    {
+        "prefix": True,
+        "command": "删除词云形状",
+        "args": ["--default"],
+    },
+)
 
 
-# @mask_cmd.got(
-#     "image",
-#     prompt="请发送一张图片作为词云形状",
-#     parameterless=[Depends(parse_image("image"))],
-# )
-# async def handle_get_image_v12(
-#     bot: BotV12, state: T_State, image: MessageSegment = Arg()
-# ):
-#     file_id = image.data["file_id"]
-#     result = await bot.get_file(type="data", file_id=file_id)
-#     data = result["data"]
-#     # json 中的数据为 base64 编码的字符串
-#     state["image_bytes"] = b64decode(data) if isinstance(data, str) else data
+@delete_mask_cmd.handle()
+async def _(
+    session: Session = Depends(extract_session),
+    default: Query[bool] = AlconnaQuery("default.value", default=False),
+):
+    if session.level not in [SessionLevel.LEVEL2, SessionLevel.LEVEL3]:
+        await wordcloud_cmd.finish("请在群组中使用！")
 
-
-# @mask_cmd.handle()
-# async def handle_save_mask(
-#     image_bytes: bytes = Arg(),
-#     default: bool = Arg(),
-#     mask_key: str = Arg(),
-#     msg: str = Arg(),
-# ):
-#     mask = Image.open(BytesIO(image_bytes))
-#     if default:
-#         mask.save(plugin_config.get_mask_path(), format="PNG")
-#         await mask_cmd.finish("词云默认形状设置成功")
-#     else:
-#         mask.save(plugin_config.get_mask_path(mask_key), format="PNG")
-#         await mask_cmd.finish(f"{msg} 的词云形状设置成功")
+    mask_key = session.get_id(
+        SessionIdType.GROUP, include_bot_type=False, include_bot_id=False
+    )
+    if default.result:
+        mask_path = plugin_config.get_mask_path()
+        mask_path.unlink(missing_ok=True)
+        await delete_mask_cmd.finish("词云默认形状已删除")
+    else:
+        mask_path = plugin_config.get_mask_path(mask_key)
+        mask_path.unlink(missing_ok=True)
+        await delete_mask_cmd.finish("词云形状已删除")
 
 
 schedule_cmd = wordcloud.command(
-    "schedule", aliases={"词云每日定时发送状态", "开启词云每日定时发送", "关闭词云每日定时发送"}, permission=SUPERUSER
+    "schedule",
+    aliases={
+        "词云每日定时发送状态",
+        "开启词云每日定时发送",
+        "关闭词云每日定时发送",
+    },
+    permission=SUPERUSER,
 )
 
 
