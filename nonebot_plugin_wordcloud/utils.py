@@ -1,6 +1,8 @@
+import contextlib
 from datetime import datetime, time
 from typing import Optional
 
+from nonebot.permission import SUPERUSER
 from nonebot_plugin_apscheduler import scheduler
 from nonebot_plugin_saa import (
     PlatformTarget,
@@ -189,3 +191,13 @@ def target_to_session(target: PlatformTarget) -> Session:
             )
 
     raise ValueError(f"不支持的 PlatformTarget 类型：{target}")
+
+
+def admin_permission():
+    permission = SUPERUSER
+    with contextlib.suppress(ImportError):
+        from nonebot.adapters.onebot.v11.permission import GROUP_ADMIN, GROUP_OWNER
+
+        permission = permission | GROUP_ADMIN | GROUP_OWNER
+
+    return permission

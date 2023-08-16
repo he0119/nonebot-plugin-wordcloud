@@ -6,7 +6,7 @@ from io import BytesIO
 from typing import Tuple, Union
 
 from nonebot import CommandGroup, require
-from nonebot.adapters import Message
+from nonebot.adapters import Bot, Event, Message
 from nonebot.matcher import Matcher
 from nonebot.params import Arg, Command, CommandArg, Depends
 from nonebot.permission import SUPERUSER
@@ -44,6 +44,7 @@ from .config import Config, plugin_config
 from .data_source import get_wordcloud
 from .schedule import schedule_service
 from .utils import (
+    admin_permission,
     get_datetime_fromisoformat_with_timezone,
     get_datetime_now_with_timezone,
     get_time_fromisoformat_with_timezone,
@@ -253,7 +254,7 @@ set_mask_cmd = on_alconna(
         Option("--default", default=False, action=store_true),
         Args["img?", alc.Image],
     ),
-    permission=SUPERUSER,
+    permission=admin_permission(),
 )
 set_mask_cmd.shortcut(
     "设置默认词云形状",
@@ -280,6 +281,8 @@ async def _(
 
 @set_mask_cmd.got_path("img", "请发送一张图片作为词云形状", image_fetch)
 async def handle_save_mask(
+    bot: Bot,
+    event: Event,
     img: bytes = AlconnaArg("img"),
     session: Session = Depends(extract_session),
     default: Query[bool] = AlconnaQuery("default.value", default=False),
@@ -289,6 +292,8 @@ async def handle_save_mask(
     )
     mask = Image.open(BytesIO(img))
     if default.result:
+        if not await SUPERUSER(bot, event):
+            await set_mask_cmd.finish("仅超级用户可设置词云默认形状")
         mask.save(plugin_config.get_mask_path(), format="PNG")
         await set_mask_cmd.finish("词云默认形状设置成功")
     else:
@@ -301,7 +306,7 @@ delete_mask_cmd = on_alconna(
         "删除词云形状",
         Option("--default", default=False, action=store_true),
     ),
-    permission=SUPERUSER,
+    permission=admin_permission(),
 )
 delete_mask_cmd.shortcut(
     "删除默认词云形状",
@@ -315,6 +320,8 @@ delete_mask_cmd.shortcut(
 
 @delete_mask_cmd.handle()
 async def _(
+    bot: Bot,
+    event: Event,
     session: Session = Depends(extract_session),
     default: Query[bool] = AlconnaQuery("default.value", default=False),
 ):
@@ -325,6 +332,8 @@ async def _(
         SessionIdType.GROUP, include_bot_type=False, include_bot_id=False
     )
     if default.result:
+        if not await SUPERUSER(bot, event):
+            await delete_mask_cmd.finish("仅超级用户可删除词云默认形状")
         mask_path = plugin_config.get_mask_path()
         mask_path.unlink(missing_ok=True)
         await delete_mask_cmd.finish("词云默认形状已删除")
@@ -341,7 +350,7 @@ schedule_cmd = wordcloud.command(
         "开启词云每日定时发送",
         "关闭词云每日定时发送",
     },
-    permission=SUPERUSER,
+    permission=admin_permission(),
 )
 
 
