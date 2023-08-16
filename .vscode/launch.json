@@ -35,6 +35,12 @@
         "test_history_wordcloud_start_stop_get_args"
       ],
       "justMyCode": false,
+    },
+    {
+      "name": "Debug Unit Test",
+      "type": "python",
+      "request": "test",
+      "justMyCode": false,
     }
   ]
 }

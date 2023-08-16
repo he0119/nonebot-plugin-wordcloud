@@ -1945,6 +1945,26 @@ pytest = ">=7.0.0,<8.0.0"
 typing-extensions = ">=4.0.0,<5.0.0"
 
 [[package]]
+name = "nonebug-saa"
+version = "0.2.1"
+description = "A nonebug helper for nonebot-plugin-send-anything-anything"
+optional = false
+python-versions = "^3.8"
+files = []
+develop = false
+
+[package.dependencies]
+nonebot-plugin-send-anything-anywhere = ">=0.2.4"
+nonebug = "^0.3.1"
+pytest-mock = "^3.10.0"
+
+[package.source]
+type = "git"
+url = "https://github.com/he0119/nonebug-saa.git"
+reference = "feat/python-version"
+resolved_reference = "b999e5a147c1aeab9bb7c77be0173872989b19ae"
+
+[[package]]
 name = "noneprompt"
 version = "0.1.9"
 description = "Prompt toolkit for console interaction"
@@ -3278,4 +3298,4 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8"
-content-hash = "c32caabbd5e2ae032209aed5c3e409b690061bbbd4552ac0dd82364507636993"
+content-hash = "ca0efe9a809d09c53e2a36a9435917d2f19af7e00c20f373bdaef2d8ef45cd88"

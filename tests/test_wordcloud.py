@@ -1,5 +1,6 @@
 from datetime import datetime
 from pathlib import Path
+from typing import List
 
 try:
     from zoneinfo import ZoneInfo
@@ -10,21 +11,24 @@ import random
 from io import BytesIO
 
 import pytest
-from nonebot.adapters.onebot.v11 import Bot, Message, MessageSegment
+from nonebot import get_driver
+from nonebot.adapters.onebot.v11 import Adapter, Bot, Message
+from nonebot.adapters.onebot.v12 import Adapter as AdapterV12
 from nonebot.adapters.onebot.v12 import Bot as BotV12
 from nonebot.adapters.onebot.v12 import Message as MessageV12
-from nonebot.adapters.onebot.v12 import MessageSegment as MessageSegmentV12
 from nonebug import App
+from nonebug_saa import should_send_saa
 from PIL import Image, ImageChops
 from pytest_mock import MockerFixture
 
-from .utils import fake_channel_message_event_v12, fake_group_message_event_v11
+from .utils import (
+    fake_channel_message_event_v12,
+    fake_group_message_event_v11,
+    fake_group_message_event_v12,
+)
 
-FAKE_IMAGE = (
-    BytesIO(
-        b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x02\x00\x00\x00\x90wS\xde\x00\x00\x00\x0cIDATx\x9cc\xf8\xff\xff?\x00\x05\xfe\x02\xfe\r\xefF\xb8\x00\x00\x00\x00IEND\xaeB`\x82"
-    ),
-    "base64://iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4//8/AAX+Av4N70a4AAAAAElFTkSuQmCC",
+FAKE_IMAGE = BytesIO(
+    b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x02\x00\x00\x00\x90wS\xde\x00\x00\x00\x0cIDATx\x9cc\xf8\xff\xff?\x00\x05\xfe\x02\xfe\r\xefF\xb8\x00\x00\x00\x00IEND\xaeB`\x82"
 )
 
 
@@ -33,71 +37,154 @@ async def message_record(app: App):
     from nonebot_plugin_chatrecorder import serialize_message
     from nonebot_plugin_chatrecorder.model import MessageRecord
     from nonebot_plugin_datastore import create_session
+    from nonebot_plugin_session import Session, SessionLevel
+    from nonebot_plugin_session.model import get_or_add_session_model
 
-    def make_message_record_v11(message: str, user_id: str, time: datetime):
-        return MessageRecord(
+    async with app.test_api() as ctx:
+        adapter = Adapter(get_driver())
+        adapter_v12 = AdapterV12(get_driver())
+        bot = ctx.create_bot(base=Bot, adapter=adapter, auto_connect=False)
+        bot_v12 = ctx.create_bot(
+            base=BotV12,
+            adapter=adapter_v12,
+            auto_connect=False,
+            platform="test",
+            impl="test",
+        )
+
+    sessions = [
+        Session(
             bot_id="test",
             bot_type="OneBot V11",
-            type="message_sent" if user_id == "bot" else "message",
-            user_id=user_id,
-            time=time,  # UTC 时间
             platform="qq",
-            message_id="test",
-            message=serialize_message(Message(message)),
-            plain_text=message,
-            detail_type="group",
-            group_id="10000",
-        )
-
-    def make_message_record_v12(message: str, user_id: str, time: datetime):
-        return MessageRecord(
+            level=SessionLevel.LEVEL2,
+            id1="bot",
+            id2="10000",
+            id3=None,
+        ),
+        Session(
+            bot_id="test",
+            bot_type="OneBot V11",
+            platform="qq",
+            level=SessionLevel.LEVEL2,
+            id1="10",
+            id2="10000",
+            id3=None,
+        ),
+        Session(
+            bot_id="test",
+            bot_type="OneBot V11",
+            platform="qq",
+            level=SessionLevel.LEVEL2,
+            id1="11",
+            id2="10000",
+            id3=None,
+        ),
+        Session(
             bot_id="test",
             bot_type="OneBot V12",
-            type="message_sent" if user_id == "bot" else "message",
-            user_id=user_id,
-            time=time,  # UTC 时间
             platform="test",
-            message_id="test",
-            message=serialize_message(MessageV12(message)),
-            plain_text=message,
-            detail_type="channel",
-            guild_id="10000",
-            channel_id="100000",
-        )
+            level=SessionLevel.LEVEL3,
+            id1="10",
+            id2="100000",
+            id3="10000",
+        ),
+        Session(
+            bot_id="test",
+            bot_type="OneBot V12",
+            platform="test",
+            level=SessionLevel.LEVEL3,
+            id1="11",
+            id2="100000",
+            id3="10000",
+        ),
+    ]
+    session_ids: List[int] = []
+    async with create_session() as db_session:
+        for session in sessions:
+            session_model = await get_or_add_session_model(session, db_session)
+            session_ids.append(session_model.id)
 
-    async with create_session() as session:
+    records = [
         # 星期日
-        session.add(
-            make_message_record_v11("bot:1-2", "bot", datetime(2022, 1, 2, 4, 0, 0))
-        )
-        session.add(
-            make_message_record_v11("10:1-2", "10", datetime(2022, 1, 2, 4, 0, 0))
-        )
-        session.add(
-            make_message_record_v11("11:1-2", "11", datetime(2022, 1, 2, 4, 0, 0))
-        )
-        session.add(
-            make_message_record_v12("v12-10:1-2", "10", datetime(2022, 1, 2, 4, 0, 0))
-        )
-        session.add(
-            make_message_record_v12("v12-11:1-2", "11", datetime(2022, 1, 2, 4, 0, 0))
-        )
+        MessageRecord(
+            session_id=session_ids[0],
+            time=datetime(2022, 1, 2, 4, 0, 0),
+            type="message_sent",
+            message_id="1",
+            message=serialize_message(bot, Message("bot:1-2")),
+            plain_text="bot:1-2",
+        ),
+        MessageRecord(
+            session_id=session_ids[1],
+            time=datetime(2022, 1, 2, 4, 0, 0),
+            type="message",
+            message_id="2",
+            message=serialize_message(bot, Message("10:1-2")),
+            plain_text="10:1-2",
+        ),
+        MessageRecord(
+            session_id=session_ids[2],
+            time=datetime(2022, 1, 2, 4, 0, 0),
+            type="message",
+            message_id="3",
+            message=serialize_message(bot, Message("11:1-2")),
+            plain_text="11:1-2",
+        ),
+        MessageRecord(
+            session_id=session_ids[3],
+            time=datetime(2022, 1, 2, 4, 0, 0),
+            type="message",
+            message_id="4",
+            message=serialize_message(bot_v12, MessageV12("v12-10:1-2")),
+            plain_text="v12-10:1-2",
+        ),
+        MessageRecord(
+            session_id=session_ids[4],
+            time=datetime(2022, 1, 2, 4, 0, 0),
+            type="message",
+            message_id="4",
+            message=serialize_message(bot_v12, MessageV12("v12-11:1-2")),
+            plain_text="v12-11:1-2",
+        ),
         # 星期一
-        session.add(
-            make_message_record_v11("10:1-3", "10", datetime(2022, 1, 3, 4, 0, 0))
-        )
-        session.add(
-            make_message_record_v11("11:1-3", "11", datetime(2022, 1, 3, 4, 0, 0))
-        )
+        MessageRecord(
+            session_id=session_ids[1],
+            time=datetime(2022, 1, 3, 4, 0, 0),
+            type="message",
+            message_id="2",
+            message=serialize_message(bot, Message("10:1-3")),
+            plain_text="10:1-3",
+        ),
+        MessageRecord(
+            session_id=session_ids[2],
+            time=datetime(2022, 1, 3, 4, 0, 0),
+            type="message",
+            message_id="3",
+            message=serialize_message(bot, Message("11:1-3")),
+            plain_text="11:1-3",
+        ),
         # 星期二
-        session.add(
-            make_message_record_v11("10:2-1", "10", datetime(2022, 2, 1, 4, 0, 0))
-        )
-        session.add(
-            make_message_record_v11("11:2-1", "11", datetime(2022, 2, 1, 4, 0, 0))
-        )
-
-        await session.commit()
+        MessageRecord(
+            session_id=session_ids[1],
+            time=datetime(2022, 2, 1, 4, 0, 0),
+            type="message",
+            message_id="2",
+            message=serialize_message(bot, Message("10:2-1")),
+            plain_text="10:2-1",
+        ),
+        MessageRecord(
+            session_id=session_ids[2],
+            time=datetime(2022, 2, 1, 4, 0, 0),
+            type="message",
+            message_id="3",
+            message=serialize_message(bot, Message("11:2-1")),
+            plain_text="11:2-1",
+        ),
+    ]
+    async with create_session() as db_session:
+        db_session.add_all(records)
+        await db_session.commit()
 
 
 async def test_get_wordcloud(app: App, mocker: MockerFixture):
@@ -156,6 +243,7 @@ async def test_wordcloud_cmd(app: App):
 async def test_today_wordcloud(app: App, mocker: MockerFixture, message_record: None):
     """测试今日词云"""
     from nonebot_plugin_chatrecorder import get_messages_plain_text
+    from nonebot_plugin_saa import Image, MessageFactory
 
     from nonebot_plugin_wordcloud import wordcloud_cmd
 
@@ -170,7 +258,7 @@ async def test_today_wordcloud(app: App, mocker: MockerFixture, message_record: 
 
     mocked_get_wordcloud = mocker.patch(
         "nonebot_plugin_wordcloud.get_wordcloud",
-        return_value=FAKE_IMAGE[0],
+        return_value=FAKE_IMAGE,
     )
 
     async with app.test_matcher(wordcloud_cmd) as ctx:
@@ -178,22 +266,21 @@ async def test_today_wordcloud(app: App, mocker: MockerFixture, message_record: 
         event = fake_group_message_event_v11(message=Message("/今日词云"))
 
         ctx.receive_event(bot, event)
-        ctx.should_call_send(
-            event,
-            MessageSegment.image(FAKE_IMAGE[1]),
-            True,
-            at_sender=False,
+        should_send_saa(
+            ctx, MessageFactory(Image(FAKE_IMAGE, "wordcloud.png")), bot, event=event
         )
         ctx.should_finished()
 
     mocked_datetime_now.assert_called_once_with()
-    mocked_get_wordcloud.assert_called_once_with(["10:1-2", "11:1-2"], "qq-group-10000")
+    mocked_get_wordcloud.assert_called_once_with(["10:1-2", "11:1-2"], "qq_10000")
 
 
 async def test_my_today_wordcloud(
     app: App, mocker: MockerFixture, message_record: None
 ):
     """测试我的今日词云"""
+    from nonebot_plugin_saa import Image, MessageFactory
+
     from nonebot_plugin_wordcloud import wordcloud_cmd
 
     mocked_datetime_now = mocker.patch(
@@ -203,7 +290,7 @@ async def test_my_today_wordcloud(
 
     mocked_get_wordcloud = mocker.patch(
         "nonebot_plugin_wordcloud.get_wordcloud",
-        return_value=FAKE_IMAGE[0],
+        return_value=FAKE_IMAGE,
     )
 
     async with app.test_matcher(wordcloud_cmd) as ctx:
@@ -211,22 +298,25 @@ async def test_my_today_wordcloud(
         event = fake_group_message_event_v11(message=Message("/我的今日词云"))
 
         ctx.receive_event(bot, event)
-        ctx.should_call_send(
-            event,
-            MessageSegment.image(FAKE_IMAGE[1]),
-            True,
+        should_send_saa(
+            ctx,
+            MessageFactory(Image(FAKE_IMAGE, "wordcloud.png")),
+            bot,
+            event=event,
             at_sender=True,
         )
         ctx.should_finished()
 
     mocked_datetime_now.assert_called_once_with()
-    mocked_get_wordcloud.assert_called_once_with(["10:1-2"], "qq-group-10000")
+    mocked_get_wordcloud.assert_called_once_with(["10:1-2"], "qq_10000")
 
 
 async def test_yesterday_wordcloud(
     app: App, mocker: MockerFixture, message_record: None
 ):
     """测试昨日词云"""
+    from nonebot_plugin_saa import Image, MessageFactory
+
     from nonebot_plugin_wordcloud import wordcloud_cmd
 
     mocked_datetime_now = mocker.patch(
@@ -236,7 +326,7 @@ async def test_yesterday_wordcloud(
 
     mocked_get_wordcloud = mocker.patch(
         "nonebot_plugin_wordcloud.get_wordcloud",
-        return_value=FAKE_IMAGE[0],
+        return_value=FAKE_IMAGE,
     )
 
     async with app.test_matcher(wordcloud_cmd) as ctx:
@@ -244,22 +334,24 @@ async def test_yesterday_wordcloud(
         event = fake_group_message_event_v11(message=Message("/昨日词云"))
 
         ctx.receive_event(bot, event)
-        ctx.should_call_send(
-            event,
-            MessageSegment.image(FAKE_IMAGE[1]),
-            True,
-            at_sender=False,
+        should_send_saa(
+            ctx,
+            MessageFactory(Image(FAKE_IMAGE, "wordcloud.png")),
+            bot,
+            event=event,
         )
         ctx.should_finished()
 
     mocked_datetime_now.assert_called_once_with()
-    mocked_get_wordcloud.assert_called_once_with(["10:1-2", "11:1-2"], "qq-group-10000")
+    mocked_get_wordcloud.assert_called_once_with(["10:1-2", "11:1-2"], "qq_10000")
 
 
 async def test_my_yesterday_wordcloud(
     app: App, mocker: MockerFixture, message_record: None
 ):
     """测试我的昨日词云"""
+    from nonebot_plugin_saa import Image, MessageFactory
+
     from nonebot_plugin_wordcloud import wordcloud_cmd
 
     mocked_datetime_now = mocker.patch(
@@ -269,7 +361,7 @@ async def test_my_yesterday_wordcloud(
 
     mocked_get_wordcloud = mocker.patch(
         "nonebot_plugin_wordcloud.get_wordcloud",
-        return_value=FAKE_IMAGE[0],
+        return_value=FAKE_IMAGE,
     )
 
     async with app.test_matcher(wordcloud_cmd) as ctx:
@@ -277,20 +369,23 @@ async def test_my_yesterday_wordcloud(
         event = fake_group_message_event_v11(message=Message("/我的昨日词云"))
 
         ctx.receive_event(bot, event)
-        ctx.should_call_send(
-            event,
-            MessageSegment.image(FAKE_IMAGE[1]),
-            True,
+        should_send_saa(
+            ctx,
+            MessageFactory(Image(FAKE_IMAGE, "wordcloud.png")),
+            bot,
+            event=event,
             at_sender=True,
         )
         ctx.should_finished()
 
     mocked_datetime_now.assert_called_once_with()
-    mocked_get_wordcloud.assert_called_once_with(["10:1-2"], "qq-group-10000")
+    mocked_get_wordcloud.assert_called_once_with(["10:1-2"], "qq_10000")
 
 
 async def test_week_wordcloud(app: App, mocker: MockerFixture, message_record: None):
     """测试本周词云"""
+    from nonebot_plugin_saa import Image, MessageFactory
+
     from nonebot_plugin_wordcloud import wordcloud_cmd
 
     mocked_datetime_now = mocker.patch(
@@ -300,7 +395,7 @@ async def test_week_wordcloud(app: App, mocker: MockerFixture, message_record: N
 
     mocked_get_wordcloud = mocker.patch(
         "nonebot_plugin_wordcloud.get_wordcloud",
-        return_value=FAKE_IMAGE[0],
+        return_value=FAKE_IMAGE,
     )
 
     async with app.test_matcher(wordcloud_cmd) as ctx:
@@ -308,22 +403,24 @@ async def test_week_wordcloud(app: App, mocker: MockerFixture, message_record: N
         event = fake_group_message_event_v11(message=Message("/本周词云"))
 
         ctx.receive_event(bot, event)
-        ctx.should_call_send(
-            event,
-            MessageSegment.image(FAKE_IMAGE[1]),
-            True,
-            at_sender=False,
+        should_send_saa(
+            ctx,
+            MessageFactory(Image(FAKE_IMAGE, "wordcloud.png")),
+            bot,
+            event=event,
         )
         ctx.should_finished()
 
     mocked_datetime_now.assert_called_once_with()
-    mocked_get_wordcloud.assert_called_once_with(["10:1-3", "11:1-3"], "qq-group-10000")
+    mocked_get_wordcloud.assert_called_once_with(["10:1-3", "11:1-3"], "qq_10000")
 
 
 async def test_last_week_wordcloud(
     app: App, mocker: MockerFixture, message_record: None
 ):
     """测试上周词云"""
+    from nonebot_plugin_saa import Image, MessageFactory
+
     from nonebot_plugin_wordcloud import wordcloud_cmd
 
     mocked_datetime_now = mocker.patch(
@@ -333,7 +430,7 @@ async def test_last_week_wordcloud(
 
     mocked_get_wordcloud = mocker.patch(
         "nonebot_plugin_wordcloud.get_wordcloud",
-        return_value=FAKE_IMAGE[0],
+        return_value=FAKE_IMAGE,
     )
 
     async with app.test_matcher(wordcloud_cmd) as ctx:
@@ -341,20 +438,22 @@ async def test_last_week_wordcloud(
         event = fake_group_message_event_v11(message=Message("/上周词云"))
 
         ctx.receive_event(bot, event)
-        ctx.should_call_send(
-            event,
-            MessageSegment.image(FAKE_IMAGE[1]),
-            True,
-            at_sender=False,
+        should_send_saa(
+            ctx,
+            MessageFactory(Image(FAKE_IMAGE, "wordcloud.png")),
+            bot,
+            event=event,
         )
         ctx.should_finished()
 
     mocked_datetime_now.assert_called_once_with()
-    mocked_get_wordcloud.assert_called_once_with(["10:1-2", "11:1-2"], "qq-group-10000")
+    mocked_get_wordcloud.assert_called_once_with(["10:1-2", "11:1-2"], "qq_10000")
 
 
 async def test_month_wordcloud(app: App, mocker: MockerFixture, message_record: None):
     """测试本月词云"""
+    from nonebot_plugin_saa import Image, MessageFactory
+
     from nonebot_plugin_wordcloud import wordcloud_cmd
 
     mocked_datetime_now = mocker.patch(
@@ -364,7 +463,7 @@ async def test_month_wordcloud(app: App, mocker: MockerFixture, message_record: 
 
     mocked_get_wordcloud = mocker.patch(
         "nonebot_plugin_wordcloud.get_wordcloud",
-        return_value=FAKE_IMAGE[0],
+        return_value=FAKE_IMAGE,
     )
 
     async with app.test_matcher(wordcloud_cmd) as ctx:
@@ -372,22 +471,24 @@ async def test_month_wordcloud(app: App, mocker: MockerFixture, message_record: 
         event = fake_group_message_event_v11(message=Message("/本月词云"))
 
         ctx.receive_event(bot, event)
-        ctx.should_call_send(
-            event,
-            MessageSegment.image(FAKE_IMAGE[1]),
-            True,
-            at_sender=False,
+        should_send_saa(
+            ctx,
+            MessageFactory(Image(FAKE_IMAGE, "wordcloud.png")),
+            bot,
+            event=event,
         )
         ctx.should_finished()
 
     mocked_datetime_now.assert_called_once_with()
-    mocked_get_wordcloud.assert_called_once_with(["10:2-1", "11:2-1"], "qq-group-10000")
+    mocked_get_wordcloud.assert_called_once_with(["10:2-1", "11:2-1"], "qq_10000")
 
 
 async def test_last_month_wordcloud(
     app: App, mocker: MockerFixture, message_record: None
 ):
     """测试上月词云"""
+    from nonebot_plugin_saa import Image, MessageFactory
+
     from nonebot_plugin_wordcloud import wordcloud_cmd
 
     mocked_datetime_now = mocker.patch(
@@ -397,7 +498,7 @@ async def test_last_month_wordcloud(
 
     mocked_get_wordcloud = mocker.patch(
         "nonebot_plugin_wordcloud.get_wordcloud",
-        return_value=FAKE_IMAGE[0],
+        return_value=FAKE_IMAGE,
     )
 
     async with app.test_matcher(wordcloud_cmd) as ctx:
@@ -405,22 +506,24 @@ async def test_last_month_wordcloud(
         event = fake_group_message_event_v11(message=Message("/上月词云"))
 
         ctx.receive_event(bot, event)
-        ctx.should_call_send(
-            event,
-            MessageSegment.image(FAKE_IMAGE[1]),
-            True,
-            at_sender=False,
+        should_send_saa(
+            ctx,
+            MessageFactory(Image(FAKE_IMAGE, "wordcloud.png")),
+            bot,
+            event=event,
         )
         ctx.should_finished()
 
     mocked_datetime_now.assert_called_once_with()
     mocked_get_wordcloud.assert_called_once_with(
-        ["10:1-2", "11:1-2", "10:1-3", "11:1-3"], "qq-group-10000"
+        ["10:1-2", "11:1-2", "10:1-3", "11:1-3"], "qq_10000"
     )
 
 
 async def test_year_wordcloud(app: App, mocker: MockerFixture, message_record: None):
     """测试年度词云"""
+    from nonebot_plugin_saa import Image, MessageFactory
+
     from nonebot_plugin_wordcloud import wordcloud_cmd
 
     mocked_datetime_now = mocker.patch(
@@ -430,7 +533,7 @@ async def test_year_wordcloud(app: App, mocker: MockerFixture, message_record: N
 
     mocked_get_wordcloud = mocker.patch(
         "nonebot_plugin_wordcloud.get_wordcloud",
-        return_value=FAKE_IMAGE[0],
+        return_value=FAKE_IMAGE,
     )
 
     async with app.test_matcher(wordcloud_cmd) as ctx:
@@ -438,22 +541,24 @@ async def test_year_wordcloud(app: App, mocker: MockerFixture, message_record: N
         event = fake_group_message_event_v11(message=Message("/年度词云"))
 
         ctx.receive_event(bot, event)
-        ctx.should_call_send(
-            event,
-            MessageSegment.image(FAKE_IMAGE[1]),
-            True,
-            at_sender=False,
+        should_send_saa(
+            ctx,
+            MessageFactory(Image(FAKE_IMAGE, "wordcloud.png")),
+            bot,
+            event=event,
         )
         ctx.should_finished()
 
     mocked_datetime_now.assert_called_once_with()
     mocked_get_wordcloud.assert_called_once_with(
-        ["10:1-2", "11:1-2", "10:1-3", "11:1-3", "10:2-1", "11:2-1"], "qq-group-10000"
+        ["10:1-2", "11:1-2", "10:1-3", "11:1-3", "10:2-1", "11:2-1"], "qq_10000"
     )
 
 
 async def test_my_year_wordcloud(app: App, mocker: MockerFixture, message_record: None):
     """测试我的年度词云"""
+    from nonebot_plugin_saa import Image, MessageFactory
+
     from nonebot_plugin_wordcloud import wordcloud_cmd
 
     mocked_datetime_now = mocker.patch(
@@ -463,7 +568,7 @@ async def test_my_year_wordcloud(app: App, mocker: MockerFixture, message_record
 
     mocked_get_wordcloud = mocker.patch(
         "nonebot_plugin_wordcloud.get_wordcloud",
-        return_value=FAKE_IMAGE[0],
+        return_value=FAKE_IMAGE,
     )
 
     async with app.test_matcher(wordcloud_cmd) as ctx:
@@ -471,27 +576,30 @@ async def test_my_year_wordcloud(app: App, mocker: MockerFixture, message_record
         event = fake_group_message_event_v11(message=Message("/我的年度词云"))
 
         ctx.receive_event(bot, event)
-        ctx.should_call_send(
-            event,
-            MessageSegment.image(FAKE_IMAGE[1]),
-            True,
+        should_send_saa(
+            ctx,
+            MessageFactory(Image(FAKE_IMAGE, "wordcloud.png")),
+            bot,
+            event=event,
             at_sender=True,
         )
         ctx.should_finished()
 
     mocked_datetime_now.assert_called_once_with()
     mocked_get_wordcloud.assert_called_once_with(
-        ["10:1-2", "10:1-3", "10:2-1"], "qq-group-10000"
+        ["10:1-2", "10:1-3", "10:2-1"], "qq_10000"
     )
 
 
 async def test_history_wordcloud(app: App, mocker: MockerFixture, message_record: None):
     """测试历史词云"""
+    from nonebot_plugin_saa import Image, MessageFactory
+
     from nonebot_plugin_wordcloud import wordcloud_cmd
 
     mocked_get_wordcloud = mocker.patch(
         "nonebot_plugin_wordcloud.get_wordcloud",
-        return_value=FAKE_IMAGE[0],
+        return_value=FAKE_IMAGE,
     )
 
     async with app.test_matcher(wordcloud_cmd) as ctx:
@@ -499,26 +607,28 @@ async def test_history_wordcloud(app: App, mocker: MockerFixture, message_record
         event = fake_group_message_event_v11(message=Message("/历史词云 2022-01-02"))
 
         ctx.receive_event(bot, event)
-        ctx.should_call_send(
-            event,
-            MessageSegment.image(FAKE_IMAGE[1]),
-            True,
-            at_sender=False,
+        should_send_saa(
+            ctx,
+            MessageFactory(Image(FAKE_IMAGE, "wordcloud.png")),
+            bot,
+            event=event,
         )
         ctx.should_finished()
 
-    mocked_get_wordcloud.assert_called_once_with(["10:1-2", "11:1-2"], "qq-group-10000")
+    mocked_get_wordcloud.assert_called_once_with(["10:1-2", "11:1-2"], "qq_10000")
 
 
 async def test_history_wordcloud_start_stop(
     app: App, mocker: MockerFixture, message_record: None
 ):
     """测试历史词云，有起始时间的情况"""
+    from nonebot_plugin_saa import Image, MessageFactory
+
     from nonebot_plugin_wordcloud import wordcloud_cmd
 
     mocked_get_wordcloud = mocker.patch(
         "nonebot_plugin_wordcloud.get_wordcloud",
-        return_value=FAKE_IMAGE[0],
+        return_value=FAKE_IMAGE,
     )
 
     async with app.test_matcher(wordcloud_cmd) as ctx:
@@ -528,16 +638,16 @@ async def test_history_wordcloud_start_stop(
         )
 
         ctx.receive_event(bot, event)
-        ctx.should_call_send(
-            event,
-            MessageSegment.image(FAKE_IMAGE[1]),
-            True,
-            at_sender=False,
+        should_send_saa(
+            ctx,
+            MessageFactory(Image(FAKE_IMAGE, "wordcloud.png")),
+            bot,
+            event=event,
         )
         ctx.should_finished()
 
     mocked_get_wordcloud.assert_called_once_with(
-        ["10:1-3", "11:1-3", "10:2-1", "11:2-1"], "qq-group-10000"
+        ["10:1-3", "11:1-3", "10:2-1", "11:2-1"], "qq_10000"
     )
 
 
@@ -545,11 +655,13 @@ async def test_history_wordcloud_start_stop_get_args(
     app: App, mocker: MockerFixture, message_record: None
 ):
     """测试历史词云，获取起始时间参数的情况"""
+    from nonebot_plugin_saa import Image, MessageFactory
+
     from nonebot_plugin_wordcloud import wordcloud_cmd
 
     mocked_get_wordcloud = mocker.patch(
         "nonebot_plugin_wordcloud.get_wordcloud",
-        return_value=FAKE_IMAGE[0],
+        return_value=FAKE_IMAGE,
     )
 
     async with app.test_matcher(wordcloud_cmd) as ctx:
@@ -572,21 +684,23 @@ async def test_history_wordcloud_start_stop_get_args(
 
         stop_event = fake_group_message_event_v11(message=Message("2022-02-22"))
         ctx.receive_event(bot, stop_event)
-        ctx.should_call_send(
-            stop_event,
-            MessageSegment.image(FAKE_IMAGE[1]),
-            True,
-            at_sender=False,
+        should_send_saa(
+            ctx,
+            MessageFactory(Image(FAKE_IMAGE, "wordcloud.png")),
+            bot,
+            event=stop_event,
         )
         ctx.should_finished()
 
     mocked_get_wordcloud.assert_called_once_with(
-        ["10:1-2", "11:1-2", "10:1-3", "11:1-3", "10:2-1", "11:2-1"], "qq-group-10000"
+        ["10:1-2", "11:1-2", "10:1-3", "11:1-3", "10:2-1", "11:2-1"], "qq_10000"
     )
 
 
 async def test_history_wordcloud_invalid_input(app: App):
     """测试历史词云，输入的日期无效"""
+    from nonebot_plugin_saa import Image, MessageFactory
+
     from nonebot_plugin_wordcloud import wordcloud_cmd
 
     async with app.test_matcher(wordcloud_cmd) as ctx:
@@ -621,6 +735,8 @@ async def test_history_wordcloud_invalid_input(app: App):
 async def test_today_wordcloud_v12(
     app: App, mocker: MockerFixture, message_record: None
 ):
+    from nonebot_plugin_saa import Image, MessageFactory
+
     from nonebot_plugin_wordcloud import wordcloud_cmd
 
     mocked_datetime_now = mocker.patch(
@@ -630,35 +746,32 @@ async def test_today_wordcloud_v12(
 
     mocked_get_wordcloud = mocker.patch(
         "nonebot_plugin_wordcloud.get_wordcloud",
-        return_value=FAKE_IMAGE[0],
+        return_value=FAKE_IMAGE,
     )
     async with app.test_matcher(wordcloud_cmd) as ctx:
         bot = ctx.create_bot(base=BotV12, platform="test", impl="test")
         event = fake_channel_message_event_v12(message=MessageV12("/今日词云"))
 
         ctx.receive_event(bot, event)
-        ctx.should_call_api(
-            "upload_file",
-            {"type": "data", "name": "wordcloud.png", "data": FAKE_IMAGE[0].getvalue()},
-            {"file_id": "test"},
-        )
-        ctx.should_call_send(
-            event,
-            MessageSegmentV12.image("test"),
-            True,
-            at_sender=False,
+        should_send_saa(
+            ctx,
+            MessageFactory(Image(FAKE_IMAGE, "wordcloud.png")),
+            bot,
+            event=event,
         )
         ctx.should_finished()
 
     mocked_datetime_now.assert_called_once_with()
     mocked_get_wordcloud.assert_called_once_with(
-        ["v12-10:1-2", "v12-11:1-2"], "test-guild-10000"
+        ["v12-10:1-2", "v12-11:1-2"], "test_10000_100000"
     )
 
 
 async def test_my_today_wordcloud_v12(
     app: App, mocker: MockerFixture, message_record: None
 ):
+    from nonebot_plugin_saa import Image, MessageFactory
+
     from nonebot_plugin_wordcloud import wordcloud_cmd
 
     mocked_datetime_now = mocker.patch(
@@ -668,7 +781,7 @@ async def test_my_today_wordcloud_v12(
 
     mocked_get_wordcloud = mocker.patch(
         "nonebot_plugin_wordcloud.get_wordcloud",
-        return_value=FAKE_IMAGE[0],
+        return_value=FAKE_IMAGE,
     )
 
     async with app.test_matcher(wordcloud_cmd) as ctx:
@@ -676,26 +789,25 @@ async def test_my_today_wordcloud_v12(
         event = fake_channel_message_event_v12(message=MessageV12("/我的今日词云"))
 
         ctx.receive_event(bot, event)
-        ctx.should_call_api(
-            "upload_file",
-            {"type": "data", "name": "wordcloud.png", "data": FAKE_IMAGE[0].getvalue()},
-            {"file_id": "test"},
-        )
-        ctx.should_call_send(
-            event,
-            MessageSegmentV12.image("test"),
-            True,
+        should_send_saa(
+            ctx,
+            MessageFactory(Image(FAKE_IMAGE, "wordcloud.png")),
+            bot,
+            event=event,
             at_sender=True,
         )
         ctx.should_finished()
 
     mocked_datetime_now.assert_called_once_with()
-    mocked_get_wordcloud.assert_called_once_with(["v12-10:1-2"], "test-guild-10000")
+    mocked_get_wordcloud.assert_called_once_with(["v12-10:1-2"], "test_10000_100000")
 
 
 async def test_today_wordcloud_qq_group_v12(
     app: App, mocker: MockerFixture, message_record: None
 ):
+    """测试 ob12 的 QQ群 今日词云"""
+    from nonebot_plugin_saa import Image, MessageFactory
+
     from nonebot_plugin_wordcloud import wordcloud_cmd
 
     mocked_datetime_now = mocker.patch(
@@ -705,34 +817,31 @@ async def test_today_wordcloud_qq_group_v12(
 
     mocked_get_wordcloud = mocker.patch(
         "nonebot_plugin_wordcloud.get_wordcloud",
-        return_value=FAKE_IMAGE[0],
+        return_value=FAKE_IMAGE,
     )
     async with app.test_matcher(wordcloud_cmd) as ctx:
         bot = ctx.create_bot(base=BotV12, platform="qq", impl="test")
-        event = fake_channel_message_event_v12(message=MessageV12("/今日词云"))
+        event = fake_group_message_event_v12(message=MessageV12("/今日词云"))
 
         ctx.receive_event(bot, event)
-        ctx.should_call_api(
-            "upload_file",
-            {"type": "data", "name": "wordcloud.png", "data": FAKE_IMAGE[0].getvalue()},
-            {"file_id": "test"},
-        )
-        ctx.should_call_send(
-            event,
-            MessageSegmentV12.image("test"),
-            True,
-            at_sender=False,
+        should_send_saa(
+            ctx,
+            MessageFactory(Image(FAKE_IMAGE, "wordcloud.png")),
+            bot,
+            event=event,
         )
         ctx.should_finished()
 
     mocked_datetime_now.assert_called_once_with()
-    mocked_get_wordcloud.assert_called_once_with([], "qq-guild-10000")
+    mocked_get_wordcloud.assert_called_once_with(["10:1-2", "11:1-2"], "qq_10000")
 
 
 async def test_today_wordcloud_exclude_user_ids(
     app: App, mocker: MockerFixture, message_record: None
 ):
     """测试今日词云，排除特定用户"""
+    from nonebot_plugin_saa import Image, MessageFactory
+
     from nonebot_plugin_wordcloud import plugin_config, wordcloud_cmd
 
     mocker.patch.object(plugin_config, "wordcloud_exclude_user_ids", {"10"})
@@ -744,7 +853,7 @@ async def test_today_wordcloud_exclude_user_ids(
 
     mocked_get_wordcloud = mocker.patch(
         "nonebot_plugin_wordcloud.get_wordcloud",
-        return_value=FAKE_IMAGE[0],
+        return_value=FAKE_IMAGE,
     )
 
     async with app.test_matcher(wordcloud_cmd) as ctx:
@@ -752,13 +861,13 @@ async def test_today_wordcloud_exclude_user_ids(
         event = fake_group_message_event_v11(message=Message("/今日词云"))
 
         ctx.receive_event(bot, event)
-        ctx.should_call_send(
-            event,
-            MessageSegment.image(FAKE_IMAGE[1]),
-            True,
-            at_sender=False,
+        should_send_saa(
+            ctx,
+            MessageFactory(Image(FAKE_IMAGE, "wordcloud.png")),
+            bot,
+            event=event,
         )
         ctx.should_finished()
 
     mocked_datetime_now.assert_called_once_with()
-    mocked_get_wordcloud.assert_called_once_with(["11:1-2"], "qq-group-10000")
+    mocked_get_wordcloud.assert_called_once_with(["11:1-2"], "qq_10000")
