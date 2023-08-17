@@ -116,7 +116,7 @@ def target_to_session(target: PlatformTarget) -> Session:
             level=SessionLevel.LEVEL3,
             id1=None,
             id2=str(target.channel_id),
-            id3=None,
+            id3=None,  # FIXME: 缺少 guild_id，会导致主动发送时的 mask_id 出问题
         )
     elif isinstance(target, TargetKaiheilaPrivate):
         return Session(

@@ -1,11 +1,11 @@
 from datetime import time
 from io import BytesIO
 
-from nonebot.adapters.onebot.v11 import Bot, Message, MessageSegment
+from nonebot.adapters.onebot.v11 import Bot, Message
 from nonebot.adapters.onebot.v12 import Bot as BotV12
 from nonebot.adapters.onebot.v12 import Message as MessageV12
-from nonebot.adapters.onebot.v12 import MessageSegment as MessageSegmentV12
 from nonebug import App
+from nonebug_saa import should_send_saa
 from pytest_mock import MockerFixture
 from sqlalchemy import select
 
@@ -84,9 +84,10 @@ async def test_disable_schedule(app: App):
 
     async with create_session() as session:
         schedule = Schedule(
-            bot_id="test",
-            platform="qq",
-            group_id="10000",
+            target={
+                "platform_type": "QQ Group",
+                "group_id": 10000,
+            },
             time=time(14, 0),
         )
         session.add(schedule)
@@ -113,10 +114,9 @@ async def test_disable_schedule(app: App):
 
 
 async def test_schedule_status(app: App):
-    from nonebot_plugin_datastore import create_session
+    from nonebot_plugin_saa import TargetQQGroup
 
-    from nonebot_plugin_wordcloud import schedule_cmd
-    from nonebot_plugin_wordcloud.model import Schedule
+    from nonebot_plugin_wordcloud import schedule_cmd, schedule_service
 
     async with app.test_matcher(schedule_cmd) as ctx:
         bot = ctx.create_bot(base=Bot)
@@ -127,10 +127,7 @@ async def test_schedule_status(app: App):
         ctx.should_call_send(event, "词云每日定时发送未开启", True)
         ctx.should_finished()
 
-    async with create_session() as session:
-        schedule = Schedule(bot_id="test", platform="qq", group_id="10000")
-        session.add(schedule)
-        await session.commit()
+    await schedule_service.add_schedule(TargetQQGroup(group_id=10000))
 
     async with app.test_matcher(schedule_cmd) as ctx:
         bot = ctx.create_bot(base=Bot)
@@ -141,12 +138,7 @@ async def test_schedule_status(app: App):
         ctx.should_call_send(event, "词云每日定时发送已开启，发送时间为：22:00:00+08:00", True)
         ctx.should_finished()
 
-    async with create_session() as session:
-        schedule = Schedule(
-            bot_id="test2", platform="qq", group_id="10000", time=time(15, 0)
-        )
-        session.add(schedule)
-        await session.commit()
+    await schedule_service.add_schedule(TargetQQGroup(group_id=10000), time=time(23, 0))
 
     async with app.test_matcher(schedule_cmd) as ctx:
         bot = ctx.create_bot(base=Bot, self_id="test2")
@@ -159,223 +151,113 @@ async def test_schedule_status(app: App):
 
 
 async def test_run_task_group(app: App, mocker: MockerFixture):
-    from nonebot_plugin_datastore import create_session
+    from nonebot_plugin_saa import Image, MessageFactory, TargetQQGroup
 
     from nonebot_plugin_wordcloud import schedule_service
-    from nonebot_plugin_wordcloud.model import Schedule
 
-    async with create_session() as session:
-        schedule = Schedule(bot_id="test", platform="qq", group_id="10000")
-        session.add(schedule)
-        await session.commit()
+    image = BytesIO(b"test")
+    target = TargetQQGroup(group_id=10000)
+    await schedule_service.add_schedule(target)
 
     mocked_get_messages_plain_text = mocker.patch(
         "nonebot_plugin_wordcloud.schedule.get_messages_plain_text",
         return_value=["test"],
     )
-    mocked_bot = mocker.AsyncMock(spec=Bot)
-    mocked_bot.send_group_msg = mocker.AsyncMock()
-    mocked_get_bot = mocker.patch(
-        "nonebot_plugin_wordcloud.schedule.get_bot", return_value=mocked_bot
-    )
     mocked_get_wordcloud = mocker.patch(
-        "nonebot_plugin_wordcloud.schedule.get_wordcloud", return_value="test"
+        "nonebot_plugin_wordcloud.schedule.get_wordcloud", return_value=image
     )
 
-    await schedule_service.run_task()
+    async with app.test_api() as ctx:
+        bot = ctx.create_bot(base=Bot)
+        should_send_saa(ctx, MessageFactory(Image(image)), bot, target=target)
+        await schedule_service.run_task()
 
-    mocked_get_bot.assert_called_once_with("test")
     mocked_get_messages_plain_text.assert_called_once()
-    mocked_get_wordcloud.assert_called_once_with(["test"], "qq-group-10000")
-    mocked_bot.send_group_msg.assert_called_once_with(
-        group_id=10000,
-        message=Message(MessageSegment.image("test")),
-    )
+    mocked_get_wordcloud.assert_called_once_with(["test"], "qq_10000")
 
     # OneBot V12
     mocked_get_messages_plain_text_v12 = mocker.patch(
         "nonebot_plugin_wordcloud.schedule.get_messages_plain_text",
         return_value=["test"],
     )
-    mocked_bot_v12 = mocker.AsyncMock(spec=BotV12)
-    mocked_bot_v12.send_message = mocker.AsyncMock()
-    mocked_bot_v12.upload_file = mocker.AsyncMock(return_value={"file_id": "test"})
-    mocked_get_bot_v12 = mocker.patch(
-        "nonebot_plugin_wordcloud.schedule.get_bot", return_value=mocked_bot_v12
-    )
+
     mocked_get_wordcloud_v12 = mocker.patch(
-        "nonebot_plugin_wordcloud.schedule.get_wordcloud", return_value=BytesIO(b"test")
+        "nonebot_plugin_wordcloud.schedule.get_wordcloud", return_value=image
     )
 
-    await schedule_service.run_task()
+    async with app.test_api() as ctx:
+        bot = ctx.create_bot(base=BotV12, impl="test", platform="qq")
+        should_send_saa(ctx, MessageFactory(Image(image)), bot, target=target)
+        await schedule_service.run_task()
 
-    mocked_get_bot_v12.assert_called_once_with("test")
     mocked_get_messages_plain_text_v12.assert_called_once()
-    mocked_get_wordcloud_v12.assert_called_once_with(["test"], "qq-group-10000")
-    mocked_bot_v12.send_message.assert_called_once_with(
-        message=MessageV12(MessageSegmentV12.image("test")),
-        detail_type="group",
-        group_id="10000",
-    )
+    mocked_get_wordcloud_v12.assert_called_once_with(["test"], "qq_10000")
 
 
 async def test_run_task_channel(app: App, mocker: MockerFixture):
-    from nonebot_plugin_datastore import create_session
+    from nonebot_plugin_saa import Image, MessageFactory, TargetQQGuildChannel
 
     from nonebot_plugin_wordcloud import schedule_service
-    from nonebot_plugin_wordcloud.model import Schedule
 
-    async with create_session() as session:
-        schedule = Schedule(
-            bot_id="test", platform="qq", guild_id="10000", channel_id="100000"
-        )
-        session.add(schedule)
-        await session.commit()
+    image = BytesIO(b"test")
+    target = TargetQQGuildChannel(channel_id=100000)
+    await schedule_service.add_schedule(target)
 
     mocked_get_messages_plain_text = mocker.patch(
         "nonebot_plugin_wordcloud.schedule.get_messages_plain_text",
         return_value=["test"],
     )
-    mocked_bot = mocker.AsyncMock(spec=BotV12)
-    mocked_bot.send_message = mocker.AsyncMock()
-    mocked_bot.upload_file = mocker.AsyncMock(return_value={"file_id": "test"})
-    mocked_get_bot = mocker.patch(
-        "nonebot_plugin_wordcloud.schedule.get_bot", return_value=mocked_bot
-    )
     mocked_get_wordcloud_v12 = mocker.patch(
-        "nonebot_plugin_wordcloud.schedule.get_wordcloud", return_value=BytesIO(b"test")
+        "nonebot_plugin_wordcloud.schedule.get_wordcloud", return_value=image
     )
 
-    await schedule_service.run_task()
+    async with app.test_api() as ctx:
+        bot = ctx.create_bot(base=BotV12, impl="test", platform="qqguild")
+        should_send_saa(ctx, MessageFactory(Image(image)), bot, target=target)
+        await schedule_service.run_task()
 
-    mocked_get_bot.assert_called_once_with("test")
     mocked_get_messages_plain_text.assert_called_once()
-    mocked_get_wordcloud_v12.assert_called_once_with(["test"], "qq-guild-10000")
-    mocked_bot.send_message.assert_called_once_with(
-        message=MessageV12(MessageSegmentV12.image("test")),
-        detail_type="channel",
-        guild_id="10000",
-        channel_id="100000",
-    )
-
-    # 机器人类型不是 V11/V12
-    mocked_get_messages_plain_text_invalid_bot = mocker.patch(
-        "nonebot_plugin_wordcloud.schedule.get_messages_plain_text",
-        return_value=["test"],
-    )
-    mocked_bot_invalid_bot = mocker.AsyncMock()
-    mocked_bot_invalid_bot.send_message = mocker.AsyncMock()
-    mocked_get_bot_invalid_bot = mocker.patch(
-        "nonebot_plugin_wordcloud.schedule.get_bot", return_value=mocked_bot_invalid_bot
-    )
-    mocked_get_wordcloud_v12_invalid_bot = mocker.patch(
-        "nonebot_plugin_wordcloud.schedule.get_wordcloud", return_value=BytesIO(b"test")
-    )
-
-    await schedule_service.run_task()
-
-    mocked_get_bot_invalid_bot.assert_called_once_with("test")
-    mocked_get_messages_plain_text_invalid_bot.assert_not_called()
-    mocked_get_wordcloud_v12_invalid_bot.assert_not_called()
-    mocked_bot_invalid_bot.send_message.assert_not_called()
+    mocked_get_wordcloud_v12.assert_called_once_with(["test"], "qqguild__100000")
 
 
 async def test_run_task_without_data(app: App, mocker: MockerFixture):
-    from nonebot_plugin_datastore import create_session
+    from nonebot_plugin_saa import MessageFactory, TargetQQGroup, Text
 
     from nonebot_plugin_wordcloud import schedule_service
-    from nonebot_plugin_wordcloud.model import Schedule
 
-    async with create_session() as session:
-        schedule = Schedule(bot_id="test", platform="qq", group_id="10000")
-        session.add(schedule)
-        await session.commit()
+    target = TargetQQGroup(group_id=10000)
+    await schedule_service.add_schedule(target)
 
     mocked_get_messages_plain_text = mocker.patch(
         "nonebot_plugin_wordcloud.schedule.get_messages_plain_text",
         return_value=["test"],
     )
-    mocked_bot = mocker.AsyncMock(spec=Bot)
-    mocked_bot.send_group_msg = mocker.AsyncMock()
-    mocked_get_bot = mocker.patch(
-        "nonebot_plugin_wordcloud.schedule.get_bot", return_value=mocked_bot
-    )
     mocked_get_wordcloud = mocker.patch(
         "nonebot_plugin_wordcloud.schedule.get_wordcloud", return_value=None
     )
 
-    await schedule_service.run_task()
+    async with app.test_api() as ctx:
+        bot = ctx.create_bot(base=Bot)
+        should_send_saa(ctx, MessageFactory(Text("今天没有足够的数据生成词云")), bot, target=target)
+        await schedule_service.run_task()
 
-    mocked_get_bot.assert_called_once_with("test")
     mocked_get_messages_plain_text.assert_called_once()
-    mocked_get_wordcloud.assert_called_once_with(["test"], "qq-group-10000")
-    mocked_bot.send_group_msg.assert_called_once_with(
-        group_id=10000,
-        message=Message("今天没有足够的数据生成词云"),
-    )
-
-
-async def test_run_task_without_data_channel(app: App, mocker: MockerFixture):
-    from nonebot_plugin_datastore import create_session
-
-    from nonebot_plugin_wordcloud import schedule_service
-    from nonebot_plugin_wordcloud.model import Schedule
-
-    async with create_session() as session:
-        schedule = Schedule(
-            bot_id="test", platform="qq", guild_id="10000", channel_id="100000"
-        )
-        session.add(schedule)
-        await session.commit()
-
-    mocked_get_messages_plain_text = mocker.patch(
-        "nonebot_plugin_wordcloud.schedule.get_messages_plain_text",
-        return_value=["test"],
-    )
-    mocked_bot = mocker.AsyncMock(spec=BotV12)
-    mocked_bot.send_message = mocker.AsyncMock()
-    mocked_get_bot = mocker.patch(
-        "nonebot_plugin_wordcloud.schedule.get_bot", return_value=mocked_bot
-    )
-    mocked_get_wordcloud = mocker.patch(
-        "nonebot_plugin_wordcloud.schedule.get_wordcloud", return_value=None
-    )
-
-    await schedule_service.run_task()
-
-    mocked_get_bot.assert_called_once_with("test")
-    mocked_get_messages_plain_text.assert_called_once()
-    mocked_get_wordcloud.assert_called_once_with(["test"], "qq-guild-10000")
-    mocked_bot.send_message.assert_called_once_with(
-        message=MessageV12("今天没有足够的数据生成词云"),
-        detail_type="channel",
-        guild_id="10000",
-        channel_id="100000",
-    )
+    mocked_get_wordcloud.assert_called_once_with(["test"], "qq_10000")
 
 
 async def test_run_task_remove_schedule(app: App):
     """测试运行定时任务时，删除没有内容的定时任务"""
-    from nonebot_plugin_datastore import create_session
+    from nonebot_plugin_saa import TargetQQGroup
 
-    from nonebot_plugin_wordcloud.model import Schedule
     from nonebot_plugin_wordcloud.schedule import schedule_service
 
-    async with create_session() as session:
-        schedule = Schedule(
-            bot_id="test", platform="qq", group_id="10000", time=time(15, 0)
-        )
-        session.add(schedule)
-        await session.commit()
+    await schedule_service.add_schedule(TargetQQGroup(group_id=10000), time=time(23, 0))
 
     await schedule_service.update()
 
     assert "15:00:00" in schedule_service.schedules
 
-    async with create_session() as session:
-        schedule.time = time(16, 0)
-        session.add(schedule)
-        await session.commit()
+    await schedule_service.add_schedule(TargetQQGroup(group_id=10000), time=time(0, 0))
 
     await schedule_service.update()
 

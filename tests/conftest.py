@@ -31,12 +31,14 @@ async def app(tmp_path: Path):
     yield App()
 
     from nonebot_plugin_chatrecorder.model import MessageRecord
+    from nonebot_plugin_session.model import SessionModel
 
     from nonebot_plugin_wordcloud.model import Schedule
 
     # 清理数据
     async with create_session() as session, session.begin():
         await session.execute(delete(MessageRecord))
+        await session.execute(delete(SessionModel))
         await session.execute(delete(Schedule))
 
     keys = [key for key in schedule_service.schedules.keys() if key != "default"]
