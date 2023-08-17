@@ -13,6 +13,7 @@ def pytest_configure(config: pytest.Config) -> None:
         "datastore_database_url": "sqlite+aiosqlite://",
         "datastore_engine_options": {"poolclass": StaticPool},
         "alconna_use_command_start": True,
+        "driver": "~fastapi+~httpx",
     }
 
 
