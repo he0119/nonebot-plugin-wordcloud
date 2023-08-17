@@ -2,6 +2,8 @@ from pathlib import Path
 
 import nonebot
 import pytest
+from nonebot.adapters.onebot.v11 import Adapter as OnebotV11Adapter
+from nonebot.adapters.onebot.v12 import Adapter as OnebotV12Adapter
 from nonebug import NONEBOT_INIT_KWARGS, App
 from sqlalchemy import StaticPool, delete
 
@@ -44,3 +46,10 @@ async def app(tmp_path: Path):
     keys = [key for key in schedule_service.schedules.keys() if key != "default"]
     for key in keys:
         schedule_service.schedules.pop(key)
+
+
+@pytest.fixture(scope="session", autouse=True)
+def load_adapters(nonebug_init: None):
+    driver = nonebot.get_driver()
+    driver.register_adapter(OnebotV11Adapter)
+    driver.register_adapter(OnebotV12Adapter)

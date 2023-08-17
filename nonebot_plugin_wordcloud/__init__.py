@@ -257,7 +257,7 @@ set_mask_cmd = on_alconna(
     permission=admin_permission(),
 )
 set_mask_cmd.shortcut(
-    "设置默认词云形状",
+    "设置词云默认形状",
     {
         "prefix": True,
         "command": "设置词云形状",
@@ -309,7 +309,7 @@ delete_mask_cmd = on_alconna(
     permission=admin_permission(),
 )
 delete_mask_cmd.shortcut(
-    "删除默认词云形状",
+    "删除词云默认形状",
     {
         "prefix": True,
         "command": "删除词云形状",
