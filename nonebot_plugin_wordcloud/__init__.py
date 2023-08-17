@@ -10,7 +10,7 @@ from nonebot.adapters import Bot, Event, Message
 from nonebot.matcher import Matcher
 from nonebot.params import Arg, Command, CommandArg, Depends
 from nonebot.permission import SUPERUSER
-from nonebot.plugin import PluginMetadata
+from nonebot.plugin import PluginMetadata, inherit_supported_adapters
 from nonebot.typing import T_State
 from PIL import Image
 
@@ -88,8 +88,9 @@ __plugin_meta__ = PluginMetadata(
 /关闭词云每日定时发送""",
     homepage="https://github.com/he0119/nonebot-plugin-wordcloud",
     type="application",
-    supported_adapters=(saa.__plugin_meta__.supported_adapters or set())
-    & (chatrecorder_meta.supported_adapters or set()),
+    supported_adapters=inherit_supported_adapters(
+        "nonebot_plugin_chatrecorder", "nonebot_plugin_saa", "nonebot_plugin_alconna"
+    ),
     config=Config,
 )
 
