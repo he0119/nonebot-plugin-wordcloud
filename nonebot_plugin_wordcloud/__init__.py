@@ -3,12 +3,12 @@
 import re
 from datetime import datetime, timedelta
 from io import BytesIO
-from typing import Tuple, Union
+from typing import Union
 
-from nonebot import CommandGroup, require
+from nonebot import require
 from nonebot.adapters import Bot, Event, Message
 from nonebot.matcher import Matcher
-from nonebot.params import Arg, Command, CommandArg, Depends
+from nonebot.params import Arg, Depends
 from nonebot.permission import SUPERUSER
 from nonebot.plugin import PluginMetadata, inherit_supported_adapters
 from nonebot.typing import T_State
@@ -22,12 +22,15 @@ require("nonebot_plugin_alconna")
 require("nonebot_plugin_cesaa")
 import nonebot_plugin_alconna as alc
 import nonebot_plugin_saa as saa
+from nepattern import BasePattern
+from nepattern.context import global_patterns
 from nonebot_plugin_alconna import (
     Alconna,
     AlconnaArg,
     AlconnaMatch,
     AlconnaMatcher,
     AlconnaQuery,
+    AlcResult,
     Args,
     Match,
     Option,
@@ -96,27 +99,10 @@ __plugin_meta__ = PluginMetadata(
     config=Config,
 )
 
-wordcloud = CommandGroup("词云")
-
-wordcloud_cmd = wordcloud.command(
-    "main",
-    aliases={
-        "词云",
-        "今日词云",
-        "昨日词云",
-        "本周词云",
-        "上周词云",
-        "本月词云",
-        "上月词云",
-        "年度词云",
-        "历史词云",
-        "我的今日词云",
-        "我的昨日词云",
-        "我的本周词云",
-        "我的本月词云",
-        "我的年度词云",
-        "我的历史词云",
-    },
+date = BasePattern("今日|昨日|本周|上周|本月|上月|年度|历史")
+global_patterns()["date"] = date
+wordcloud = on_alconna(
+    Alconna("{my:我的}?{type:date}词云", Args["time?", str]),
 )
 
 
@@ -140,52 +126,55 @@ def parse_datetime(key: str):
     return _key_parser
 
 
-@wordcloud_cmd.handle(parameterless=[Depends(ensure_group)])
+@wordcloud.handle(parameterless=[Depends(ensure_group)])
 async def handle_first_receive(
     state: T_State,
-    commands: Tuple[str, ...] = Command(),
-    args: Message = CommandArg(),
+    commands: AlcResult,
+    time: Match[str] = AlconnaMatch("time"),
 ):
-    command = commands[0][:-2]  # 去除后缀
-
-    state["my"] = command.startswith("我的")
-    if state["my"]:
-        command = command[2:]
-
+    commands_result = commands.result.header_result
     dt = get_datetime_now_with_timezone()
-    if command == "今日":
+    if "我的" in commands_result:
+        state["my"] = True
+    else:
+        state["my"] = False
+
+    if "今日" in commands_result:
         state["start"] = dt.replace(hour=0, minute=0, second=0, microsecond=0)
         state["stop"] = dt
-    elif command == "昨日":
+    elif "昨日" in commands_result:
         state["stop"] = dt.replace(hour=0, minute=0, second=0, microsecond=0)
         state["start"] = state["stop"] - timedelta(days=1)
-    elif command == "本周":
+    elif "本周" in commands_result:
         state["start"] = dt.replace(
             hour=0, minute=0, second=0, microsecond=0
         ) - timedelta(days=dt.weekday())
         state["stop"] = dt
-    elif command == "上周":
+    elif "上周" in commands_result:
         state["stop"] = dt.replace(
             hour=0, minute=0, second=0, microsecond=0
         ) - timedelta(days=dt.weekday())
         state["start"] = state["stop"] - timedelta(days=7)
-    elif command == "本月":
+    elif "本月" in commands_result:
         state["start"] = dt.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         state["stop"] = dt
-    elif command == "上月":
+    elif "上月" in commands_result:
         state["stop"] = dt.replace(
             day=1, hour=0, minute=0, second=0, microsecond=0
         ) - timedelta(microseconds=1)
         state["start"] = state["stop"].replace(
             day=1, hour=0, minute=0, second=0, microsecond=0
         )
-    elif command == "年度":
+    elif "年度" in commands_result:
         state["start"] = dt.replace(
             month=1, day=1, hour=0, minute=0, second=0, microsecond=0
         )
         state["stop"] = dt
-    elif command == "历史":
-        plaintext = args.extract_plain_text().strip()
+    elif "历史" in commands_result:
+        if not time.available:
+            await wordcloud.finish(__plugin_meta__.usage)
+
+        plaintext = time.result
         if match := re.match(r"^(.+?)(?:~(.+))?$", plaintext):
             start = match[1]
             stop = match[2]
@@ -200,21 +189,21 @@ async def handle_first_receive(
                     )
                     state["stop"] = state["start"] + timedelta(days=1)
             except ValueError:
-                await wordcloud_cmd.finish("请输入正确的日期，不然我没法理解呢！")
+                await wordcloud.finish("请输入正确的日期，不然我没法理解呢！")
     else:
         # 当完整匹配词云的时候才输出帮助信息
-        if not args.extract_plain_text():
-            await wordcloud_cmd.finish(__plugin_meta__.usage)
+        if not time.available:
+            await wordcloud.finish(__plugin_meta__.usage)
         else:
-            await wordcloud_cmd.finish()
+            await wordcloud.finish()
 
 
-@wordcloud_cmd.got(
+@wordcloud.got(
     "start",
     prompt="请输入你要查询的起始日期（如 2022-01-01）",
     parameterless=[Depends(parse_datetime("start"))],
 )
-@wordcloud_cmd.got(
+@wordcloud.got(
     "stop",
     prompt="请输入你要查询的结束日期（如 2022-02-22）",
     parameterless=[Depends(parse_datetime("stop"))],
@@ -239,7 +228,7 @@ async def handle_wordcloud(
     )
 
     if not (image := await get_wordcloud(messages, mask_key)):
-        await wordcloud_cmd.finish("没有足够的数据生成词云", at_sender=my)
+        await wordcloud.finish("没有足够的数据生成词云", at_sender=my)
 
     await saa.Image(image, "wordcloud.png").finish(at_sender=my)
 
@@ -326,8 +315,8 @@ async def _(
         await remove_mask_cmd.finish("词云形状已删除")
 
 
-schedule_cmd = wordcloud.command(
-    "schedule",
+schedule_cmd = on_alconna(
+    Alconna("schedule", Args["time?", str]),
     aliases={
         "词云每日定时发送状态",
         "开启词云每日定时发送",
@@ -339,20 +328,23 @@ schedule_cmd = wordcloud.command(
 
 @schedule_cmd.handle(parameterless=[Depends(ensure_group)])
 async def _(
+    commands: AlcResult,
     target: saa.PlatformTarget = Depends(saa.get_target),
-    commands: Tuple[str, ...] = Command(),
-    args: Message = CommandArg(),
+    time: Match[str] = AlconnaMatch("time"),
 ):
-    command = commands[0]
+    command_result = commands.result.header_result
 
-    if command == "词云每日定时发送状态":
+    if command_result == "词云每日定时发送状态":
         schedule_time = await schedule_service.get_schedule(target)
         await schedule_cmd.finish(
             f"词云每日定时发送已开启，发送时间为：{schedule_time}" if schedule_time else "词云每日定时发送未开启"
         )
-    elif command == "开启词云每日定时发送":
+    elif command_result == "开启词云每日定时发送":
+        if not time.available:
+            await schedule_cmd.finish("请在指令后输入正确的时间，不然我没法理解呢！")
+
         schedule_time = None
-        if time_str := args.extract_plain_text().strip():
+        if time_str := time.result:
             try:
                 schedule_time = get_time_fromisoformat_with_timezone(time_str)
             except ValueError:
@@ -363,6 +355,6 @@ async def _(
             if schedule_time
             else f"已开启词云每日定时发送，发送时间为：{plugin_config.wordcloud_default_schedule_time}"
         )
-    elif command == "关闭词云每日定时发送":
+    elif command_result == "关闭词云每日定时发送":
         await schedule_service.remove_schedule(target)
         await schedule_cmd.finish("已关闭词云每日定时发送")
