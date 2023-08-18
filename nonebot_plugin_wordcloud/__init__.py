@@ -101,7 +101,7 @@ __plugin_meta__ = PluginMetadata(
 
 date = BasePattern("今日|昨日|本周|上周|本月|上月|年度|历史")
 global_patterns()["date"] = date
-wordcloud = on_alconna(
+wordcloud_cmd = on_alconna(
     Alconna("{my:我的}?{type:date}词云", Args["time?", str]),
 )
 
@@ -172,7 +172,7 @@ async def handle_first_receive(
         state["stop"] = dt
     elif "历史" in commands_result:
         if not time.available:
-            await wordcloud.finish(__plugin_meta__.usage)
+            await wordcloud_cmd.finish(__plugin_meta__.usage)
 
         plaintext = time.result
         if match := re.match(r"^(.+?)(?:~(.+))?$", plaintext):
@@ -193,17 +193,17 @@ async def handle_first_receive(
     else:
         # 当完整匹配词云的时候才输出帮助信息
         if not time.available:
-            await wordcloud.finish(__plugin_meta__.usage)
+            await wordcloud_cmd.finish(__plugin_meta__.usage)
         else:
-            await wordcloud.finish()
+            await wordcloud_cmd.finish()
 
 
-@wordcloud.got(
+@wordcloud_cmd.got(
     "start",
     prompt="请输入你要查询的起始日期（如 2022-01-01）",
     parameterless=[Depends(parse_datetime("start"))],
 )
-@wordcloud.got(
+@wordcloud_cmd.got(
     "stop",
     prompt="请输入你要查询的结束日期（如 2022-02-22）",
     parameterless=[Depends(parse_datetime("stop"))],
@@ -228,7 +228,7 @@ async def handle_wordcloud(
     )
 
     if not (image := await get_wordcloud(messages, mask_key)):
-        await wordcloud.finish("没有足够的数据生成词云", at_sender=my)
+        await wordcloud_cmd.finish("没有足够的数据生成词云", at_sender=my)
 
     await saa.Image(image, "wordcloud.png").finish(at_sender=my)
 
