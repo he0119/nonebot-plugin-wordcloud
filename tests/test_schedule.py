@@ -1,6 +1,7 @@
 from datetime import time
 from io import BytesIO
 
+from nonebot import get_driver
 from nonebot.adapters.onebot.v11 import Bot, Message
 from nonebot.adapters.onebot.v12 import Bot as BotV12
 from nonebot.adapters.onebot.v12 import Message as MessageV12
@@ -13,6 +14,7 @@ from .utils import (
     fake_channel_message_event_v12,
     fake_group_message_event_v11,
     fake_group_message_event_v12,
+    fake_private_message_event_v11,
 )
 
 
@@ -159,8 +161,8 @@ async def test_run_task_group(app: App, mocker: MockerFixture):
     target = TargetQQGroup(group_id=10000)
     await schedule_service.add_schedule(target)
 
-    mocked_get_messages_plain_text = mocker.patch(
-        "nonebot_plugin_wordcloud.schedule.get_messages_plain_text",
+    mocked_get_messages_plain_text_by_target = mocker.patch(
+        "nonebot_plugin_wordcloud.schedule.get_messages_plain_text_by_target",
         return_value=["test"],
     )
     mocked_get_wordcloud = mocker.patch(
@@ -172,12 +174,12 @@ async def test_run_task_group(app: App, mocker: MockerFixture):
         should_send_saa(ctx, MessageFactory(Image(image)), bot, target=target)
         await schedule_service.run_task()
 
-    mocked_get_messages_plain_text.assert_called_once()
-    mocked_get_wordcloud.assert_called_once_with(["test"], "qq_10000")
+    mocked_get_messages_plain_text_by_target.assert_called_once()
+    mocked_get_wordcloud.assert_called_once_with(["test"], "qq_group-group_id=10000")
 
     # OneBot V12
-    mocked_get_messages_plain_text_v12 = mocker.patch(
-        "nonebot_plugin_wordcloud.schedule.get_messages_plain_text",
+    mocked_get_messages_plain_text_by_target_v12 = mocker.patch(
+        "nonebot_plugin_wordcloud.schedule.get_messages_plain_text_by_target",
         return_value=["test"],
     )
 
@@ -190,8 +192,10 @@ async def test_run_task_group(app: App, mocker: MockerFixture):
         should_send_saa(ctx, MessageFactory(Image(image)), bot, target=target)
         await schedule_service.run_task()
 
-    mocked_get_messages_plain_text_v12.assert_called_once()
-    mocked_get_wordcloud_v12.assert_called_once_with(["test"], "qq_10000")
+    mocked_get_messages_plain_text_by_target_v12.assert_called_once()
+    mocked_get_wordcloud_v12.assert_called_once_with(
+        ["test"], "qq_group-group_id=10000"
+    )
 
 
 async def test_run_task_channel(app: App, mocker: MockerFixture):
@@ -203,8 +207,8 @@ async def test_run_task_channel(app: App, mocker: MockerFixture):
     target = TargetQQGuildChannel(channel_id=100000)
     await schedule_service.add_schedule(target)
 
-    mocked_get_messages_plain_text = mocker.patch(
-        "nonebot_plugin_wordcloud.schedule.get_messages_plain_text",
+    mocked_get_messages_plain_text_by_target = mocker.patch(
+        "nonebot_plugin_wordcloud.schedule.get_messages_plain_text_by_target",
         return_value=["test"],
     )
     mocked_get_wordcloud_v12 = mocker.patch(
@@ -216,8 +220,10 @@ async def test_run_task_channel(app: App, mocker: MockerFixture):
         should_send_saa(ctx, MessageFactory(Image(image)), bot, target=target)
         await schedule_service.run_task()
 
-    mocked_get_messages_plain_text.assert_called_once()
-    mocked_get_wordcloud_v12.assert_called_once_with(["test"], "qqguild__100000")
+    mocked_get_messages_plain_text_by_target.assert_called_once()
+    mocked_get_wordcloud_v12.assert_called_once_with(
+        ["test"], "qq_guild_channel-channel_id=100000"
+    )
 
 
 async def test_run_task_without_data(app: App, mocker: MockerFixture):
@@ -228,8 +234,8 @@ async def test_run_task_without_data(app: App, mocker: MockerFixture):
     target = TargetQQGroup(group_id=10000)
     await schedule_service.add_schedule(target)
 
-    mocked_get_messages_plain_text = mocker.patch(
-        "nonebot_plugin_wordcloud.schedule.get_messages_plain_text",
+    mocked_get_messages_plain_text_by_target = mocker.patch(
+        "nonebot_plugin_wordcloud.schedule.get_messages_plain_text_by_target",
         return_value=["test"],
     )
     mocked_get_wordcloud = mocker.patch(
@@ -241,8 +247,8 @@ async def test_run_task_without_data(app: App, mocker: MockerFixture):
         should_send_saa(ctx, MessageFactory(Text("今天没有足够的数据生成词云")), bot, target=target)
         await schedule_service.run_task()
 
-    mocked_get_messages_plain_text.assert_called_once()
-    mocked_get_wordcloud.assert_called_once_with(["test"], "qq_10000")
+    mocked_get_messages_plain_text_by_target.assert_called_once()
+    mocked_get_wordcloud.assert_called_once_with(["test"], "qq_group-group_id=10000")
 
 
 async def test_run_task_remove_schedule(app: App):
@@ -268,3 +274,19 @@ async def test_run_task_remove_schedule(app: App):
 
     assert "15:00:00" not in schedule_service.schedules
     assert "16:00:00" in schedule_service.schedules
+
+
+async def test_enable_schedule_private(app: App, mocker: MockerFixture):
+    """测试私聊开启词云每日定时发送"""
+    from nonebot_plugin_wordcloud import schedule_cmd
+
+    config = get_driver().config
+
+    mocker.patch.object(config, "superusers", {"10"})
+
+    async with app.test_matcher(schedule_cmd) as ctx:
+        bot = ctx.create_bot(base=Bot)
+        event = fake_private_message_event_v11(message=Message("/开启词云每日定时发送"))
+        ctx.receive_event(bot, event)
+        ctx.should_call_send(event, "请在群组中使用！", True)
+        ctx.should_finished()

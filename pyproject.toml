@@ -15,6 +15,7 @@ nonebot2 = { version = "^2.0.0", extras = ["fastapi"] }
 nonebot-plugin-apscheduler = "^0.3.0"
 nonebot-plugin-datastore = ">=0.6.0, <2.0.0"
 nonebot-plugin-chatrecorder = "^0.4.1"
+nonebot-plugin-cesaa = "^0.1.0"
 nonebot-plugin-send-anything-anywhere = "^0.3.0"
 nonebot-plugin-alconna = ">=0.15.0"
 wordcloud = "^1.8.1"

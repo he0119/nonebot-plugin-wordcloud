@@ -5,9 +5,8 @@ import nonebot_plugin_saa as saa
 from apscheduler.job import Job
 from nonebot.log import logger
 from nonebot_plugin_apscheduler import scheduler
-from nonebot_plugin_chatrecorder import get_messages_plain_text
+from nonebot_plugin_cesaa import get_messages_plain_text_by_target
 from nonebot_plugin_datastore import create_session
-from nonebot_plugin_session import SessionIdType
 from sqlalchemy import select
 
 from .utils import get_datetime_now_with_timezone, get_time_with_scheduler_timezone
@@ -20,7 +19,7 @@ except ImportError:
 from .config import plugin_config
 from .data_source import get_wordcloud
 from .model import Schedule
-from .utils import target_to_session, time_astimezone
+from .utils import get_mask_key, time_astimezone
 
 saa.enable_auto_select_bot()
 
@@ -88,23 +87,17 @@ class Scheduler:
             logger.info(f"开始发送每日词云，时间为 {time or '默认时间'}")
             for schedule in schedules:
                 target = schedule.saa_target
-                group_session = target_to_session(target)
                 dt = get_datetime_now_with_timezone()
                 start = dt.replace(hour=0, minute=0, second=0, microsecond=0)
                 stop = dt
-                messages = await get_messages_plain_text(
-                    session=group_session,
-                    id_type=SessionIdType.GROUP,
-                    include_bot_id=False,
-                    include_bot_type=False,
+                messages = await get_messages_plain_text_by_target(
+                    target=target,
                     types=["message"],
                     time_start=start,
                     time_stop=stop,
                     exclude_id1s=plugin_config.wordcloud_exclude_user_ids,
                 )
-                mask_key = group_session.get_id(
-                    SessionIdType.GROUP, include_bot_type=False, include_bot_id=False
-                )
+                mask_key = get_mask_key(target)
                 if not (image := await get_wordcloud(messages, mask_key)):
                     await saa.Text("今天没有足够的数据生成词云").send_to(target)
                     continue

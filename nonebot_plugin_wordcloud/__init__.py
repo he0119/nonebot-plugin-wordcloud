@@ -19,6 +19,7 @@ require("nonebot_plugin_chatrecorder")
 require("nonebot_plugin_datastore")
 require("nonebot_plugin_saa")
 require("nonebot_plugin_alconna")
+require("nonebot_plugin_cesaa")
 import nonebot_plugin_alconna as alc
 import nonebot_plugin_saa as saa
 from nonebot_plugin_alconna import (
@@ -35,18 +36,19 @@ from nonebot_plugin_alconna import (
     on_alconna,
     store_true,
 )
-from nonebot_plugin_chatrecorder import __plugin_meta__ as chatrecorder_meta
 from nonebot_plugin_chatrecorder.record import get_messages_plain_text
 from nonebot_plugin_datastore.db import post_db_init
-from nonebot_plugin_session import Session, SessionIdType, SessionLevel, extract_session
+from nonebot_plugin_session import Session, SessionIdType, extract_session
 
 from .config import Config, plugin_config
 from .data_source import get_wordcloud
 from .schedule import schedule_service
 from .utils import (
     admin_permission,
+    ensure_group,
     get_datetime_fromisoformat_with_timezone,
     get_datetime_now_with_timezone,
+    get_mask_key,
     get_time_fromisoformat_with_timezone,
 )
 
@@ -138,16 +140,12 @@ def parse_datetime(key: str):
     return _key_parser
 
 
-@wordcloud_cmd.handle()
+@wordcloud_cmd.handle(parameterless=[Depends(ensure_group)])
 async def handle_first_receive(
     state: T_State,
-    session: Session = Depends(extract_session),
     commands: Tuple[str, ...] = Command(),
     args: Message = CommandArg(),
 ):
-    if session.level not in [SessionLevel.LEVEL2, SessionLevel.LEVEL3]:
-        await wordcloud_cmd.finish("请在群组中使用！")
-
     command = commands[0][:-2]  # 去除后缀
 
     state["my"] = command.startswith("我的")
@@ -226,6 +224,7 @@ async def handle_wordcloud(
     start: datetime = Arg(),
     stop: datetime = Arg(),
     my: bool = Arg(),
+    mask_key: str = Depends(get_mask_key),
 ):
     """生成词云"""
     messages = await get_messages_plain_text(
@@ -237,10 +236,6 @@ async def handle_wordcloud(
         time_start=start,
         time_stop=stop,
         exclude_id1s=plugin_config.wordcloud_exclude_user_ids,
-    )
-
-    mask_key = session.get_id(
-        SessionIdType.GROUP, include_bot_type=False, include_bot_id=False
     )
 
     if not (image := await get_wordcloud(messages, mask_key)):
@@ -267,15 +262,11 @@ set_mask_cmd.shortcut(
 )
 
 
-@set_mask_cmd.handle()
+@set_mask_cmd.handle(parameterless=[Depends(ensure_group)])
 async def _(
     matcher: AlconnaMatcher,
-    session: Session = Depends(extract_session),
     img: Match[bytes] = AlconnaMatch("img", image_fetch),
 ):
-    if session.level not in [SessionLevel.LEVEL2, SessionLevel.LEVEL3]:
-        await wordcloud_cmd.finish("请在群组中使用！")
-
     if img.available:
         matcher.set_path_arg("img", img.result)
 
@@ -285,12 +276,9 @@ async def handle_save_mask(
     bot: Bot,
     event: Event,
     img: bytes = AlconnaArg("img"),
-    session: Session = Depends(extract_session),
     default: Query[bool] = AlconnaQuery("default.value", default=False),
+    mask_key: str = Depends(get_mask_key),
 ):
-    mask_key = session.get_id(
-        SessionIdType.GROUP, include_bot_type=False, include_bot_id=False
-    )
     mask = Image.open(BytesIO(img))
     if default.result:
         if not await SUPERUSER(bot, event):
@@ -302,14 +290,14 @@ async def handle_save_mask(
         await set_mask_cmd.finish(f"词云形状设置成功")
 
 
-delete_mask_cmd = on_alconna(
+remove_mask_cmd = on_alconna(
     Alconna(
         "删除词云形状",
         Option("--default", default=False, action=store_true),
     ),
     permission=admin_permission(),
 )
-delete_mask_cmd.shortcut(
+remove_mask_cmd.shortcut(
     "删除词云默认形状",
     {
         "prefix": True,
@@ -319,29 +307,23 @@ delete_mask_cmd.shortcut(
 )
 
 
-@delete_mask_cmd.handle()
+@remove_mask_cmd.handle(parameterless=[Depends(ensure_group)])
 async def _(
     bot: Bot,
     event: Event,
-    session: Session = Depends(extract_session),
     default: Query[bool] = AlconnaQuery("default.value", default=False),
+    mask_key: str = Depends(get_mask_key),
 ):
-    if session.level not in [SessionLevel.LEVEL2, SessionLevel.LEVEL3]:
-        await wordcloud_cmd.finish("请在群组中使用！")
-
-    mask_key = session.get_id(
-        SessionIdType.GROUP, include_bot_type=False, include_bot_id=False
-    )
     if default.result:
         if not await SUPERUSER(bot, event):
-            await delete_mask_cmd.finish("仅超级用户可删除词云默认形状")
+            await remove_mask_cmd.finish("仅超级用户可删除词云默认形状")
         mask_path = plugin_config.get_mask_path()
         mask_path.unlink(missing_ok=True)
-        await delete_mask_cmd.finish("词云默认形状已删除")
+        await remove_mask_cmd.finish("词云默认形状已删除")
     else:
         mask_path = plugin_config.get_mask_path(mask_key)
         mask_path.unlink(missing_ok=True)
-        await delete_mask_cmd.finish("词云形状已删除")
+        await remove_mask_cmd.finish("词云形状已删除")
 
 
 schedule_cmd = wordcloud.command(
@@ -355,7 +337,7 @@ schedule_cmd = wordcloud.command(
 )
 
 
-@schedule_cmd.handle()
+@schedule_cmd.handle(parameterless=[Depends(ensure_group)])
 async def _(
     target: saa.PlatformTarget = Depends(saa.get_target),
     commands: Tuple[str, ...] = Command(),

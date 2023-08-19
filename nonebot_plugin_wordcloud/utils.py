@@ -2,22 +2,12 @@ import contextlib
 from datetime import datetime, time
 from typing import Optional
 
+from nonebot.matcher import Matcher
+from nonebot.params import Depends
 from nonebot.permission import SUPERUSER
 from nonebot_plugin_apscheduler import scheduler
-from nonebot_plugin_saa import (
-    PlatformTarget,
-    TargetFeishuGroup,
-    TargetFeishuPrivate,
-    TargetKaiheilaChannel,
-    TargetKaiheilaPrivate,
-    TargetOB12Unknow,
-    TargetQQGroup,
-    TargetQQGuildChannel,
-    TargetQQGuildDirect,
-    TargetQQPrivate,
-)
-from nonebot_plugin_session import Session, SessionLevel
-from nonebot_plugin_session.const import SupportedPlatform
+from nonebot_plugin_saa import PlatformTarget, get_target
+from nonebot_plugin_session import Session, SessionLevel, extract_session
 
 from .config import plugin_config
 
@@ -73,126 +63,6 @@ def get_time_with_scheduler_timezone(time: time) -> time:
     return time_astimezone(time, scheduler.timezone)
 
 
-def target_to_session(target: PlatformTarget) -> Session:
-    """将 PlatformTarget 转换为 Session"""
-    bot_id = "saa"
-    bot_type = "saa"
-
-    if isinstance(target, TargetQQPrivate):
-        return Session(
-            bot_id=bot_id,
-            bot_type=bot_type,
-            platform=SupportedPlatform.qq,
-            level=SessionLevel.LEVEL1,
-            id1=str(target.user_id),
-            id2=None,
-            id3=None,
-        )
-    elif isinstance(target, TargetQQGroup):
-        return Session(
-            bot_id=bot_id,
-            bot_type=bot_type,
-            platform=SupportedPlatform.qq,
-            level=SessionLevel.LEVEL2,
-            id1=None,
-            id2=str(target.group_id),
-            id3=None,
-        )
-    elif isinstance(target, TargetQQGuildDirect):
-        return Session(
-            bot_id=bot_id,
-            bot_type=bot_type,
-            platform=SupportedPlatform.qqguild,
-            level=SessionLevel.LEVEL1,
-            id1=str(target.recipient_id),
-            id2=None,
-            id3=str(target.source_guild_id),
-        )
-    elif isinstance(target, TargetQQGuildChannel):
-        return Session(
-            bot_id=bot_id,
-            bot_type=bot_type,
-            platform=SupportedPlatform.qqguild,
-            level=SessionLevel.LEVEL3,
-            id1=None,
-            id2=str(target.channel_id),
-            id3=None,  # FIXME: 缺少 guild_id，会导致主动发送时的 mask_id 出问题
-        )
-    elif isinstance(target, TargetKaiheilaPrivate):
-        return Session(
-            bot_id=bot_id,
-            bot_type=bot_type,
-            platform=SupportedPlatform.kaiheila,
-            level=SessionLevel.LEVEL1,
-            id1=str(target.user_id),
-            id2=None,
-            id3=None,
-        )
-    elif isinstance(target, TargetKaiheilaChannel):
-        return Session(
-            bot_id=bot_id,
-            bot_type=bot_type,
-            platform=SupportedPlatform.kaiheila,
-            level=SessionLevel.LEVEL3,
-            id1=None,
-            id2=str(target.channel_id),
-            id3=None,
-        )
-    elif isinstance(target, TargetFeishuPrivate):
-        return Session(
-            bot_id=bot_id,
-            bot_type=bot_type,
-            platform=SupportedPlatform.feishu,
-            level=SessionLevel.LEVEL1,
-            id1=str(target.open_id),
-            id2=None,
-            id3=None,
-        )
-    elif isinstance(target, TargetFeishuGroup):
-        return Session(
-            bot_id=bot_id,
-            bot_type=bot_type,
-            platform=SupportedPlatform.feishu,
-            level=SessionLevel.LEVEL2,
-            id1=None,
-            id2=str(target.chat_id),
-            id3=None,
-        )
-    elif isinstance(target, TargetOB12Unknow):
-        if target.detail_type == "private":
-            return Session(
-                bot_id=bot_id,
-                bot_type=bot_type,
-                platform=target.platform,
-                level=SessionLevel.LEVEL1,
-                id1=str(target.user_id),
-                id2=None,
-                id3=None,
-            )
-        elif target.detail_type == "group":
-            return Session(
-                bot_id=bot_id,
-                bot_type=bot_type,
-                platform=target.platform,
-                level=SessionLevel.LEVEL2,
-                id1=None,
-                id2=str(target.group_id),
-                id3=None,
-            )
-        else:
-            return Session(
-                bot_id=bot_id,
-                bot_type=bot_type,
-                platform=target.platform,
-                level=SessionLevel.LEVEL3,
-                id1=None,
-                id2=target.channel_id,
-                id3=target.guild_id,
-            )
-
-    raise ValueError(f"不支持的 PlatformTarget 类型：{target}")
-
-
 def admin_permission():
     permission = SUPERUSER
     with contextlib.suppress(ImportError):
@@ -201,3 +71,27 @@ def admin_permission():
         permission = permission | GROUP_ADMIN | GROUP_OWNER
 
     return permission
+
+
+def get_mask_key(target: PlatformTarget = Depends(get_target)) -> str:
+    """获取 mask key
+
+    例如：
+    qq_group-group_id=10000
+    qq_guild_channel-channel_id=100000
+    """
+    mask_keys = [f"{target.platform_type.name}"]
+    mask_keys.extend(
+        [
+            f"{key}={value}"
+            for key, value in target.dict(exclude={"platform_type"}).items()
+            if value is not None
+        ]
+    )
+    return "-".join(mask_keys)
+
+
+async def ensure_group(matcher: Matcher, session: Session = Depends(extract_session)):
+    """确保在群组中使用"""
+    if session.level not in [SessionLevel.LEVEL2, SessionLevel.LEVEL3]:
+        await matcher.finish("请在群组中使用！")

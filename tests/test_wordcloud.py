@@ -25,6 +25,7 @@ from .utils import (
     fake_channel_message_event_v12,
     fake_group_message_event_v11,
     fake_group_message_event_v12,
+    fake_private_message_event_v11,
 )
 
 FAKE_IMAGE = BytesIO(
@@ -208,6 +209,23 @@ async def test_get_wordcloud(app: App, mocker: MockerFixture):
     mocked_random.assert_called_once_with()
 
 
+async def test_get_wordcloud_private(app: App):
+    """测试私聊词云"""
+    from nonebot_plugin_wordcloud import wordcloud_cmd
+
+    async with app.test_matcher(wordcloud_cmd) as ctx:
+        bot = ctx.create_bot(base=Bot)
+        event = fake_private_message_event_v11(message=Message("/词云"))
+
+        ctx.receive_event(bot, event)
+        ctx.should_call_send(
+            event,
+            "请在群组中使用！",
+            True,
+        )
+        ctx.should_finished()
+
+
 async def test_wordcloud_cmd(app: App):
     """测试输出帮助信息与没有数据的情况"""
     from nonebot_plugin_wordcloud import __plugin_meta__, wordcloud_cmd
@@ -272,7 +290,9 @@ async def test_today_wordcloud(app: App, mocker: MockerFixture, message_record: 
         ctx.should_finished()
 
     mocked_datetime_now.assert_called_once_with()
-    mocked_get_wordcloud.assert_called_once_with(["10:1-2", "11:1-2"], "qq_10000")
+    mocked_get_wordcloud.assert_called_once_with(
+        ["10:1-2", "11:1-2"], "qq_group-group_id=10000"
+    )
 
 
 async def test_my_today_wordcloud(
@@ -308,7 +328,7 @@ async def test_my_today_wordcloud(
         ctx.should_finished()
 
     mocked_datetime_now.assert_called_once_with()
-    mocked_get_wordcloud.assert_called_once_with(["10:1-2"], "qq_10000")
+    mocked_get_wordcloud.assert_called_once_with(["10:1-2"], "qq_group-group_id=10000")
 
 
 async def test_yesterday_wordcloud(
@@ -343,7 +363,9 @@ async def test_yesterday_wordcloud(
         ctx.should_finished()
 
     mocked_datetime_now.assert_called_once_with()
-    mocked_get_wordcloud.assert_called_once_with(["10:1-2", "11:1-2"], "qq_10000")
+    mocked_get_wordcloud.assert_called_once_with(
+        ["10:1-2", "11:1-2"], "qq_group-group_id=10000"
+    )
 
 
 async def test_my_yesterday_wordcloud(
@@ -379,7 +401,7 @@ async def test_my_yesterday_wordcloud(
         ctx.should_finished()
 
     mocked_datetime_now.assert_called_once_with()
-    mocked_get_wordcloud.assert_called_once_with(["10:1-2"], "qq_10000")
+    mocked_get_wordcloud.assert_called_once_with(["10:1-2"], "qq_group-group_id=10000")
 
 
 async def test_week_wordcloud(app: App, mocker: MockerFixture, message_record: None):
@@ -412,7 +434,9 @@ async def test_week_wordcloud(app: App, mocker: MockerFixture, message_record: N
         ctx.should_finished()
 
     mocked_datetime_now.assert_called_once_with()
-    mocked_get_wordcloud.assert_called_once_with(["10:1-3", "11:1-3"], "qq_10000")
+    mocked_get_wordcloud.assert_called_once_with(
+        ["10:1-3", "11:1-3"], "qq_group-group_id=10000"
+    )
 
 
 async def test_last_week_wordcloud(
@@ -447,7 +471,9 @@ async def test_last_week_wordcloud(
         ctx.should_finished()
 
     mocked_datetime_now.assert_called_once_with()
-    mocked_get_wordcloud.assert_called_once_with(["10:1-2", "11:1-2"], "qq_10000")
+    mocked_get_wordcloud.assert_called_once_with(
+        ["10:1-2", "11:1-2"], "qq_group-group_id=10000"
+    )
 
 
 async def test_month_wordcloud(app: App, mocker: MockerFixture, message_record: None):
@@ -480,7 +506,9 @@ async def test_month_wordcloud(app: App, mocker: MockerFixture, message_record: 
         ctx.should_finished()
 
     mocked_datetime_now.assert_called_once_with()
-    mocked_get_wordcloud.assert_called_once_with(["10:2-1", "11:2-1"], "qq_10000")
+    mocked_get_wordcloud.assert_called_once_with(
+        ["10:2-1", "11:2-1"], "qq_group-group_id=10000"
+    )
 
 
 async def test_last_month_wordcloud(
@@ -516,7 +544,7 @@ async def test_last_month_wordcloud(
 
     mocked_datetime_now.assert_called_once_with()
     mocked_get_wordcloud.assert_called_once_with(
-        ["10:1-2", "11:1-2", "10:1-3", "11:1-3"], "qq_10000"
+        ["10:1-2", "11:1-2", "10:1-3", "11:1-3"], "qq_group-group_id=10000"
     )
 
 
@@ -551,7 +579,8 @@ async def test_year_wordcloud(app: App, mocker: MockerFixture, message_record: N
 
     mocked_datetime_now.assert_called_once_with()
     mocked_get_wordcloud.assert_called_once_with(
-        ["10:1-2", "11:1-2", "10:1-3", "11:1-3", "10:2-1", "11:2-1"], "qq_10000"
+        ["10:1-2", "11:1-2", "10:1-3", "11:1-3", "10:2-1", "11:2-1"],
+        "qq_group-group_id=10000",
     )
 
 
@@ -587,7 +616,7 @@ async def test_my_year_wordcloud(app: App, mocker: MockerFixture, message_record
 
     mocked_datetime_now.assert_called_once_with()
     mocked_get_wordcloud.assert_called_once_with(
-        ["10:1-2", "10:1-3", "10:2-1"], "qq_10000"
+        ["10:1-2", "10:1-3", "10:2-1"], "qq_group-group_id=10000"
     )
 
 
@@ -615,7 +644,9 @@ async def test_history_wordcloud(app: App, mocker: MockerFixture, message_record
         )
         ctx.should_finished()
 
-    mocked_get_wordcloud.assert_called_once_with(["10:1-2", "11:1-2"], "qq_10000")
+    mocked_get_wordcloud.assert_called_once_with(
+        ["10:1-2", "11:1-2"], "qq_group-group_id=10000"
+    )
 
 
 async def test_history_wordcloud_start_stop(
@@ -647,7 +678,7 @@ async def test_history_wordcloud_start_stop(
         ctx.should_finished()
 
     mocked_get_wordcloud.assert_called_once_with(
-        ["10:1-3", "11:1-3", "10:2-1", "11:2-1"], "qq_10000"
+        ["10:1-3", "11:1-3", "10:2-1", "11:2-1"], "qq_group-group_id=10000"
     )
 
 
@@ -693,7 +724,8 @@ async def test_history_wordcloud_start_stop_get_args(
         ctx.should_finished()
 
     mocked_get_wordcloud.assert_called_once_with(
-        ["10:1-2", "11:1-2", "10:1-3", "11:1-3", "10:2-1", "11:2-1"], "qq_10000"
+        ["10:1-2", "11:1-2", "10:1-3", "11:1-3", "10:2-1", "11:2-1"],
+        "qq_group-group_id=10000",
     )
 
 
@@ -763,7 +795,8 @@ async def test_today_wordcloud_v12(
 
     mocked_datetime_now.assert_called_once_with()
     mocked_get_wordcloud.assert_called_once_with(
-        ["v12-10:1-2", "v12-11:1-2"], "test_10000_100000"
+        ["v12-10:1-2", "v12-11:1-2"],
+        "unknown_ob12-platform=qq-detail_type=channel-guild_id=10000-channel_id=100000",
     )
 
 
@@ -799,7 +832,10 @@ async def test_my_today_wordcloud_v12(
         ctx.should_finished()
 
     mocked_datetime_now.assert_called_once_with()
-    mocked_get_wordcloud.assert_called_once_with(["v12-10:1-2"], "test_10000_100000")
+    mocked_get_wordcloud.assert_called_once_with(
+        ["v12-10:1-2"],
+        "unknown_ob12-platform=qq-detail_type=channel-guild_id=10000-channel_id=100000",
+    )
 
 
 async def test_today_wordcloud_qq_group_v12(
@@ -833,7 +869,9 @@ async def test_today_wordcloud_qq_group_v12(
         ctx.should_finished()
 
     mocked_datetime_now.assert_called_once_with()
-    mocked_get_wordcloud.assert_called_once_with(["10:1-2", "11:1-2"], "qq_10000")
+    mocked_get_wordcloud.assert_called_once_with(
+        ["10:1-2", "11:1-2"], "qq_group-group_id=10000"
+    )
 
 
 async def test_today_wordcloud_exclude_user_ids(
@@ -870,4 +908,4 @@ async def test_today_wordcloud_exclude_user_ids(
         ctx.should_finished()
 
     mocked_datetime_now.assert_called_once_with()
-    mocked_get_wordcloud.assert_called_once_with(["11:1-2"], "qq_10000")
+    mocked_get_wordcloud.assert_called_once_with(["11:1-2"], "qq_group-group_id=10000")
