@@ -257,11 +257,15 @@ async def test_run_task_remove_schedule(app: App):
 
     from nonebot_plugin_wordcloud.schedule import schedule_service
 
+    assert "15:00:00" not in schedule_service.schedules
+    assert "16:00:00" not in schedule_service.schedules
+
     await schedule_service.add_schedule(TargetQQGroup(group_id=10000), time=time(23, 0))
 
     await schedule_service.update()
 
     assert "15:00:00" in schedule_service.schedules
+    assert "16:00:00" not in schedule_service.schedules
 
     await schedule_service.add_schedule(TargetQQGroup(group_id=10000), time=time(0, 0))
 

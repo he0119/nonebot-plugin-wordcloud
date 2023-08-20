@@ -7,7 +7,8 @@ from nonebot.log import logger
 from nonebot_plugin_apscheduler import scheduler
 from nonebot_plugin_cesaa import get_messages_plain_text_by_target
 from nonebot_plugin_datastore import create_session
-from sqlalchemy import select
+from nonebot_plugin_datastore.db import get_engine
+from sqlalchemy import JSON, cast, select
 
 from .utils import get_datetime_now_with_timezone, get_time_with_scheduler_timezone
 
@@ -130,7 +131,13 @@ class Scheduler:
             time = time_astimezone(time, ZoneInfo("UTC"))
 
         async with create_session() as session:
-            statement = select(Schedule).where(Schedule.target == target.dict())
+            if get_engine().dialect.name == "mysql":
+                statement = select(Schedule).where(
+                    Schedule.target == cast(target.dict(), JSON)
+                )
+            else:
+                statement = select(Schedule).where(Schedule.target == target.dict())
+
             results = await session.scalars(statement)
             if schedule := results.one_or_none():
                 schedule.time = time
