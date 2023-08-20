@@ -1,43 +1,51 @@
 """ 词云
 """
 import re
-from base64 import b64decode
 from datetime import datetime, timedelta
 from io import BytesIO
-from typing import List, Tuple, Union, cast
-
-try:
-    from zoneinfo import ZoneInfo
-except ImportError:
-    from backports.zoneinfo import ZoneInfo  # type: ignore
+from typing import Tuple, Union
 
 from nonebot import CommandGroup, require
-from nonebot.adapters import Message, MessageSegment
-from nonebot.adapters.onebot.v11 import Bot as BotV11
-from nonebot.adapters.onebot.v11 import GroupMessageEvent as GroupMessageEventV11
-from nonebot.adapters.onebot.v11 import MessageSegment as MessageSegmentV11
-from nonebot.adapters.onebot.v11.permission import GROUP_ADMIN, GROUP_OWNER
-from nonebot.adapters.onebot.v12 import Bot as BotV12
-from nonebot.adapters.onebot.v12 import ChannelMessageEvent
-from nonebot.adapters.onebot.v12 import GroupMessageEvent as GroupMessageEventV12
-from nonebot.adapters.onebot.v12 import MessageSegment as MessageSegmentV12
+from nonebot.adapters import Bot, Event, Message
 from nonebot.matcher import Matcher
 from nonebot.params import Arg, Command, CommandArg, Depends
 from nonebot.permission import SUPERUSER
-from nonebot.plugin import PluginMetadata
+from nonebot.plugin import PluginMetadata, inherit_supported_adapters
 from nonebot.typing import T_State
 from PIL import Image
 
 require("nonebot_plugin_apscheduler")
 require("nonebot_plugin_chatrecorder")
 require("nonebot_plugin_datastore")
-from nonebot_plugin_chatrecorder import get_messages_plain_text
+require("nonebot_plugin_saa")
+require("nonebot_plugin_alconna")
+require("nonebot_plugin_cesaa")
+import nonebot_plugin_alconna as alc
+import nonebot_plugin_saa as saa
+from nonebot_plugin_alconna import (
+    Alconna,
+    AlconnaArg,
+    AlconnaMatch,
+    AlconnaMatcher,
+    AlconnaQuery,
+    Args,
+    Match,
+    Option,
+    Query,
+    image_fetch,
+    on_alconna,
+    store_true,
+)
+from nonebot_plugin_chatrecorder.record import get_messages_plain_text
 from nonebot_plugin_datastore.db import post_db_init
+from nonebot_plugin_session import Session, SessionIdType, extract_session
 
-from .config import Config, plugin_config, plugin_data
+from .config import Config, plugin_config
 from .data_source import get_wordcloud
 from .schedule import schedule_service
 from .utils import (
+    admin_permission,
+    ensure_group,
     get_datetime_fromisoformat_with_timezone,
     get_datetime_now_with_timezone,
     get_mask_key,
@@ -82,7 +90,9 @@ __plugin_meta__ = PluginMetadata(
 /关闭词云每日定时发送""",
     homepage="https://github.com/he0119/nonebot-plugin-wordcloud",
     type="application",
-    supported_adapters={"~onebot.v11", "~onebot.v12"},
+    supported_adapters=inherit_supported_adapters(
+        "nonebot_plugin_chatrecorder", "nonebot_plugin_saa", "nonebot_plugin_alconna"
+    ),
     config=Config,
 )
 
@@ -130,9 +140,8 @@ def parse_datetime(key: str):
     return _key_parser
 
 
-@wordcloud_cmd.handle()
+@wordcloud_cmd.handle(parameterless=[Depends(ensure_group)])
 async def handle_first_receive(
-    event: Union[GroupMessageEventV11, GroupMessageEventV12, ChannelMessageEvent],
     state: T_State,
     commands: Tuple[str, ...] = Command(),
     args: Message = CommandArg(),
@@ -210,245 +219,134 @@ async def handle_first_receive(
     prompt="请输入你要查询的结束日期（如 2022-02-22）",
     parameterless=[Depends(parse_datetime("stop"))],
 )
-async def handle_get_messages_group_message(
-    bot: Union[BotV11, BotV12],
-    event: Union[GroupMessageEventV11, GroupMessageEventV12],
-    state: T_State,
+async def handle_wordcloud(
+    session: Session = Depends(extract_session),
     start: datetime = Arg(),
     stop: datetime = Arg(),
     my: bool = Arg(),
+    mask_key: str = Depends(get_mask_key),
 ):
-    """获取群聊相关数据"""
-    platform = "qq" if isinstance(bot, BotV11) else bot.platform
-    # 将时间转换到 UTC 时区
-    state["messages"] = await get_messages_plain_text(
-        platforms=[platform],
-        user_ids=[str(event.user_id)] if my else None,  # 是否只查询自己的记录
-        group_ids=[str(event.group_id)],
+    """生成词云"""
+    messages = await get_messages_plain_text(
+        session=session,
+        id_type=SessionIdType.GROUP_USER if my else SessionIdType.GROUP,
+        include_bot_id=False,
+        include_bot_type=False,
         types=["message"],  # 排除机器人自己发的消息
-        time_start=start.astimezone(ZoneInfo("UTC")),
-        time_stop=stop.astimezone(ZoneInfo("UTC")),
-        exclude_user_ids=plugin_config.wordcloud_exclude_user_ids,
-    )
-    state["mask_key"] = get_mask_key(
-        "qq" if isinstance(bot, BotV11) else bot.platform, group_id=event.group_id
+        time_start=start,
+        time_stop=stop,
+        exclude_id1s=plugin_config.wordcloud_exclude_user_ids,
     )
 
-
-@wordcloud_cmd.got(
-    "start",
-    prompt="请输入你要查询的起始日期（如 2022-01-01）",
-    parameterless=[Depends(parse_datetime("start"))],
-)
-@wordcloud_cmd.got(
-    "stop",
-    prompt="请输入你要查询的结束日期（如 2022-02-22）",
-    parameterless=[Depends(parse_datetime("stop"))],
-)
-async def handle_get_messages_channel_message(
-    bot: BotV12,
-    event: ChannelMessageEvent,
-    state: T_State,
-    start: datetime = Arg(),
-    stop: datetime = Arg(),
-    my: bool = Arg(),
-):
-    """获取频道相关数据"""
-    state["messages"] = await get_messages_plain_text(
-        platforms=[bot.platform],
-        user_ids=[event.user_id] if my else None,
-        guild_ids=[event.guild_id],
-        channel_ids=[event.channel_id],
-        types=["message"],
-        time_start=start.astimezone(ZoneInfo("UTC")),
-        time_stop=stop.astimezone(ZoneInfo("UTC")),
-        exclude_user_ids=plugin_config.wordcloud_exclude_user_ids,
-    )
-    state["mask_key"] = get_mask_key(bot.platform, guild_id=event.guild_id)
-
-
-@wordcloud_cmd.handle()
-async def handle_send_message(
-    bot: Union[BotV11, BotV12],
-    messages: List[str] = Arg(),
-    mask_key: str = Arg(),
-    my: bool = Arg(),
-):
-    """发送词云"""
     if not (image := await get_wordcloud(messages, mask_key)):
         await wordcloud_cmd.finish("没有足够的数据生成词云", at_sender=my)
 
-    if isinstance(bot, BotV11):
-        await wordcloud_cmd.finish(MessageSegmentV11.image(image), at_sender=my)
-    else:
-        resp = await bot.upload_file(
-            type="data", name="wordcloud.png", data=image.getvalue()
-        )
-        file_id = resp["file_id"]
-        await wordcloud_cmd.finish(MessageSegmentV12.image(file_id), at_sender=my)
+    await saa.Image(image, "wordcloud.png").finish(at_sender=my)
 
 
-def parse_image(key: str):
-    """处理图片，并将结果存入 state 中"""
-
-    async def _key_parser(
-        matcher: Matcher,
-        state: T_State,
-        input: Union[MessageSegment, Message] = Arg(key),
-    ):
-        if isinstance(input, MessageSegment):
-            return
-
-        images = input["image"]
-        if not images:
-            await matcher.reject_arg(key, "请发送一张图片，不然我没法理解呢！")
-        else:
-            state[key] = images[0]
-
-    return _key_parser
-
-
-mask_cmd = wordcloud.command(
-    "mask",
-    aliases={
+set_mask_cmd = on_alconna(
+    Alconna(
         "设置词云形状",
-        "设置词云默认形状",
-        "删除词云形状",
-        "删除词云默认形状",
+        Option("--default", default=False, action=store_true),
+        Args["img?", alc.Image],
+    ),
+    permission=admin_permission(),
+)
+set_mask_cmd.shortcut(
+    "设置词云默认形状",
+    {
+        "prefix": True,
+        "command": "设置词云形状",
+        "args": ["--default"],
     },
-    permission=SUPERUSER | GROUP_OWNER | GROUP_ADMIN,
 )
 
 
-@mask_cmd.handle()
+@set_mask_cmd.handle(parameterless=[Depends(ensure_group)])
 async def _(
-    bot: Union[BotV11, BotV12],
-    event: Union[GroupMessageEventV11, GroupMessageEventV12, ChannelMessageEvent],
-    state: T_State,
-    args: Message = CommandArg(),
-    commands: Tuple[str, ...] = Command(),
+    matcher: AlconnaMatcher,
+    img: Match[bytes] = AlconnaMatch("img", image_fetch),
 ):
-    if isinstance(event, GroupMessageEventV11):
-        mask_key = get_mask_key("qq", group_id=event.group_id)
-        msg = f"群 {event.group_id}"
-    elif isinstance(event, GroupMessageEventV12):
-        bot = cast(BotV12, bot)
-        mask_key = get_mask_key(bot.platform, group_id=event.group_id)
-        msg = f"群 {event.group_id}"
-    else:
-        bot = cast(BotV12, bot)
-        mask_key = get_mask_key(bot.platform, guild_id=event.guild_id)
-        msg = f"频道 {event.guild_id}"
-
-    if (command := commands[0]) == "设置词云默认形状":
-        if not await SUPERUSER(bot, event):
-            await mask_cmd.finish("仅超级用户可设置词云默认形状")
-        state["default"] = True
-        state["mask_key"] = "default"
-    elif command == "删除词云默认形状":
-        if not await SUPERUSER(bot, event):
-            await mask_cmd.finish("仅超级用户可删除词云默认形状")
-        mask_path = plugin_config.get_mask_path()
-        mask_path.unlink(missing_ok=True)
-        await mask_cmd.finish("词云默认形状已删除")
-    elif command == "设置词云形状":
-        state["default"] = False
-        state["mask_key"] = mask_key
-    elif command == "删除词云形状":
-        mask_path = plugin_config.get_mask_path(mask_key)
-        mask_path.unlink(missing_ok=True)
-        await mask_cmd.finish(f"{msg} 的词云形状已删除")
-
-    if images := args["image"]:
-        state["image"] = images[0]
-
-    state["msg"] = msg
+    if img.available:
+        matcher.set_path_arg("img", img.result)
 
 
-@mask_cmd.got(
-    "image",
-    prompt="请发送一张图片作为词云形状",
-    parameterless=[Depends(parse_image("image"))],
-)
-async def handle_get_image_v11(
-    bot: BotV11, state: T_State, image: MessageSegment = Arg()
-):
-    state["image_bytes"] = await plugin_data.download_file(
-        image.data["url"], "masked", cache=True
-    )
-
-
-@mask_cmd.got(
-    "image",
-    prompt="请发送一张图片作为词云形状",
-    parameterless=[Depends(parse_image("image"))],
-)
-async def handle_get_image_v12(
-    bot: BotV12, state: T_State, image: MessageSegment = Arg()
-):
-    file_id = image.data["file_id"]
-    result = await bot.get_file(type="data", file_id=file_id)
-    data = result["data"]
-    # json 中的数据为 base64 编码的字符串
-    state["image_bytes"] = b64decode(data) if isinstance(data, str) else data
-
-
-@mask_cmd.handle()
+@set_mask_cmd.got_path("img", "请发送一张图片作为词云形状", image_fetch)
 async def handle_save_mask(
-    image_bytes: bytes = Arg(),
-    default: bool = Arg(),
-    mask_key: str = Arg(),
-    msg: str = Arg(),
+    bot: Bot,
+    event: Event,
+    img: bytes = AlconnaArg("img"),
+    default: Query[bool] = AlconnaQuery("default.value", default=False),
+    mask_key: str = Depends(get_mask_key),
 ):
-    mask = Image.open(BytesIO(image_bytes))
-    if default:
+    mask = Image.open(BytesIO(img))
+    if default.result:
+        if not await SUPERUSER(bot, event):
+            await set_mask_cmd.finish("仅超级用户可设置词云默认形状")
         mask.save(plugin_config.get_mask_path(), format="PNG")
-        await mask_cmd.finish("词云默认形状设置成功")
+        await set_mask_cmd.finish("词云默认形状设置成功")
     else:
         mask.save(plugin_config.get_mask_path(mask_key), format="PNG")
-        await mask_cmd.finish(f"{msg} 的词云形状设置成功")
+        await set_mask_cmd.finish(f"词云形状设置成功")
+
+
+remove_mask_cmd = on_alconna(
+    Alconna(
+        "删除词云形状",
+        Option("--default", default=False, action=store_true),
+    ),
+    permission=admin_permission(),
+)
+remove_mask_cmd.shortcut(
+    "删除词云默认形状",
+    {
+        "prefix": True,
+        "command": "删除词云形状",
+        "args": ["--default"],
+    },
+)
+
+
+@remove_mask_cmd.handle(parameterless=[Depends(ensure_group)])
+async def _(
+    bot: Bot,
+    event: Event,
+    default: Query[bool] = AlconnaQuery("default.value", default=False),
+    mask_key: str = Depends(get_mask_key),
+):
+    if default.result:
+        if not await SUPERUSER(bot, event):
+            await remove_mask_cmd.finish("仅超级用户可删除词云默认形状")
+        mask_path = plugin_config.get_mask_path()
+        mask_path.unlink(missing_ok=True)
+        await remove_mask_cmd.finish("词云默认形状已删除")
+    else:
+        mask_path = plugin_config.get_mask_path(mask_key)
+        mask_path.unlink(missing_ok=True)
+        await remove_mask_cmd.finish("词云形状已删除")
 
 
 schedule_cmd = wordcloud.command(
     "schedule",
-    aliases={"词云每日定时发送状态", "开启词云每日定时发送", "关闭词云每日定时发送"},
-    permission=SUPERUSER | GROUP_OWNER | GROUP_ADMIN,
+    aliases={
+        "词云每日定时发送状态",
+        "开启词云每日定时发送",
+        "关闭词云每日定时发送",
+    },
+    permission=admin_permission(),
 )
 
 
-@schedule_cmd.handle()
+@schedule_cmd.handle(parameterless=[Depends(ensure_group)])
 async def _(
-    bot: Union[BotV11, BotV12],
-    event: Union[GroupMessageEventV11, GroupMessageEventV12, ChannelMessageEvent],
+    target: saa.PlatformTarget = Depends(saa.get_target),
     commands: Tuple[str, ...] = Command(),
     args: Message = CommandArg(),
 ):
     command = commands[0]
 
-    group_id: str = ""
-    guild_id: str = ""
-    channel_id: str = ""
-    if isinstance(event, GroupMessageEventV11):
-        group_id = str(event.group_id)
-        platform = "qq"
-    elif isinstance(event, GroupMessageEventV12):
-        bot = cast(BotV12, bot)
-        group_id = event.group_id
-        platform = bot.platform
-    else:
-        bot = cast(BotV12, bot)
-        guild_id = event.guild_id
-        channel_id = event.channel_id
-        platform = bot.platform
-
     if command == "词云每日定时发送状态":
-        schedule_time = await schedule_service.get_schedule(
-            bot.self_id,
-            platform,
-            group_id=group_id,
-            guild_id=guild_id,
-            channel_id=channel_id,
-        )
+        schedule_time = await schedule_service.get_schedule(target)
         await schedule_cmd.finish(
             f"词云每日定时发送已开启，发送时间为：{schedule_time}" if schedule_time else "词云每日定时发送未开启"
         )
@@ -459,25 +357,12 @@ async def _(
                 schedule_time = get_time_fromisoformat_with_timezone(time_str)
             except ValueError:
                 await schedule_cmd.finish("请输入正确的时间，不然我没法理解呢！")
-        await schedule_service.add_schedule(
-            bot.self_id,
-            platform,
-            time=schedule_time,
-            group_id=group_id,
-            guild_id=guild_id,
-            channel_id=channel_id,
-        )
+        await schedule_service.add_schedule(target, time=schedule_time)
         await schedule_cmd.finish(
             f"已开启词云每日定时发送，发送时间为：{schedule_time}"
             if schedule_time
             else f"已开启词云每日定时发送，发送时间为：{plugin_config.wordcloud_default_schedule_time}"
         )
     elif command == "关闭词云每日定时发送":
-        await schedule_service.remove_schedule(
-            bot.self_id,
-            platform,
-            group_id=group_id,
-            guild_id=guild_id,
-            channel_id=channel_id,
-        )
+        await schedule_service.remove_schedule(target)
         await schedule_cmd.finish("已关闭词云每日定时发送")

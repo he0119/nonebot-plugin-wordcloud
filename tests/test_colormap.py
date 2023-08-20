@@ -1,3 +1,4 @@
+from io import BytesIO
 from pathlib import Path
 
 from nonebug import App
@@ -26,7 +27,7 @@ async def test_colormap(app: App, mocker: MockerFixture):
     # 比较生成的图片是否相同
     test_image_path = Path(__file__).parent / "test_colormap.png"
     test_image = Image.open(test_image_path)
-    image = Image.open(image_byte)
+    image = Image.open(BytesIO(image_byte))
     diff = ImageChops.difference(image, test_image)
     assert diff.getbbox() is None
 
@@ -54,7 +55,7 @@ async def test_colormap_by_options(app: App, mocker: MockerFixture):
     # 比较生成的图片是否相同
     test_image_path = Path(__file__).parent / "test_colormap.png"
     test_image = Image.open(test_image_path)
-    image = Image.open(image_byte)
+    image = Image.open(BytesIO(image_byte))
     diff = ImageChops.difference(image, test_image)
     assert diff.getbbox() is None
 
