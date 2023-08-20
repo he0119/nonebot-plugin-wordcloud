@@ -515,6 +515,11 @@ async def test_last_month_wordcloud(
     app: App, mocker: MockerFixture, message_record: None
 ):
     """测试上月词云"""
+    from nonebot_plugin_datastore.db import get_engine
+
+    if get_engine().dialect.name == "mysql":
+        pytest.skip("MySQL 上获取消息的顺序不同")
+
     from nonebot_plugin_saa import Image, MessageFactory
 
     from nonebot_plugin_wordcloud import wordcloud_cmd
@@ -550,6 +555,11 @@ async def test_last_month_wordcloud(
 
 async def test_year_wordcloud(app: App, mocker: MockerFixture, message_record: None):
     """测试年度词云"""
+    from nonebot_plugin_datastore.db import get_engine
+
+    if get_engine().dialect.name == "mysql":
+        pytest.skip("MySQL 上获取消息的顺序不同")
+
     from nonebot_plugin_saa import Image, MessageFactory
 
     from nonebot_plugin_wordcloud import wordcloud_cmd
@@ -653,6 +663,11 @@ async def test_history_wordcloud_start_stop(
     app: App, mocker: MockerFixture, message_record: None
 ):
     """测试历史词云，有起始时间的情况"""
+    from nonebot_plugin_datastore.db import get_engine
+
+    if get_engine().dialect.name == "mysql":
+        pytest.skip("MySQL 上获取消息的顺序不同")
+
     from nonebot_plugin_saa import Image, MessageFactory
 
     from nonebot_plugin_wordcloud import wordcloud_cmd
@@ -686,6 +701,11 @@ async def test_history_wordcloud_start_stop_get_args(
     app: App, mocker: MockerFixture, message_record: None
 ):
     """测试历史词云，获取起始时间参数的情况"""
+    from nonebot_plugin_datastore.db import get_engine
+
+    if get_engine().dialect.name == "mysql":
+        pytest.skip("MySQL 上获取消息的顺序不同")
+
     from nonebot_plugin_saa import Image, MessageFactory
 
     from nonebot_plugin_wordcloud import wordcloud_cmd
