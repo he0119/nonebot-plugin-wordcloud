@@ -126,7 +126,7 @@ def parse_datetime(key: str):
     return _key_parser
 
 
-@wordcloud.handle(parameterless=[Depends(ensure_group)])
+@wordcloud_cmd.handle(parameterless=[Depends(ensure_group)])
 async def handle_first_receive(
     state: T_State,
     commands: AlcResult,
@@ -189,7 +189,7 @@ async def handle_first_receive(
                     )
                     state["stop"] = state["start"] + timedelta(days=1)
             except ValueError:
-                await wordcloud.finish("请输入正确的日期，不然我没法理解呢！")
+                await wordcloud_cmd.finish("请输入正确的日期，不然我没法理解呢！")
     else:
         # 当完整匹配词云的时候才输出帮助信息
         if not time.available:
