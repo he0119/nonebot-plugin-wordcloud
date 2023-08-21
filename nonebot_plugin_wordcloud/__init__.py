@@ -99,7 +99,7 @@ __plugin_meta__ = PluginMetadata(
     config=Config,
 )
 
-date = BasePattern("今日|昨日|本周|上周|本月|上月|年度|历史")
+date = BasePattern("(今日|昨日|本周|上周|本月|上月|年度|历史)?")
 global_patterns()["date"] = date
 wordcloud_cmd = on_alconna(
     Alconna("{my:我的}?{type:date}词云", Args["time?", str]),
@@ -133,6 +133,10 @@ async def handle_first_receive(
     time: Match[str] = AlconnaMatch("time"),
 ):
     commands_result = commands.result.header_result
+
+    if commands_result is None:
+        await wordcloud_cmd.finish(__plugin_meta__.usage)
+
     dt = get_datetime_now_with_timezone()
     if "我的" in commands_result:
         state["my"] = True
@@ -171,25 +175,23 @@ async def handle_first_receive(
         )
         state["stop"] = dt
     elif "历史" in commands_result:
-        if not time.available:
-            await wordcloud_cmd.finish(__plugin_meta__.usage)
-
-        plaintext = time.result
-        if match := re.match(r"^(.+?)(?:~(.+))?$", plaintext):
-            start = match[1]
-            stop = match[2]
-            try:
-                state["start"] = get_datetime_fromisoformat_with_timezone(start)
-                if stop:
-                    state["stop"] = get_datetime_fromisoformat_with_timezone(stop)
-                else:
-                    # 如果没有指定结束日期，则认为是所给日期的当天的词云
-                    state["start"] = state["start"].replace(
-                        hour=0, minute=0, second=0, microsecond=0
-                    )
-                    state["stop"] = state["start"] + timedelta(days=1)
-            except ValueError:
-                await wordcloud_cmd.finish("请输入正确的日期，不然我没法理解呢！")
+        if time.available:
+            plaintext = time.result
+            if match := re.match(r"^(.+?)(?:~(.+))?$", plaintext):
+                start = match[1]
+                stop = match[2]
+                try:
+                    state["start"] = get_datetime_fromisoformat_with_timezone(start)
+                    if stop:
+                        state["stop"] = get_datetime_fromisoformat_with_timezone(stop)
+                    else:
+                        # 如果没有指定结束日期，则认为是所给日期的当天的词云
+                        state["start"] = state["start"].replace(
+                            hour=0, minute=0, second=0, microsecond=0
+                        )
+                        state["stop"] = state["start"] + timedelta(days=1)
+                except ValueError:
+                    await wordcloud_cmd.finish("请输入正确的日期，不然我没法理解呢！")
     else:
         # 当完整匹配词云的时候才输出帮助信息
         if not time.available:
@@ -322,7 +324,7 @@ schedule_cmd = on_alconna(
         "开启词云每日定时发送",
         "关闭词云每日定时发送",
     },
-    permission=admin_permission(),
+    # permission=admin_permission(),
 )
 
 
@@ -333,28 +335,27 @@ async def _(
     time: Match[str] = AlconnaMatch("time"),
 ):
     command_result = commands.result.header_result
+    print(command_result)
 
-    if command_result == "词云每日定时发送状态":
+    if "状态" in command_result:
         schedule_time = await schedule_service.get_schedule(target)
         await schedule_cmd.finish(
             f"词云每日定时发送已开启，发送时间为：{schedule_time}" if schedule_time else "词云每日定时发送未开启"
         )
-    elif command_result == "开启词云每日定时发送":
-        if not time.available:
-            await schedule_cmd.finish("请在指令后输入正确的时间，不然我没法理解呢！")
-
+    elif "开启" in command_result:
         schedule_time = None
-        if time_str := time.result:
-            try:
-                schedule_time = get_time_fromisoformat_with_timezone(time_str)
-            except ValueError:
-                await schedule_cmd.finish("请输入正确的时间，不然我没法理解呢！")
+        if time.available:
+            if time_str := time.result:
+                try:
+                    schedule_time = get_time_fromisoformat_with_timezone(time_str)
+                except ValueError:
+                    await schedule_cmd.finish("请输入正确的时间，不然我没法理解呢！")
         await schedule_service.add_schedule(target, time=schedule_time)
         await schedule_cmd.finish(
             f"已开启词云每日定时发送，发送时间为：{schedule_time}"
             if schedule_time
             else f"已开启词云每日定时发送，发送时间为：{plugin_config.wordcloud_default_schedule_time}"
         )
-    elif command_result == "关闭词云每日定时发送":
+    elif "关闭" in command_result:
         await schedule_service.remove_schedule(target)
         await schedule_cmd.finish("已关闭词云每日定时发送")
