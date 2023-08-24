@@ -37,6 +37,7 @@ nb-cli = "^1.2.2"
 nonebug-saa = {git = "https://github.com/MountainDash/nonebug-saa.git"}
 respx = "^0.20.2"
 httpx = "^0.24.1"
+gevent = "^23.7.0"
 
 [tool.nonebot]
 plugins = ["nonebot_plugin_wordcloud"]
