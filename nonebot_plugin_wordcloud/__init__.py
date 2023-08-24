@@ -27,7 +27,6 @@ from nonebot_plugin_alconna import (
     AlconnaMatch,
     AlconnaMatcher,
     AlconnaQuery,
-    AlcResult,
     Args,
     Match,
     Option,
