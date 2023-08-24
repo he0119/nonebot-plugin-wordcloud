@@ -27,8 +27,9 @@ async def test_enable_schedule(app: App):
             message=Message("/开启词云每日定时发送"), sender={"role": "admin"}
         )
         ctx.receive_event(bot, event)
+        ctx.should_pass_permission(schedule_cmd)
         ctx.should_call_send(event, "已开启词云每日定时发送，发送时间为：22:00:00+08:00", True)
-        ctx.should_finished()
+        ctx.should_finished(schedule_cmd)
 
     assert len(schedule_service.schedules) == 1
 
@@ -39,8 +40,9 @@ async def test_enable_schedule(app: App):
         )
 
         ctx.receive_event(bot, event)
+        ctx.should_pass_permission(schedule_cmd)
         ctx.should_call_send(event, "已开启词云每日定时发送，发送时间为：10:00:00+08:00", True)
-        ctx.should_finished()
+        ctx.should_finished(schedule_cmd)
 
     assert len(schedule_service.schedules) == 2
 
@@ -51,8 +53,9 @@ async def test_enable_schedule(app: App):
         )
 
         ctx.receive_event(bot, event)
+        ctx.should_pass_permission(schedule_cmd)
         ctx.should_call_send(event, "请输入正确的时间，不然我没法理解呢！", True)
-        ctx.should_finished()
+        ctx.should_finished(schedule_cmd)
 
     # OneBot V12
     async with app.test_matcher(schedule_cmd) as ctx:
@@ -60,9 +63,9 @@ async def test_enable_schedule(app: App):
         event = fake_group_message_event_v12(message=MessageV12("/开启词云每日定时发送"))
 
         ctx.receive_event(bot, event)
-        ctx.should_ignore_permission()
+        ctx.should_ignore_permission(schedule_cmd)
         ctx.should_call_send(event, "已开启词云每日定时发送，发送时间为：22:00:00+08:00", True)
-        ctx.should_finished()
+        ctx.should_finished(schedule_cmd)
 
     assert len(schedule_service.schedules) == 2
 
@@ -71,11 +74,39 @@ async def test_enable_schedule(app: App):
         event = fake_channel_message_event_v12(message=MessageV12("/开启词云每日定时发送 09:00"))
 
         ctx.receive_event(bot, event)
-        ctx.should_ignore_permission()
+        ctx.should_ignore_permission(schedule_cmd)
         ctx.should_call_send(event, "已开启词云每日定时发送，发送时间为：09:00:00+08:00", True)
-        ctx.should_finished()
+        ctx.should_finished(schedule_cmd)
 
     assert len(schedule_service.schedules) == 3
+
+
+async def test_enable_schedule_private(app: App, mocker: MockerFixture):
+    """测试私聊开启词云每日定时发送"""
+    from nonebot_plugin_wordcloud import schedule_cmd
+
+    config = get_driver().config
+
+    mocker.patch.object(config, "superusers", {"10"})
+
+    async with app.test_matcher(schedule_cmd) as ctx:
+        bot = ctx.create_bot(base=Bot)
+        event = fake_private_message_event_v11(message=Message("/开启词云每日定时发送"))
+        ctx.receive_event(bot, event)
+        ctx.should_pass_permission(schedule_cmd)
+        ctx.should_call_send(event, "请在群组中使用！", True)
+        ctx.should_finished(schedule_cmd)
+
+
+async def test_enable_schedule_without_permission(app: App, mocker: MockerFixture):
+    """测试没有权限的用户开启词云每日定时发送"""
+    from nonebot_plugin_wordcloud import schedule_cmd
+
+    async with app.test_matcher(schedule_cmd) as ctx:
+        bot = ctx.create_bot(base=Bot)
+        event = fake_group_message_event_v11(message=Message("/开启词云每日定时发送"))
+        ctx.receive_event(bot, event)
+        ctx.should_not_pass_permission(schedule_cmd)
 
 
 async def test_disable_schedule(app: App):
@@ -104,8 +135,9 @@ async def test_disable_schedule(app: App):
             message=Message("/关闭词云每日定时发送"), sender={"role": "admin"}
         )
         ctx.receive_event(bot, event)
+        ctx.should_pass_permission(schedule_cmd)
         ctx.should_call_send(event, "已关闭词云每日定时发送", True)
-        ctx.should_finished()
+        ctx.should_finished(schedule_cmd)
 
     async with create_session() as session:
         statement = select(Schedule)
@@ -126,8 +158,9 @@ async def test_schedule_status(app: App):
             message=Message("/词云每日定时发送状态"), sender={"role": "admin"}
         )
         ctx.receive_event(bot, event)
+        ctx.should_pass_permission(schedule_cmd)
         ctx.should_call_send(event, "词云每日定时发送未开启", True)
-        ctx.should_finished()
+        ctx.should_finished(schedule_cmd)
 
     await schedule_service.add_schedule(TargetQQGroup(group_id=10000))
 
@@ -137,8 +170,9 @@ async def test_schedule_status(app: App):
             message=Message("/词云每日定时发送状态"), sender={"role": "admin"}
         )
         ctx.receive_event(bot, event)
+        ctx.should_pass_permission(schedule_cmd)
         ctx.should_call_send(event, "词云每日定时发送已开启，发送时间为：22:00:00+08:00", True)
-        ctx.should_finished()
+        ctx.should_finished(schedule_cmd)
 
     await schedule_service.add_schedule(TargetQQGroup(group_id=10000), time=time(23, 0))
 
@@ -148,8 +182,9 @@ async def test_schedule_status(app: App):
             message=Message("/词云每日定时发送状态"), sender={"role": "admin"}
         )
         ctx.receive_event(bot, event)
+        ctx.should_pass_permission(schedule_cmd)
         ctx.should_call_send(event, "词云每日定时发送已开启，发送时间为：23:00:00+08:00", True)
-        ctx.should_finished()
+        ctx.should_finished(schedule_cmd)
 
 
 async def test_run_task_group(app: App, mocker: MockerFixture):
@@ -278,19 +313,3 @@ async def test_run_task_remove_schedule(app: App):
 
     assert "15:00:00" not in schedule_service.schedules
     assert "16:00:00" in schedule_service.schedules
-
-
-async def test_enable_schedule_private(app: App, mocker: MockerFixture):
-    """测试私聊开启词云每日定时发送"""
-    from nonebot_plugin_wordcloud import schedule_cmd
-
-    config = get_driver().config
-
-    mocker.patch.object(config, "superusers", {"10"})
-
-    async with app.test_matcher(schedule_cmd) as ctx:
-        bot = ctx.create_bot(base=Bot)
-        event = fake_private_message_event_v11(message=Message("/开启词云每日定时发送"))
-        ctx.receive_event(bot, event)
-        ctx.should_call_send(event, "请在群组中使用！", True)
-        ctx.should_finished()

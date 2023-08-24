@@ -320,31 +320,43 @@ async def _(
 
 
 schedule_cmd = on_alconna(
-    Alconna("schedule", Args["time?", str]),
-    aliases={
-        "词云每日定时发送状态",
-        "开启词云每日定时发送",
-        "关闭词云每日定时发送",
+    Alconna(
+        "词云定时发送",
+        Option("--action", Args["action_type", ["状态", "开启", "关闭"]], default="状态"),
+        Args["type", ["每日"]]["time?", str],
+    ),
+    permission=admin_permission(),
+)
+schedule_cmd.shortcut(
+    r"词云(?P<type>.+)定时发送状态",
+    {
+        "prefix": True,
+        "command": "词云定时发送",
+        "args": ["--action", "状态", "{type}"],
     },
-    # permission=admin_permission(),
+)
+schedule_cmd.shortcut(
+    r"(?P<action>.+)词云(?P<type>.+)定时发送",
+    {
+        "prefix": True,
+        "command": "词云定时发送",
+        "args": ["--action", "{action}", "{type}"],
+    },
 )
 
 
 @schedule_cmd.handle(parameterless=[Depends(ensure_group)])
 async def _(
-    commands: AlcResult,
+    time: Match[str],
+    action_type: Query[str] = AlconnaQuery("action.action_type.value", "状态"),
     target: saa.PlatformTarget = Depends(saa.get_target),
-    time: Match[str] = AlconnaMatch("time"),
 ):
-    command_result = commands.result.header_result
-    print(command_result)
-
-    if "状态" in command_result:
+    if action_type.result == "状态":
         schedule_time = await schedule_service.get_schedule(target)
         await schedule_cmd.finish(
             f"词云每日定时发送已开启，发送时间为：{schedule_time}" if schedule_time else "词云每日定时发送未开启"
         )
-    elif "开启" in command_result:
+    elif action_type.result == "开启":
         schedule_time = None
         if time.available:
             if time_str := time.result:
@@ -358,6 +370,6 @@ async def _(
             if schedule_time
             else f"已开启词云每日定时发送，发送时间为：{plugin_config.wordcloud_default_schedule_time}"
         )
-    elif "关闭" in command_result:
+    elif action_type.result == "关闭":
         await schedule_service.remove_schedule(target)
         await schedule_cmd.finish("已关闭词云每日定时发送")
