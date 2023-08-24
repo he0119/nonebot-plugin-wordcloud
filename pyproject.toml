@@ -25,15 +25,11 @@ tzdata = "*"
 emoji = ">=1.6.3,<3.0.0"
 
 [tool.poetry.group.dev.dependencies]
-black = "*"
-isort = "*"
-pre-commit = "*"
 nonebug = "^0.3.1"
 pytest-cov = "^4.0.0"
 pytest-xdist = "^3.1.0"
 pytest-mock = "^3.7.0"
 pytest-asyncio = "^0.21.0"
-gevent = "^22.10.2"
 asyncpg = "*"
 aiomysql = "*"
 nonebot-adapter-onebot = "^2.2.4"
@@ -41,6 +37,7 @@ nb-cli = "^1.2.2"
 nonebug-saa = {git = "https://github.com/MountainDash/nonebug-saa.git"}
 respx = "^0.20.2"
 httpx = "^0.24.1"
+gevent = "^23.7.0"
 
 [tool.nonebot]
 plugins = ["nonebot_plugin_wordcloud"]
@@ -63,6 +60,10 @@ asyncio_mode = "auto"
 [tool.pyright]
 pythonVersion = "3.8"
 pythonPlatform = "All"
+
+[tool.coverage.run]
+# https://github.com/nedbat/coveragepy/issues/1082
+concurrency = ["thread", "gevent"]
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
