@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 ## [Unreleased]
 
+### Added
+
+- 支持多适配器
+
 ### Changed
 
 - 使用 Alconna 快捷指令简化代码
