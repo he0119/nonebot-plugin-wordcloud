@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 ## [Unreleased]
 
+### Changed
+
+- 使用 Alconna 快捷指令简化代码
+
 ### Fixed
 
 - 修复定时发送的词云没有排除指定用户的问题
