@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 ### Added
 
 - 支持多适配器
+- 支持随机选择色彩映射表的值
 
 ### Changed
 

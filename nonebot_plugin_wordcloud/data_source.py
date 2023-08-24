@@ -4,6 +4,7 @@ import contextlib
 import re
 from functools import partial
 from io import BytesIO
+from random import choice
 from typing import Dict, List, Optional
 
 import jieba
@@ -81,7 +82,13 @@ def _get_wordcloud(messages: List[str], mask_key: str) -> Optional[bytes]:
     wordcloud_options.setdefault(
         "background_color", plugin_config.wordcloud_background_color
     )
-    wordcloud_options.setdefault("colormap", plugin_config.wordcloud_colormap)
+    # 如果 colormap 是列表，则随机选择一个
+    colormap = (
+        plugin_config.wordcloud_colormap
+        if isinstance(plugin_config.wordcloud_colormap, str)
+        else choice(plugin_config.wordcloud_colormap)
+    )
+    wordcloud_options.setdefault("colormap", colormap)
     wordcloud_options.setdefault("mask", get_mask(mask_key))
     with contextlib.suppress(ValueError):
         wordcloud = WordCloud(**wordcloud_options)
