@@ -62,7 +62,7 @@ pythonPlatform = "All"
 
 [tool.coverage.run]
 # https://github.com/nedbat/coveragepy/issues/1082
-concurrency = ["greenlet"]
+concurrency = ["thread", "gevent"]
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
