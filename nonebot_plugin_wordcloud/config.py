@@ -1,6 +1,6 @@
 from datetime import datetime, time
 from pathlib import Path
-from typing import Any, Dict, Optional, Set
+from typing import Any, Dict, List, Optional, Set, Union
 
 from nonebot import get_driver
 from nonebot_plugin_datastore import get_plugin_data
@@ -18,7 +18,7 @@ class Config(BaseModel, extra=Extra.ignore):
     wordcloud_width: int = 1920
     wordcloud_height: int = 1200
     wordcloud_background_color: str = "black"
-    wordcloud_colormap: str = "viridis"
+    wordcloud_colormap: Union[str, List[str]] = "viridis"
     wordcloud_font_path: str
     wordcloud_stopwords_path: Optional[Path]
     wordcloud_userdict_path: Optional[Path]
