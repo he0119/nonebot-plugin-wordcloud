@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 ## [Unreleased]
 
+## [0.5.2] - 2023-08-26
+
 ### Fixed
 
 - 提高 NoneBot 版本限制修复报错问题
@@ -252,7 +254,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 - 可以使用的版本。
 
-[unreleased]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.5.1...HEAD
+[unreleased]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.5.2...HEAD
+[0.5.2]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.5.1...v0.5.2
 [0.5.1]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.4.9...v0.5.0
 [0.4.9]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.4.8...v0.4.9
