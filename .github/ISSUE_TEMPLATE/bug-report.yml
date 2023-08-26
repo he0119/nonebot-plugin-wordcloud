@@ -8,7 +8,25 @@ body:
     attributes:
       label: chatrecorder 版本
       description: 填写 chatrecorder 版本
-      placeholder: e.g. 0.2.4
+      placeholder: e.g. 0.4.1
+    validations:
+      required: true
+
+  - type: input
+    id: env-send-anything-anywhere
+    attributes:
+      label: send-anything-anywhere 版本
+      description: 填写 send-anything-anywhere 版本
+      placeholder: e.g. 0.3.0
+    validations:
+      required: true
+
+  - type: input
+    id: env-alconna
+    attributes:
+      label: alconna 版本
+      description: 填写 alconna 版本
+      placeholder: e.g. 0.19.0
     validations:
       required: true
 
