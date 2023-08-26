@@ -714,13 +714,13 @@ testing = ["hatch", "pre-commit", "pytest", "tox"]
 
 [[package]]
 name = "fastapi"
-version = "0.101.1"
+version = "0.102.0"
 description = "FastAPI framework, high performance, easy to learn, fast to code, ready for production"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "fastapi-0.101.1-py3-none-any.whl", hash = "sha256:aef5f8676eb1b8389952e1fe734abe20f04b71f6936afcc53b320ba79b686a4b"},
-    {file = "fastapi-0.101.1.tar.gz", hash = "sha256:7b32000d14ca9992f7461117b81e4ef9ff0c07936af641b4fe40e67d5f9d63cb"},
+    {file = "fastapi-0.102.0-py3-none-any.whl", hash = "sha256:34db27d0af54ee0d92c540e83c6ee6a11de93f63bbdf73fda54fff9a10c52569"},
+    {file = "fastapi-0.102.0.tar.gz", hash = "sha256:e3652cb9bdf4df1dedda4fce9454e9f75a8c969b5cdd3faf1bd5c6f5d2daab08"},
 ]
 
 [package.dependencies]
@@ -1752,13 +1752,13 @@ typing-extensions = ">=4.0.0,<5.0.0"
 
 [[package]]
 name = "nonebot-plugin-alconna"
-version = "0.17.0"
+version = "0.19.0"
 description = "Alconna Adapter for Nonebot"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "nonebot_plugin_alconna-0.17.0-py3-none-any.whl", hash = "sha256:069c0d8fce2a5988b80e1194ea7b8ddc44f317afddee4debe23a56354422bd39"},
-    {file = "nonebot_plugin_alconna-0.17.0.tar.gz", hash = "sha256:99d2a41716c604458c1b815c494ca514d2b7d75b85b76d89474067ba5e68ab06"},
+    {file = "nonebot_plugin_alconna-0.19.0-py3-none-any.whl", hash = "sha256:9a1c1c87ec19c64ae2a997c5fb7b4cd2f5af233dc83a93255f6a875d6af63ee7"},
+    {file = "nonebot_plugin_alconna-0.19.0.tar.gz", hash = "sha256:a002a593c1f616d79af355d0dc0ac3b10c07e1cbf9853d9676a4589c16384c5b"},
 ]
 
 [package.dependencies]
@@ -3275,4 +3275,4 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8"
-content-hash = "5a6ad3bf5dbd2a1d96c7baeb117f9047b500820a7801fd762cfa2c25cdd12fc0"
+content-hash = "f049ca165fc091462442691e6b87560fe9a0f5623588ae7119a3e4d1f3054387"
