@@ -11,7 +11,7 @@ documentation = "https://github.com/he0119/nonebot-plugin-wordcloud#readme"
 
 [tool.poetry.dependencies]
 python = "^3.8"
-nonebot2 = { version = "^2.0.0", extras = ["fastapi"] }
+nonebot2 = { version = "^2.0.1", extras = ["fastapi"] }
 nonebot-plugin-apscheduler = "^0.3.0"
 nonebot-plugin-datastore = ">=0.6.0, <2.0.0"
 nonebot-plugin-chatrecorder = "^0.4.1"
