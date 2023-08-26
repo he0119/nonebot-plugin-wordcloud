@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 ## [Unreleased]
 
+## [0.5.1] - 2023-08-26
+
 ### Fixed
 
 - 修复默认不遵守 nb 的 command_start 配置的问题
@@ -246,7 +248,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 - 可以使用的版本。
 
-[unreleased]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.5.0...HEAD
+[unreleased]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.5.1...HEAD
+[0.5.1]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.4.9...v0.5.0
 [0.4.9]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.4.8...v0.4.9
 [0.4.8]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.4.7...v0.4.8
