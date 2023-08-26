@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 ## [Unreleased]
 
+### Fixed
+
+- 修复默认不遵守 nb 的 command_start 配置的问题
+
 ## [0.5.0] - 2023-08-24
 
 ### Added
