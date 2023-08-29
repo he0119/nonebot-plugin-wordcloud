@@ -14,9 +14,6 @@ from nonebot.typing import T_State
 from PIL import Image
 
 require("nonebot_plugin_apscheduler")
-require("nonebot_plugin_chatrecorder")
-require("nonebot_plugin_datastore")
-require("nonebot_plugin_saa")
 require("nonebot_plugin_alconna")
 require("nonebot_plugin_cesaa")
 import nonebot_plugin_alconna as alc
@@ -35,7 +32,7 @@ from nonebot_plugin_alconna import (
     on_alconna,
     store_true,
 )
-from nonebot_plugin_chatrecorder.record import get_messages_plain_text
+from nonebot_plugin_cesaa import get_messages_plain_text
 from nonebot_plugin_datastore.db import post_db_init
 from nonebot_plugin_session import Session, SessionIdType, extract_session
 
@@ -233,6 +230,7 @@ async def handle_wordcloud(
 
     if not (image := await get_wordcloud(messages, mask_key)):
         await wordcloud_cmd.finish("没有足够的数据生成词云", at_sender=my.result)
+        return  # pragma: no cover
 
     await saa.Image(image, "wordcloud.png").finish(at_sender=my.result)
 
