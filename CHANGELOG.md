@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 ## [Unreleased]
 
+### Changed
+
+- 直接使用 cesaa 中的函数替代 chatrecorder
+
 ## [0.5.2] - 2023-08-26
 
 ### Fixed
