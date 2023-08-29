@@ -5,7 +5,7 @@ import nonebot_plugin_saa as saa
 from apscheduler.job import Job
 from nonebot.log import logger
 from nonebot_plugin_apscheduler import scheduler
-from nonebot_plugin_cesaa import get_messages_plain_text_by_target
+from nonebot_plugin_cesaa import get_messages_plain_text
 from nonebot_plugin_datastore import create_session
 from nonebot_plugin_datastore.db import get_engine
 from sqlalchemy import JSON, Select, cast, select
@@ -91,7 +91,7 @@ class Scheduler:
                 dt = get_datetime_now_with_timezone()
                 start = dt.replace(hour=0, minute=0, second=0, microsecond=0)
                 stop = dt
-                messages = await get_messages_plain_text_by_target(
+                messages = await get_messages_plain_text(
                     target=target,
                     types=["message"],
                     time_start=start,

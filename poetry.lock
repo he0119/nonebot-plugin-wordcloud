@@ -714,13 +714,13 @@ testing = ["hatch", "pre-commit", "pytest", "tox"]
 
 [[package]]
 name = "fastapi"
-version = "0.102.0"
+version = "0.103.0"
 description = "FastAPI framework, high performance, easy to learn, fast to code, ready for production"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "fastapi-0.102.0-py3-none-any.whl", hash = "sha256:34db27d0af54ee0d92c540e83c6ee6a11de93f63bbdf73fda54fff9a10c52569"},
-    {file = "fastapi-0.102.0.tar.gz", hash = "sha256:e3652cb9bdf4df1dedda4fce9454e9f75a8c969b5cdd3faf1bd5c6f5d2daab08"},
+    {file = "fastapi-0.103.0-py3-none-any.whl", hash = "sha256:61ab72c6c281205dd0cbaccf503e829a37e0be108d965ac223779a8479243665"},
+    {file = "fastapi-0.103.0.tar.gz", hash = "sha256:4166732f5ddf61c33e9fa4664f73780872511e0598d4d5434b1816dc1e6d9421"},
 ]
 
 [package.dependencies]
@@ -733,18 +733,21 @@ all = ["email-validator (>=2.0.0)", "httpx (>=0.23.0)", "itsdangerous (>=1.1.0)"
 
 [[package]]
 name = "filelock"
-version = "3.12.2"
+version = "3.12.3"
 description = "A platform independent file lock."
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.8"
 files = [
-    {file = "filelock-3.12.2-py3-none-any.whl", hash = "sha256:cbb791cdea2a72f23da6ac5b5269ab0a0d161e9ef0100e653b69049a7706d1ec"},
-    {file = "filelock-3.12.2.tar.gz", hash = "sha256:002740518d8aa59a26b0c76e10fb8c6e15eae825d34b6fdf670333fd7b938d81"},
+    {file = "filelock-3.12.3-py3-none-any.whl", hash = "sha256:f067e40ccc40f2b48395a80fcbd4728262fab54e232e090a4063ab804179efeb"},
+    {file = "filelock-3.12.3.tar.gz", hash = "sha256:0ecc1dd2ec4672a10c8550a8182f1bd0c0a5088470ecd5a125e45f49472fac3d"},
 ]
 
+[package.dependencies]
+typing-extensions = {version = ">=4.7.1", markers = "python_version < \"3.11\""}
+
 [package.extras]
-docs = ["furo (>=2023.5.20)", "sphinx (>=7.0.1)", "sphinx-autodoc-typehints (>=1.23,!=1.23.4)"]
-testing = ["covdefaults (>=2.3)", "coverage (>=7.2.7)", "diff-cover (>=7.5)", "pytest (>=7.3.1)", "pytest-cov (>=4.1)", "pytest-mock (>=3.10)", "pytest-timeout (>=2.1)"]
+docs = ["furo (>=2023.7.26)", "sphinx (>=7.1.2)", "sphinx-autodoc-typehints (>=1.24)"]
+testing = ["covdefaults (>=2.3)", "coverage (>=7.3)", "diff-cover (>=7.7)", "pytest (>=7.4)", "pytest-cov (>=4.1)", "pytest-mock (>=3.11.1)", "pytest-timeout (>=2.1)"]
 
 [[package]]
 name = "fonttools"
@@ -1752,13 +1755,13 @@ typing-extensions = ">=4.0.0,<5.0.0"
 
 [[package]]
 name = "nonebot-plugin-alconna"
-version = "0.19.1"
+version = "0.19.2"
 description = "Alconna Adapter for Nonebot"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "nonebot_plugin_alconna-0.19.1-py3-none-any.whl", hash = "sha256:ad20baead0ef389a17b26ca0a9171592b520c1fc7fb78d375ab0617b50c2e516"},
-    {file = "nonebot_plugin_alconna-0.19.1.tar.gz", hash = "sha256:55f6b7aa2f86f1abb78a95215a13af9ff1f00074e3b2a661df0be8716c81bbe0"},
+    {file = "nonebot_plugin_alconna-0.19.2-py3-none-any.whl", hash = "sha256:612d6b2410625514031702092a974466a7a1c07ded976b101c5d3c3fd9a4f649"},
+    {file = "nonebot_plugin_alconna-0.19.2.tar.gz", hash = "sha256:4d4942f9587ad7c442a500650ff5ecb5d5ae21a33a4639c992467ebc3dbc7dd5"},
 ]
 
 [package.dependencies]
@@ -1784,28 +1787,30 @@ nonebot2 = ">=2.0.0,<3.0.0"
 
 [[package]]
 name = "nonebot-plugin-cesaa"
-version = "0.1.0"
+version = "0.2.1"
 description = "为 chatrecorder 添加 send-anything-anywhere 的 PlatformTarget 支持"
 optional = false
 python-versions = ">=3.8,<4.0"
 files = [
-    {file = "nonebot_plugin_cesaa-0.1.0-py3-none-any.whl", hash = "sha256:2c7f097161c294259783308f0ef318d25be6ddbc52c8b2d34fdd2c9d78774da0"},
-    {file = "nonebot_plugin_cesaa-0.1.0.tar.gz", hash = "sha256:0e1f9bb6208e54a7cccecfab0b387cda18fda1eb9dc7f853ba176567bcb5ef11"},
+    {file = "nonebot_plugin_cesaa-0.2.1-py3-none-any.whl", hash = "sha256:b9454ef2deee969693799286999370e30a504d4c0a975b9fd37bd52fff1239c2"},
+    {file = "nonebot_plugin_cesaa-0.2.1.tar.gz", hash = "sha256:4a4eef32826b2838326d6cb004c071ac043c10dd1a7a0fba7ceaa8d252adcbc0"},
 ]
 
 [package.dependencies]
-nonebot-plugin-chatrecorder = ">=0.4.1,<0.5.0"
+nonebot-plugin-chatrecorder = ">=0.4.2,<0.5.0"
 nonebot-plugin-send-anything-anywhere = ">=0.3.0,<0.4.0"
+nonebot-plugin-session = ">=0.1.0,<0.2.0"
+nonebot2 = ">=2.0.1,<3.0.0"
 
 [[package]]
 name = "nonebot-plugin-chatrecorder"
-version = "0.4.1"
+version = "0.4.2"
 description = "适用于 Nonebot2 的聊天记录插件"
 optional = false
 python-versions = ">=3.8,<4.0"
 files = [
-    {file = "nonebot_plugin_chatrecorder-0.4.1-py3-none-any.whl", hash = "sha256:9cbba7100d7137f2919b8ce95899b03c0c960a5f6f64703f8f19a89b703dc95f"},
-    {file = "nonebot_plugin_chatrecorder-0.4.1.tar.gz", hash = "sha256:d1b5235a113f9a982808900fb65d2c7fdbcc416484d06eaed42d28f4b1533960"},
+    {file = "nonebot_plugin_chatrecorder-0.4.2-py3-none-any.whl", hash = "sha256:d705e4191c97bc1cbbf97223d22cfbe1237861c6848fc778eb669af0373c7478"},
+    {file = "nonebot_plugin_chatrecorder-0.4.2.tar.gz", hash = "sha256:bb4f0f9bdb294081db9f6a3b18d37490744e5a47a2e0168519f7641409e8299e"},
 ]
 
 [package.dependencies]
@@ -2104,13 +2109,13 @@ test = ["appdirs (==1.4.4)", "covdefaults (>=2.2.2)", "pytest (>=7.2)", "pytest-
 
 [[package]]
 name = "pluggy"
-version = "1.2.0"
+version = "1.3.0"
 description = "plugin and hook calling mechanisms for python"
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.8"
 files = [
-    {file = "pluggy-1.2.0-py3-none-any.whl", hash = "sha256:c2fd55a7d7a3863cba1a013e4e2414658b1d07b6bc57b3919e0c63c9abb99849"},
-    {file = "pluggy-1.2.0.tar.gz", hash = "sha256:d12f0c4b579b15f5e054301bb226ee85eeeba08ffec228092f8defbaa3a4c4b3"},
+    {file = "pluggy-1.3.0-py3-none-any.whl", hash = "sha256:d89c696a773f8bd377d18e5ecda92b7a3793cbe66c87060a6fb58c7b6e1061f7"},
+    {file = "pluggy-1.3.0.tar.gz", hash = "sha256:cf61ae8f126ac6f7c451172cf30e3e43d3ca77615509771b3a984a0730651e12"},
 ]
 
 [package.extras]
@@ -3275,4 +3280,4 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8"
-content-hash = "bafe08da00f37ea168f97849c36b3ed3ad862ce82732865d64cdeeb4ac79e9f6"
+content-hash = "03eaadf927c6cad7d34421565c92bcf590704e532f7266e28dada66703872f4a"
