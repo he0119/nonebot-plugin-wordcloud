@@ -3,8 +3,9 @@
 import re
 from datetime import datetime, timedelta
 from io import BytesIO
-from typing import Union
+from typing import Optional, Union
 
+from arclet.alconna.arparma import Arparma
 from nonebot import require
 from nonebot.adapters import Bot, Event, Message
 from nonebot.params import Arg, Depends
@@ -18,9 +19,9 @@ require("nonebot_plugin_alconna")
 require("nonebot_plugin_cesaa")
 import nonebot_plugin_alconna as alc
 import nonebot_plugin_saa as saa
+from arclet.alconna import ArparmaBehavior
 from nonebot_plugin_alconna import (
     Alconna,
-    AlconnaArg,
     AlconnaMatch,
     AlconnaMatcher,
     AlconnaQuery,
@@ -92,11 +93,21 @@ __plugin_meta__ = PluginMetadata(
     config=Config,
 )
 
+
+class SameTime(ArparmaBehavior):
+    def operate(self, interface: Arparma):
+        type = interface.query("type")
+        time = interface.query("time")
+        if type is None and time:
+            interface.behave_fail()
+
+
 wordcloud_cmd = on_alconna(
     Alconna(
         "词云",
-        Args["type?", ["今日", "昨日", "本周", "上周", "本月", "上月", "年度", "历史"]]["time?", str],
         Option("--my", default=False, action=store_true),
+        Args["type?", ["今日", "昨日", "本周", "上周", "本月", "上月", "年度", "历史"]]["time?", str],
+        behaviors=[SameTime()],
     ),
     use_cmd_start=True,
 )
@@ -139,49 +150,48 @@ def parse_datetime(key: str):
 
 
 @wordcloud_cmd.handle(parameterless=[Depends(ensure_group)])
-async def handle_first_receive(state: T_State, type: Match[str], time: Match[str]):
+async def handle_first_receive(
+    state: T_State, type: Optional[str] = None, time: Optional[str] = None
+):
     dt = get_datetime_now_with_timezone()
 
-    if not type.available:
-        # 仅在没有任何参数时，才会返回帮助信息，否则直接结束命令响应
-        if time.available:
-            await wordcloud_cmd.finish()
+    if not type:
         await wordcloud_cmd.finish(__plugin_meta__.usage)
 
-    if type.result == "今日":
+    if type == "今日":
         state["start"] = dt.replace(hour=0, minute=0, second=0, microsecond=0)
         state["stop"] = dt
-    elif type.result == "昨日":
+    elif type == "昨日":
         state["stop"] = dt.replace(hour=0, minute=0, second=0, microsecond=0)
         state["start"] = state["stop"] - timedelta(days=1)
-    elif type.result == "本周":
+    elif type == "本周":
         state["start"] = dt.replace(
             hour=0, minute=0, second=0, microsecond=0
         ) - timedelta(days=dt.weekday())
         state["stop"] = dt
-    elif type.result == "上周":
+    elif type == "上周":
         state["stop"] = dt.replace(
             hour=0, minute=0, second=0, microsecond=0
         ) - timedelta(days=dt.weekday())
         state["start"] = state["stop"] - timedelta(days=7)
-    elif type.result == "本月":
+    elif type == "本月":
         state["start"] = dt.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         state["stop"] = dt
-    elif type.result == "上月":
+    elif type == "上月":
         state["stop"] = dt.replace(
             day=1, hour=0, minute=0, second=0, microsecond=0
         ) - timedelta(microseconds=1)
         state["start"] = state["stop"].replace(
             day=1, hour=0, minute=0, second=0, microsecond=0
         )
-    elif type.result == "年度":
+    elif type == "年度":
         state["start"] = dt.replace(
             month=1, day=1, hour=0, minute=0, second=0, microsecond=0
         )
         state["stop"] = dt
-    elif type.result == "历史":
-        if time.available:
-            plaintext = time.result
+    elif type == "历史":
+        if time:
+            plaintext = time
             if match := re.match(r"^(.+?)(?:~(.+))?$", plaintext):
                 start = match[1]
                 stop = match[2]
@@ -267,7 +277,7 @@ async def _(
 async def handle_save_mask(
     bot: Bot,
     event: Event,
-    img: bytes = AlconnaArg("img"),
+    img: bytes,
     default: Query[bool] = AlconnaQuery("default.value", default=False),
     mask_key: str = Depends(get_mask_key),
 ):
@@ -348,7 +358,7 @@ schedule_cmd.shortcut(
 
 @schedule_cmd.handle(parameterless=[Depends(ensure_group)])
 async def _(
-    time: Match[str],
+    time: Optional[str] = None,
     action_type: Query[str] = AlconnaQuery("action.action_type.value", "状态"),
     target: saa.PlatformTarget = Depends(saa.get_target),
 ):
@@ -359,12 +369,11 @@ async def _(
         )
     elif action_type.result == "开启":
         schedule_time = None
-        if time.available:
-            if time_str := time.result:
-                try:
-                    schedule_time = get_time_fromisoformat_with_timezone(time_str)
-                except ValueError:
-                    await schedule_cmd.finish("请输入正确的时间，不然我没法理解呢！")
+        if time:
+            try:
+                schedule_time = get_time_fromisoformat_with_timezone(time)
+            except ValueError:
+                await schedule_cmd.finish("请输入正确的时间，不然我没法理解呢！")
         await schedule_service.add_schedule(target, time=schedule_time)
         await schedule_cmd.finish(
             f"已开启词云每日定时发送，发送时间为：{schedule_time}"
