@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 ### Changed
 
 - 直接使用 cesaa 中的函数替代 chatrecorder
+- 使用 alconna 新提供的依赖注入
 
 ## [0.5.2] - 2023-08-26
 
