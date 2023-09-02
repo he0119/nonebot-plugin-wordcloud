@@ -58,6 +58,11 @@ asyncio_mode = "auto"
 [tool.pyright]
 pythonVersion = "3.8"
 pythonPlatform = "All"
+typeCheckingMode = "basic"
+
+[tool.ruff]
+select = ["E", "W", "F", "UP", "C", "T", "PYI", "Q"]
+ignore = ["E402", "E501", "E711", "C901", "UP037"]
 
 [tool.coverage.run]
 # https://github.com/nedbat/coveragepy/issues/1082
