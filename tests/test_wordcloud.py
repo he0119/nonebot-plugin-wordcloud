@@ -751,8 +751,6 @@ async def test_history_wordcloud_start_stop_get_args(
 
 async def test_history_wordcloud_invalid_input(app: App):
     """测试历史词云，输入的日期无效"""
-    from nonebot_plugin_saa import Image, MessageFactory
-
     from nonebot_plugin_wordcloud import wordcloud_cmd
 
     async with app.test_matcher(wordcloud_cmd) as ctx:

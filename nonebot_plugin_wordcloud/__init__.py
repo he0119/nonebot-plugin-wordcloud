@@ -289,7 +289,7 @@ async def handle_save_mask(
         await set_mask_cmd.finish("词云默认形状设置成功")
     else:
         mask.save(plugin_config.get_mask_path(mask_key), format="PNG")
-        await set_mask_cmd.finish(f"词云形状设置成功")
+        await set_mask_cmd.finish("词云形状设置成功")
 
 
 remove_mask_cmd = on_alconna(
