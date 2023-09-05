@@ -4,7 +4,23 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
+    groups:
+      production-dependencies:
+        dependency-type: "production"
+        update-types:
+          - "patch"
+          - "minor"
+      development-dependencies:
+        dependency-type: "development"
+        update-types:
+          - "patch"
+          - "minor"
+          - "major"
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "daily"
+    groups:
+      actions-update:
+        patterns:
+          - "*"
