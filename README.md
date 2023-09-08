@@ -34,6 +34,18 @@ _✨ NoneBot 词云插件 ✨_
 nb plugin install nonebot-plugin-wordcloud
 ```
 
+> **Note**
+>
+> 如需通过命令设置词云形状，则需使用支持 http 请求的驱动器，如 httpx 和 aiohttp。
+>
+> 请参考 [配置驱动器](https://nonebot.dev/docs/advanced/driver#%E9%85%8D%E7%BD%AE%E9%A9%B1%E5%8A%A8%E5%99%A8) 文档进行设置。
+>
+> 例如：
+>
+> DRIVER=~httpx
+> DRIVER=~aiohttp
+> DRIVER=~fastapi+~httpx
+
 ## 命令
 
 - 查看帮助
