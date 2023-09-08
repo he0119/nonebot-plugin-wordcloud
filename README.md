@@ -43,7 +43,9 @@ nb plugin install nonebot-plugin-wordcloud
 > 例如：
 >
 > DRIVER=~httpx
+>
 > DRIVER=~aiohttp
+>
 > DRIVER=~fastapi+~httpx
 
 ## 命令
