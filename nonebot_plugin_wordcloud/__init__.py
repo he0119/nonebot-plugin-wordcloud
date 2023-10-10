@@ -1,25 +1,26 @@
 """ 词云
 """
+from nonebot import require
+
+require("nonebot_plugin_apscheduler")
+require("nonebot_plugin_alconna")
+require("nonebot_plugin_cesaa")
+
 import re
 from datetime import datetime, timedelta
 from io import BytesIO
 from typing import Optional, Union
 
+import nonebot_plugin_alconna as alc
+import nonebot_plugin_saa as saa
+from arclet.alconna import ArparmaBehavior
 from arclet.alconna.arparma import Arparma
-from nonebot import require
+from nonebot import get_driver
 from nonebot.adapters import Bot, Event, Message
 from nonebot.params import Arg, Depends
 from nonebot.permission import SUPERUSER
 from nonebot.plugin import PluginMetadata, inherit_supported_adapters
 from nonebot.typing import T_State
-from PIL import Image
-
-require("nonebot_plugin_apscheduler")
-require("nonebot_plugin_alconna")
-require("nonebot_plugin_cesaa")
-import nonebot_plugin_alconna as alc
-import nonebot_plugin_saa as saa
-from arclet.alconna import ArparmaBehavior
 from nonebot_plugin_alconna import (
     Alconna,
     AlconnaMatch,
@@ -34,9 +35,10 @@ from nonebot_plugin_alconna import (
     store_true,
 )
 from nonebot_plugin_cesaa import get_messages_plain_text
-from nonebot_plugin_datastore.db import post_db_init
 from nonebot_plugin_session import Session, SessionIdType, extract_session
+from PIL import Image
 
+from . import migrations
 from .config import Config, plugin_config
 from .data_source import get_wordcloud
 from .schedule import schedule_service
@@ -49,7 +51,7 @@ from .utils import (
     get_time_fromisoformat_with_timezone,
 )
 
-post_db_init(schedule_service.update)
+get_driver().on_startup(schedule_service.update)
 
 __plugin_meta__ = PluginMetadata(
     name="词云",
@@ -91,6 +93,7 @@ __plugin_meta__ = PluginMetadata(
         "nonebot_plugin_chatrecorder", "nonebot_plugin_saa", "nonebot_plugin_alconna"
     ),
     config=Config,
+    extra={"orm_version_location": migrations},
 )
 
 
