@@ -17,13 +17,13 @@ from .utils import fake_group_message_event_v11, fake_private_message_event_v11
 
 async def test_masked(app: App, mocker: MockerFixture):
     """测试自定义图片形状"""
-    from nonebot_plugin_wordcloud.config import plugin_config, plugin_data
+    from nonebot_plugin_wordcloud.config import DATA_DIR, plugin_config
     from nonebot_plugin_wordcloud.data_source import get_wordcloud
 
     mocker.patch.object(plugin_config, "wordcloud_background_color", "white")
 
     mask_path = Path(__file__).parent / "mask.png"
-    shutil.copy(mask_path, plugin_data.data_dir / "mask.png")
+    shutil.copy(mask_path, DATA_DIR / "mask.png")
 
     mocked_random = mocker.patch("wordcloud.wordcloud.Random")
     mocked_random.return_value = random.Random(0)
@@ -47,12 +47,12 @@ async def test_masked_by_command(app: App, mocker: MockerFixture):
     from nonebot_plugin_saa import Image, MessageFactory
 
     from nonebot_plugin_wordcloud import wordcloud_cmd
-    from nonebot_plugin_wordcloud.config import plugin_config, plugin_data
+    from nonebot_plugin_wordcloud.config import DATA_DIR, plugin_config
 
     mocker.patch.object(plugin_config, "wordcloud_background_color", "white")
 
     mask_path = Path(__file__).parent / "mask.png"
-    shutil.copy(mask_path, plugin_data.data_dir / "mask.png")
+    shutil.copy(mask_path, DATA_DIR / "mask.png")
 
     mocked_random = mocker.patch("wordcloud.wordcloud.Random")
     mocked_random.return_value = random.Random(0)
@@ -85,13 +85,13 @@ async def test_masked_by_command(app: App, mocker: MockerFixture):
 
 async def test_masked_group(app: App, mocker: MockerFixture):
     """测试不同群的自定义图片形状"""
-    from nonebot_plugin_wordcloud.config import plugin_config, plugin_data
+    from nonebot_plugin_wordcloud.config import DATA_DIR, plugin_config
     from nonebot_plugin_wordcloud.data_source import get_wordcloud
 
     mocker.patch.object(plugin_config, "wordcloud_background_color", "white")
 
     mask_path = Path(__file__).parent / "mask.png"
-    shutil.copy(mask_path, plugin_data.data_dir / "mask-10000.png")
+    shutil.copy(mask_path, DATA_DIR / "mask-10000.png")
 
     mocked_random = mocker.patch("wordcloud.wordcloud.Random")
     mocked_random.return_value = random.Random(0)
@@ -116,7 +116,7 @@ async def test_set_mask_default(
 ):
     """测试自定义图片形状"""
     from nonebot_plugin_wordcloud import set_mask_cmd
-    from nonebot_plugin_wordcloud.config import plugin_data
+    from nonebot_plugin_wordcloud.config import DATA_DIR
 
     mask_path = Path(__file__).parent / "mask.png"
     with mask_path.open("rb") as f:
@@ -156,7 +156,7 @@ async def test_set_mask_default(
         ctx.should_call_send(event, "词云默认形状设置成功", True)
         ctx.should_finished()
 
-    assert plugin_data.exists("mask.png")
+    assert (DATA_DIR / "mask.png").exists()
     assert image_url.call_count == 2
 
 
@@ -164,7 +164,7 @@ async def test_set_mask_default(
 async def test_set_mask(app: App, respx_mock: respx.MockRouter):
     """测试自定义图片形状"""
     from nonebot_plugin_wordcloud import set_mask_cmd
-    from nonebot_plugin_wordcloud.config import plugin_data
+    from nonebot_plugin_wordcloud.config import DATA_DIR
 
     image_url = respx_mock.get("https://test").mock(
         return_value=Response(
@@ -172,7 +172,7 @@ async def test_set_mask(app: App, respx_mock: respx.MockRouter):
         )
     )
 
-    assert not plugin_data.exists("mask-qq_group-group_id=10000.png")
+    assert not (DATA_DIR / "mask-qq_group-group_id=10000.png").exists()
 
     async with app.test_matcher(set_mask_cmd) as ctx:
         adapter = get_adapter(Adapter)
@@ -187,14 +187,14 @@ async def test_set_mask(app: App, respx_mock: respx.MockRouter):
         ctx.should_finished()
 
     assert image_url.call_count == 1
-    assert plugin_data.exists("mask-qq_group-group_id=10000.png")
+    assert (DATA_DIR / "mask-qq_group-group_id=10000.png").exists()
 
 
 @respx.mock(assert_all_called=True)
 async def test_set_mask_get_args(app: App, respx_mock: respx.MockRouter):
     """测试自定义图片形状，需要额外获取图片时的情况"""
     from nonebot_plugin_wordcloud import set_mask_cmd
-    from nonebot_plugin_wordcloud.config import plugin_data
+    from nonebot_plugin_wordcloud.config import DATA_DIR
 
     image_url = respx_mock.get("https://test").mock(
         return_value=Response(
@@ -229,19 +229,19 @@ async def test_set_mask_get_args(app: App, respx_mock: respx.MockRouter):
         ctx.should_call_send(image_event, "词云形状设置成功", True)
         ctx.should_finished()
 
-    assert plugin_data.exists("mask-qq_group-group_id=10000.png")
+    assert (DATA_DIR / "mask-qq_group-group_id=10000.png").exists()
     assert image_url.call_count == 1
 
 
 async def test_remove_default_mask(app: App, mocker: MockerFixture):
     """移除默认形状"""
     from nonebot_plugin_wordcloud import remove_mask_cmd
-    from nonebot_plugin_wordcloud.config import plugin_data
+    from nonebot_plugin_wordcloud.config import DATA_DIR
 
     mask_path = Path(__file__).parent / "mask.png"
 
-    mask_default_path = plugin_data.data_dir / "mask.png"
-    mask_group_path = plugin_data.data_dir / "mask-qq_group-group_id=10000.png"
+    mask_default_path = DATA_DIR / "mask.png"
+    mask_group_path = DATA_DIR / "mask-qq_group-group_id=10000.png"
 
     shutil.copy(mask_path, mask_default_path)
     shutil.copy(mask_path, mask_group_path)
@@ -277,12 +277,12 @@ async def test_remove_default_mask(app: App, mocker: MockerFixture):
 
 async def test_remove_mask(app: App):
     from nonebot_plugin_wordcloud import remove_mask_cmd
-    from nonebot_plugin_wordcloud.config import plugin_data
+    from nonebot_plugin_wordcloud.config import DATA_DIR
 
     mask_path = Path(__file__).parent / "mask.png"
 
-    mask_default_path = plugin_data.data_dir / "mask.png"
-    mask_group_path = plugin_data.data_dir / "mask-qq_group-group_id=10000.png"
+    mask_default_path = DATA_DIR / "mask.png"
+    mask_group_path = DATA_DIR / "mask-qq_group-group_id=10000.png"
 
     shutil.copy(mask_path, mask_default_path)
     shutil.copy(mask_path, mask_group_path)

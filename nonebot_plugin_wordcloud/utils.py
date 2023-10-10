@@ -1,6 +1,7 @@
 import contextlib
 from datetime import datetime, time
 from typing import Optional
+from zoneinfo import ZoneInfo
 
 from nonebot.matcher import Matcher
 from nonebot.params import Depends
@@ -10,11 +11,6 @@ from nonebot_plugin_saa import PlatformTarget, get_target
 from nonebot_plugin_session import Session, SessionLevel, extract_session
 
 from .config import plugin_config
-
-try:
-    from zoneinfo import ZoneInfo
-except ImportError:
-    from backports.zoneinfo import ZoneInfo  # type: ignore
 
 
 def get_datetime_now_with_timezone() -> datetime:

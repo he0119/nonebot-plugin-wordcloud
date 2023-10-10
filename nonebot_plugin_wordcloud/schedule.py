@@ -1,26 +1,25 @@
 from datetime import time
 from typing import Dict, Optional, Tuple
+from zoneinfo import ZoneInfo
 
 import nonebot_plugin_saa as saa
 from apscheduler.job import Job
 from nonebot.log import logger
 from nonebot_plugin_apscheduler import scheduler
 from nonebot_plugin_cesaa import get_messages_plain_text
-from nonebot_plugin_datastore import create_session
-from nonebot_plugin_datastore.db import get_engine
+from nonebot_plugin_orm import get_session
 from sqlalchemy import JSON, Select, cast, select
-
-from .utils import get_datetime_now_with_timezone, get_time_with_scheduler_timezone
-
-try:
-    from zoneinfo import ZoneInfo
-except ImportError:
-    from backports.zoneinfo import ZoneInfo  # type: ignore
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from .config import plugin_config
 from .data_source import get_wordcloud
 from .model import Schedule
-from .utils import get_mask_key, time_astimezone
+from .utils import (
+    get_datetime_now_with_timezone,
+    get_mask_key,
+    get_time_with_scheduler_timezone,
+    time_astimezone,
+)
 
 saa.enable_auto_select_bot()
 
@@ -46,7 +45,7 @@ class Scheduler:
 
     async def update(self):
         """更新定时任务"""
-        async with create_session() as session:
+        async with get_session() as session:
             statement = (
                 select(Schedule.time)
                 .group_by(Schedule.time)
@@ -77,7 +76,7 @@ class Scheduler:
         时间为 UTC 时间，并且没有时区信息
         如果没有传入时间，则执行默认定时任务
         """
-        async with create_session() as session:
+        async with get_session() as session:
             statement = select(Schedule).where(Schedule.time == time)
             results = await session.scalars(statement)
             schedules = results.all()
@@ -107,8 +106,8 @@ class Scheduler:
 
     async def get_schedule(self, target: saa.PlatformTarget) -> Optional[time]:
         """获取定时任务时间"""
-        async with create_session() as session:
-            statement = self.select_target_statement(target)
+        async with get_session() as session:
+            statement = self.select_target_statement(target, session)
             results = await session.scalars(statement)
             if schedule := results.one_or_none():
                 if schedule.time:
@@ -130,8 +129,8 @@ class Scheduler:
         if time:
             time = time_astimezone(time, ZoneInfo("UTC"))
 
-        async with create_session() as session:
-            statement = self.select_target_statement(target)
+        async with get_session() as session:
+            statement = self.select_target_statement(target, session)
             results = await session.scalars(statement)
             if schedule := results.one_or_none():
                 schedule.time = time
@@ -143,20 +142,23 @@ class Scheduler:
 
     async def remove_schedule(self, target: saa.PlatformTarget):
         """删除定时任务"""
-        async with create_session() as session:
-            statement = self.select_target_statement(target)
+        async with get_session() as session:
+            statement = self.select_target_statement(target, session)
             results = await session.scalars(statement)
             if schedule := results.one_or_none():
                 await session.delete(schedule)
                 await session.commit()
 
     @staticmethod
-    def select_target_statement(target: saa.PlatformTarget) -> Select[Tuple[Schedule]]:
+    def select_target_statement(
+        target: saa.PlatformTarget, session: AsyncSession
+    ) -> Select[Tuple[Schedule]]:
         """获取查询目标的语句
 
         MySQL 需要手动将 JSON 类型的字段转换为 JSON 类型
         """
-        if get_engine().dialect.name == "mysql":
+        engine = session.get_bind()
+        if engine.dialect.name == "mysql":
             return select(Schedule).where(Schedule.target == cast(target.dict(), JSON))
         return select(Schedule).where(Schedule.target == target.dict())
 

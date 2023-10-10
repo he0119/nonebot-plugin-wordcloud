@@ -37,9 +37,9 @@ FAKE_IMAGE = BytesIO(
 async def message_record(app: App):
     from nonebot_plugin_chatrecorder import serialize_message
     from nonebot_plugin_chatrecorder.model import MessageRecord
-    from nonebot_plugin_datastore import create_session
+    from nonebot_plugin_orm import get_session
     from nonebot_plugin_session import Session, SessionLevel
-    from nonebot_plugin_session.model import get_or_add_session_model
+    from nonebot_plugin_session_orm import get_session_persist_id
 
     async with app.test_api() as ctx:
         adapter = Adapter(get_driver())
@@ -101,15 +101,15 @@ async def message_record(app: App):
         ),
     ]
     session_ids: List[int] = []
-    async with create_session() as db_session:
+    async with get_session() as db_session:
         for session in sessions:
-            session_model = await get_or_add_session_model(session, db_session)
-            session_ids.append(session_model.id)
+            session_model_id = await get_session_persist_id(session)
+            session_ids.append(session_model_id)
 
     records = [
         # 星期日
         MessageRecord(
-            session_id=session_ids[0],
+            session_persist_id=session_ids[0],
             time=datetime(2022, 1, 2, 4, 0, 0),
             type="message_sent",
             message_id="1",
@@ -117,7 +117,7 @@ async def message_record(app: App):
             plain_text="bot:1-2",
         ),
         MessageRecord(
-            session_id=session_ids[1],
+            session_persist_id=session_ids[1],
             time=datetime(2022, 1, 2, 4, 0, 0),
             type="message",
             message_id="2",
@@ -125,7 +125,7 @@ async def message_record(app: App):
             plain_text="10:1-2",
         ),
         MessageRecord(
-            session_id=session_ids[2],
+            session_persist_id=session_ids[2],
             time=datetime(2022, 1, 2, 4, 0, 0),
             type="message",
             message_id="3",
@@ -133,7 +133,7 @@ async def message_record(app: App):
             plain_text="11:1-2",
         ),
         MessageRecord(
-            session_id=session_ids[3],
+            session_persist_id=session_ids[3],
             time=datetime(2022, 1, 2, 4, 0, 0),
             type="message",
             message_id="4",
@@ -141,7 +141,7 @@ async def message_record(app: App):
             plain_text="v12-10:1-2",
         ),
         MessageRecord(
-            session_id=session_ids[4],
+            session_persist_id=session_ids[4],
             time=datetime(2022, 1, 2, 4, 0, 0),
             type="message",
             message_id="4",
@@ -150,7 +150,7 @@ async def message_record(app: App):
         ),
         # 星期一
         MessageRecord(
-            session_id=session_ids[1],
+            session_persist_id=session_ids[1],
             time=datetime(2022, 1, 3, 4, 0, 0),
             type="message",
             message_id="2",
@@ -158,7 +158,7 @@ async def message_record(app: App):
             plain_text="10:1-3",
         ),
         MessageRecord(
-            session_id=session_ids[2],
+            session_persist_id=session_ids[2],
             time=datetime(2022, 1, 3, 4, 0, 0),
             type="message",
             message_id="3",
@@ -167,7 +167,7 @@ async def message_record(app: App):
         ),
         # 星期二
         MessageRecord(
-            session_id=session_ids[1],
+            session_persist_id=session_ids[1],
             time=datetime(2022, 2, 1, 4, 0, 0),
             type="message",
             message_id="2",
@@ -175,7 +175,7 @@ async def message_record(app: App):
             plain_text="10:2-1",
         ),
         MessageRecord(
-            session_id=session_ids[2],
+            session_persist_id=session_ids[2],
             time=datetime(2022, 2, 1, 4, 0, 0),
             type="message",
             message_id="3",
@@ -183,7 +183,7 @@ async def message_record(app: App):
             plain_text="11:2-1",
         ),
     ]
-    async with create_session() as db_session:
+    async with get_session() as db_session:
         db_session.add_all(records)
         await db_session.commit()
 
@@ -515,9 +515,10 @@ async def test_last_month_wordcloud(
     app: App, mocker: MockerFixture, message_record: None
 ):
     """测试上月词云"""
-    from nonebot_plugin_datastore.db import get_engine
+    from nonebot_plugin_orm import get_session
 
-    if get_engine().dialect.name == "mysql":
+    engine = get_session().get_bind()
+    if engine.dialect.name == "mysql":
         pytest.skip("MySQL 上获取消息的顺序不同")
 
     from nonebot_plugin_saa import Image, MessageFactory
@@ -555,9 +556,10 @@ async def test_last_month_wordcloud(
 
 async def test_year_wordcloud(app: App, mocker: MockerFixture, message_record: None):
     """测试年度词云"""
-    from nonebot_plugin_datastore.db import get_engine
+    from nonebot_plugin_orm import get_session
 
-    if get_engine().dialect.name == "mysql":
+    engine = get_session().get_bind()
+    if engine.dialect.name == "mysql":
         pytest.skip("MySQL 上获取消息的顺序不同")
 
     from nonebot_plugin_saa import Image, MessageFactory
@@ -663,9 +665,10 @@ async def test_history_wordcloud_start_stop(
     app: App, mocker: MockerFixture, message_record: None
 ):
     """测试历史词云，有起始时间的情况"""
-    from nonebot_plugin_datastore.db import get_engine
+    from nonebot_plugin_orm import get_session
 
-    if get_engine().dialect.name == "mysql":
+    engine = get_session().get_bind()
+    if engine.dialect.name == "mysql":
         pytest.skip("MySQL 上获取消息的顺序不同")
 
     from nonebot_plugin_saa import Image, MessageFactory
@@ -701,9 +704,10 @@ async def test_history_wordcloud_start_stop_get_args(
     app: App, mocker: MockerFixture, message_record: None
 ):
     """测试历史词云，获取起始时间参数的情况"""
-    from nonebot_plugin_datastore.db import get_engine
+    from nonebot_plugin_orm import get_session
 
-    if get_engine().dialect.name == "mysql":
+    engine = get_session().get_bind()
+    if engine.dialect.name == "mysql":
         pytest.skip("MySQL 上获取消息的顺序不同")
 
     from nonebot_plugin_saa import Image, MessageFactory
