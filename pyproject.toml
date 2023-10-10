@@ -57,7 +57,7 @@ skip_gitignore = true
 asyncio_mode = "auto"
 
 [tool.pyright]
-pythonVersion = "3.8"
+pythonVersion = "3.9"
 pythonPlatform = "All"
 typeCheckingMode = "basic"
 

@@ -1,12 +1,8 @@
 from typing import Dict
+from zoneinfo import ZoneInfo
 
 import pytest
 from nonebug import App
-
-try:
-    from zoneinfo import ZoneInfo
-except ImportError:
-    from backports.zoneinfo import ZoneInfo  # type: ignore
 
 
 @pytest.mark.parametrize(

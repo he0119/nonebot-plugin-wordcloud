@@ -1,9 +1,5 @@
 from datetime import datetime, time
-
-try:
-    from zoneinfo import ZoneInfo
-except ImportError:
-    from backports.zoneinfo import ZoneInfo  # type: ignore
+from zoneinfo import ZoneInfo
 
 from nonebug import App
 from pytest_mock import MockerFixture
