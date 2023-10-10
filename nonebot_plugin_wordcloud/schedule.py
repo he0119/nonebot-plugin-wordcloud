@@ -8,7 +8,7 @@ from nonebot.log import logger
 from nonebot_plugin_apscheduler import scheduler
 from nonebot_plugin_cesaa import get_messages_plain_text
 from nonebot_plugin_orm import get_session
-from sqlalchemy import JSON, Engine, Select, cast, select
+from sqlalchemy import JSON, Select, cast, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .config import plugin_config
@@ -158,7 +158,6 @@ class Scheduler:
         MySQL 需要手动将 JSON 类型的字段转换为 JSON 类型
         """
         engine = session.get_bind()
-        assert isinstance(engine, Engine)
         if engine.dialect.name == "mysql":
             return select(Schedule).where(Schedule.target == cast(target.dict(), JSON))
         return select(Schedule).where(Schedule.target == target.dict())

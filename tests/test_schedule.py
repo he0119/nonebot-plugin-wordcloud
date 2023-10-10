@@ -110,12 +110,12 @@ async def test_enable_schedule_without_permission(app: App, mocker: MockerFixtur
 
 
 async def test_disable_schedule(app: App):
-    from nonebot_plugin_datastore import create_session
+    from nonebot_plugin_orm import get_session
 
     from nonebot_plugin_wordcloud import schedule_cmd, schedule_service
     from nonebot_plugin_wordcloud.model import Schedule
 
-    async with create_session() as session:
+    async with get_session() as session:
         schedule = Schedule(
             target={
                 "platform_type": "QQ Group",
@@ -139,7 +139,7 @@ async def test_disable_schedule(app: App):
         ctx.should_call_send(event, "已关闭词云每日定时发送", True)
         ctx.should_finished(schedule_cmd)
 
-    async with create_session() as session:
+    async with get_session() as session:
         statement = select(Schedule)
         results = await session.scalars(statement)
         assert len(results.all()) == 0
