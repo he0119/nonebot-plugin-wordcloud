@@ -2,11 +2,11 @@ ci:
   autofix_commit_msg: "style: auto fix by pre-commit hooks"
   autofix_prs: true
   autoupdate_branch: main
-  autoupdate_schedule: weekly
+  autoupdate_schedule: quarterly
   autoupdate_commit_msg: "chore: auto update by pre-commit hooks"
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.0.287
+    rev: v0.0.292
     hooks:
       - id: ruff
         args: [--fix, --exit-non-zero-on-fix]
@@ -19,7 +19,7 @@ repos:
         stages: [commit]
 
   - repo: https://github.com/psf/black
-    rev: 23.7.0
+    rev: 23.9.1
     hooks:
       - id: black
         stages: [commit]
