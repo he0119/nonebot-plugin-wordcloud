@@ -1,14 +1,9 @@
+import random
 from datetime import datetime
+from io import BytesIO
 from pathlib import Path
 from typing import List
-
-try:
-    from zoneinfo import ZoneInfo
-except ImportError:
-    from backports.zoneinfo import ZoneInfo  # type: ignore
-
-import random
-from io import BytesIO
+from zoneinfo import ZoneInfo
 
 import pytest
 from nonebot import get_driver

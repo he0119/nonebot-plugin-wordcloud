@@ -1,16 +1,14 @@
+import random
 from io import BytesIO
 from pathlib import Path
 
 from nonebug import App
-from PIL import Image
+from PIL import Image, ImageChops
 from pytest_mock import MockerFixture
 
 
 async def test_colormap(app: App, mocker: MockerFixture):
     """测试设置色彩映射表"""
-    import random
-
-    from PIL import ImageChops
 
     from nonebot_plugin_wordcloud.config import plugin_config
     from nonebot_plugin_wordcloud.data_source import get_wordcloud
@@ -36,10 +34,6 @@ async def test_colormap(app: App, mocker: MockerFixture):
 
 async def test_colormap_by_options(app: App, mocker: MockerFixture):
     """测试通过 options 设置色彩映射表"""
-    import random
-
-    from PIL import ImageChops
-
     from nonebot_plugin_wordcloud.config import plugin_config
     from nonebot_plugin_wordcloud.data_source import get_wordcloud
 
@@ -64,10 +58,6 @@ async def test_colormap_by_options(app: App, mocker: MockerFixture):
 
 async def test_colormap_random(app: App, mocker: MockerFixture):
     """测试随机选择色彩映射表"""
-    import random
-
-    from PIL import ImageChops
-
     from nonebot_plugin_wordcloud.config import plugin_config
     from nonebot_plugin_wordcloud.data_source import get_wordcloud
 
