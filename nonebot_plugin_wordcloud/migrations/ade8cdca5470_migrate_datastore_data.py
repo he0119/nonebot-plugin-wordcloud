@@ -23,9 +23,7 @@ depends_on: str | Sequence[str] | None = None
 
 def _has_table(conn: Connection, table_name: str) -> bool:
     insp = inspect(conn)
-    if table_name not in insp.get_table_names():
-        return False
-    return True
+    return table_name in insp.get_table_names()
 
 
 async def data_migrate(conn: AsyncConnection):
