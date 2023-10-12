@@ -12,6 +12,7 @@ from collections.abc import Sequence
 import sqlalchemy as sa
 from alembic.op import run_async
 from nonebot import logger, require
+from sqlalchemy import Connection, inspect
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncSession
 
 revision: str = "ade8cdca5470"
@@ -20,10 +21,23 @@ branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
 
-async def data_migrate(conn: AsyncConnection):
-    from nonebot_plugin_datastore.db import get_engine, init_db
+def _has_table(conn: Connection, table_name: str) -> bool:
+    insp = inspect(conn)
+    if table_name not in insp.get_table_names():
+        return False
+    return True
 
-    await init_db()
+
+async def data_migrate(conn: AsyncConnection):
+    from nonebot_plugin_datastore.db import get_engine
+
+    async with get_engine().connect() as ds_conn:
+        has_table = await ds_conn.run_sync(
+            _has_table, "nonebot_plugin_wordcloud_schedule"
+        )
+        if not has_table:
+            logger.info("wordcloud: 未发现来自 datastore 的数据")
+            return
 
     async with AsyncSession(get_engine()) as ds_sess:
         # 读取数据
