@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 - 直接使用 cesaa 中的函数替代 chatrecorder
 - 使用 alconna 新提供的依赖注入
 - 迁移至 nb orm
+- 如果安装有 datastore 则从中迁移数据
 
 ## [0.5.2] - 2023-08-26
 

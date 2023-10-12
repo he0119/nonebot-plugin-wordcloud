@@ -14,13 +14,14 @@ python = "^3.9"
 nonebot2 = { version = "^2.0.1", extras = ["fastapi"] }
 nonebot-plugin-apscheduler = "^0.3.0"
 nonebot-plugin-localstore = "^0.5.1"
-nonebot-plugin-orm = "^0.1.1"
+nonebot-plugin-orm = "^0.1.2"
 nonebot-plugin-alconna = ">=0.19.2"
 nonebot-plugin-cesaa = "^0.3.0b1"
 wordcloud = "^1.8.1"
 jieba = "^0.42.1"
 tzdata = "*"
 emoji = ">=1.6.3,<3.0.0"
+nonebot-plugin-datastore = { version = ">=1.0.0", optional = true }
 
 [tool.poetry.group.dev.dependencies]
 nonebug = "^0.3.1"
@@ -37,6 +38,7 @@ respx = "^0.20.2"
 httpx = "^0.24.1"
 gevent = "^23.7.0"
 nonebot-plugin-orm = { extras = ["default"], version = "^0.1.1" }
+nonebot-plugin-datastore = "^1.1.2"
 
 [tool.nonebot]
 plugins = ["nonebot_plugin_wordcloud"]
