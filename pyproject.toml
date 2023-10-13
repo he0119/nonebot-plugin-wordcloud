@@ -35,7 +35,7 @@ nonebot-adapter-onebot = "^2.2.4"
 nb-cli = "^1.2.2"
 nonebug-saa = { git = "https://github.com/MountainDash/nonebug-saa.git" }
 respx = "^0.20.2"
-httpx = "^0.24.1"
+httpx = ">=0.24.1,<0.26.0"
 gevent = "^23.7.0"
 nonebot-plugin-orm = { extras = ["default"], version = "^0.1.1" }
 nonebot-plugin-datastore = "^1.1.2"
