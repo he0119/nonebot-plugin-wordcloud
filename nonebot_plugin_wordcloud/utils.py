@@ -1,5 +1,5 @@
 import contextlib
-from datetime import datetime, time
+from datetime import datetime, time, tzinfo
 from typing import Optional
 from zoneinfo import ZoneInfo
 
@@ -33,7 +33,7 @@ def get_datetime_fromisoformat_with_timezone(date_string: str) -> datetime:
     )
 
 
-def time_astimezone(time: time, tz: Optional[ZoneInfo] = None) -> time:
+def time_astimezone(time: time, tz: Optional[tzinfo] = None) -> time:
     """将 time 对象转换为指定时区的 time 对象
 
     如果 tz 为 None，则转换为本地时区
