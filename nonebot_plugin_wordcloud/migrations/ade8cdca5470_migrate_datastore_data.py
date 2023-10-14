@@ -9,11 +9,13 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
-import sqlalchemy as sa
+from alembic import op
 from alembic.op import run_async
 from nonebot import logger, require
-from sqlalchemy import Connection, inspect
-from sqlalchemy.ext.asyncio import AsyncConnection, AsyncSession
+from sqlalchemy import Connection, inspect, select
+from sqlalchemy.ext.asyncio import AsyncConnection
+from sqlalchemy.ext.automap import automap_base
+from sqlalchemy.orm import Session
 
 revision: str = "ade8cdca5470"
 down_revision: str | Sequence[str] | None = "557fef3a156f"
@@ -26,36 +28,62 @@ def _has_table(conn: Connection, table_name: str) -> bool:
     return table_name in insp.get_table_names()
 
 
+def _migrate_old_data(ds_conn: Connection):
+    insp = inspect(ds_conn)
+    if (
+        "nonebot_plugin_wordcloud_schedule" not in insp.get_table_names()
+        or "nonebot_plugin_wordcloud_alembic_version" not in insp.get_table_names()
+    ):
+        logger.info("wordcloud: 未发现来自 datastore 的数据")
+        return
+
+    DsBase = automap_base()
+    DsBase.prepare(autoload_with=ds_conn)
+    DsSchedule = DsBase.classes.nonebot_plugin_wordcloud_schedule
+
+    Base = automap_base()
+    Base.prepare(autoload_with=op.get_bind())
+    Schedule = Base.classes.nonebot_plugin_wordcloud_schedule
+
+    ds_session = Session(ds_conn)
+    session = Session(op.get_bind())
+
+    count = ds_session.query(DsSchedule).count()
+    if count == 0:
+        logger.info("wordcloud: 未发现来自 datastore 的数据")
+        return
+
+    AlembicVersion = DsBase.classes.nonebot_plugin_wordcloud_alembic_version
+    version_num = ds_session.scalars(select(AlembicVersion.version_num)).one_or_none()
+    if not version_num:
+        return
+    if version_num != "c0ecb94cc7a0":
+        logger.warning(
+            "wordcloud: 发现旧版本的数据，请先安装 0.5.2 版本，"
+            "并运行 nb datastore upgrade 完成数据迁移之后再安装新版本"
+        )
+        raise RuntimeError("wordcloud: 请先安装 0.5.2 版本完成迁移之后再升级")
+
+    # 写入数据
+    logger.info("wordcloud: 发现来自 datastore 的数据，正在迁移...")
+    schedules = ds_session.query(DsSchedule).all()
+    for schedule in schedules:
+        session.add(
+            Schedule(
+                id=schedule.id,
+                target=schedule.target,
+                time=schedule.time,
+            )
+        )
+    session.commit()
+    logger.info("wordcloud: 迁移完成")
+
+
 async def data_migrate(conn: AsyncConnection):
     from nonebot_plugin_datastore.db import get_engine
 
     async with get_engine().connect() as ds_conn:
-        has_table = await ds_conn.run_sync(
-            _has_table, "nonebot_plugin_wordcloud_schedule"
-        )
-        if not has_table:
-            logger.info("wordcloud: 未发现来自 datastore 的数据")
-            return
-
-    async with AsyncSession(get_engine()) as ds_sess:
-        # 读取数据
-        result = await ds_sess.execute(
-            sa.text("SELECT * FROM nonebot_plugin_wordcloud_schedule")
-        )
-        data = result.all()
-
-    if not data:
-        return
-
-    # 写入数据
-    logger.info("wordcloud: 发现来自 datastore 的数据，正在迁移...")
-    await conn.execute(
-        sa.text(
-            "INSERT INTO nonebot_plugin_wordcloud_schedule (id, target, time) VALUES (:id, :target, :time)"
-        ),
-        [{"id": i, "target": t, "time": ti} for i, t, ti in data],
-    )
-    logger.info("wordcloud: 迁移完成")
+        await ds_conn.run_sync(_migrate_old_data)
 
 
 def upgrade(name: str = "") -> None:
