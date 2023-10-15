@@ -4,11 +4,20 @@ description: 提交 Bug 反馈以帮助我们改进代码
 labels: ["bug"]
 body:
   - type: input
+    id: env-wordcloud
+    attributes:
+      label: wordcloud 版本
+      description: 填写 nonebot-plugin-wordcloud 版本
+      placeholder: e.g. 0.5.2
+    validations:
+      required: true
+
+  - type: input
     id: env-chatrecorder
     attributes:
       label: chatrecorder 版本
       description: 填写 nonebot-plugin-chatrecorder 版本
-      placeholder: e.g. 0.4.1
+      placeholder: e.g. 0.4.2
     validations:
       required: true
 
@@ -17,7 +26,7 @@ body:
     attributes:
       label: saa 版本
       description: 填写 nonebot-plugin-send-anything-anywhere 版本
-      placeholder: e.g. 0.3.0
+      placeholder: e.g. 0.3.2
     validations:
       required: true
 
