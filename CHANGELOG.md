@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 ## [Unreleased]
 
+## [0.6.0] - 2023-10-18
+
 ### Changed
 
 - 直接使用 cesaa 中的函数替代 chatrecorder
@@ -261,7 +263,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 - 可以使用的版本。
 
-[unreleased]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.5.2...HEAD
+[unreleased]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.5.2...v0.6.0
 [0.5.2]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.5.1...v0.5.2
 [0.5.1]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.4.9...v0.5.0
