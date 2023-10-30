@@ -1750,13 +1750,13 @@ typing-extensions = ">=4.0.0,<5.0.0"
 
 [[package]]
 name = "nonebot-plugin-alconna"
-version = "0.30.2"
+version = "0.31.0"
 description = "Alconna Adapter for Nonebot"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "nonebot_plugin_alconna-0.30.2-py3-none-any.whl", hash = "sha256:648a239576df44b9bdff7d37bcf21a04e0e6ceb0b8d7a124b5516eebfba347ac"},
-    {file = "nonebot_plugin_alconna-0.30.2.tar.gz", hash = "sha256:6f39cc6db54a824e7350e0d94f62acec6e0188d528ae69e4a045c4a29c68606c"},
+    {file = "nonebot_plugin_alconna-0.31.0-py3-none-any.whl", hash = "sha256:da41bcca4f2c8e90420774c3bd619aa04ac231fac152b8fad242783cc7bd1543"},
+    {file = "nonebot_plugin_alconna-0.31.0.tar.gz", hash = "sha256:5fc22cdfc2b6a14425bd290a836dd63dca1d1097e9728c9bbe92142e46618aa7"},
 ]
 
 [package.dependencies]
@@ -1854,13 +1854,13 @@ typing-extensions = ">=4.0.0"
 
 [[package]]
 name = "nonebot-plugin-orm"
-version = "0.3.0"
+version = "0.4.0"
 description = "SQLAlchemy ORM support for nonebot"
 optional = false
 python-versions = "<4.0,>=3.8"
 files = [
-    {file = "nonebot_plugin_orm-0.3.0-py3-none-any.whl", hash = "sha256:1778cbc0080bbbd5b7201b946ae9b6037f55402c6f4f806d4aed559b369becf5"},
-    {file = "nonebot_plugin_orm-0.3.0.tar.gz", hash = "sha256:27dbbfa72d8a27fea9253c533ad3e5cc5d50a67698605900acafcc54c7e4c1fd"},
+    {file = "nonebot_plugin_orm-0.4.0-py3-none-any.whl", hash = "sha256:f9c973d8905377fc5a9395ec65deec806426531e8f3fa2371f557e8ae7553416"},
+    {file = "nonebot_plugin_orm-0.4.0.tar.gz", hash = "sha256:3442dc40b2d3f503303db6936b0b04375ffb37b5fe9511b55c5ed1b6643b81f6"},
 ]
 
 [package.dependencies]
