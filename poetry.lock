@@ -1691,13 +1691,13 @@ files = [
 
 [[package]]
 name = "nb-cli"
-version = "1.2.5"
+version = "1.2.6"
 description = "CLI for nonebot2"
 optional = false
 python-versions = ">=3.8, <4.0"
 files = [
-    {file = "nb-cli-1.2.5.tar.gz", hash = "sha256:8c32e72a64e943239e73aaddb8e682226d0797823f5e6998ce048469be351310"},
-    {file = "nb_cli-1.2.5-py3-none-any.whl", hash = "sha256:8261a8f4714acacb7072f30bb3444bc533e883731dd82f5e929de88fc1a3c838"},
+    {file = "nb-cli-1.2.6.tar.gz", hash = "sha256:33ca8ffdb721ea50751c47788789c84cd7594afc888ccfb2439f06ff95cbbd7c"},
+    {file = "nb_cli-1.2.6-py3-none-any.whl", hash = "sha256:2aa52e0d21fb8a5a08662b691fa6cd521c99140aa0e24a81503264129f4b3045"},
 ]
 
 [package.dependencies]
