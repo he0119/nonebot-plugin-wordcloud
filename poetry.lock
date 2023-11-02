@@ -1750,13 +1750,13 @@ typing-extensions = ">=4.0.0,<5.0.0"
 
 [[package]]
 name = "nonebot-plugin-alconna"
-version = "0.30.2"
+version = "0.31.3"
 description = "Alconna Adapter for Nonebot"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "nonebot_plugin_alconna-0.30.2-py3-none-any.whl", hash = "sha256:648a239576df44b9bdff7d37bcf21a04e0e6ceb0b8d7a124b5516eebfba347ac"},
-    {file = "nonebot_plugin_alconna-0.30.2.tar.gz", hash = "sha256:6f39cc6db54a824e7350e0d94f62acec6e0188d528ae69e4a045c4a29c68606c"},
+    {file = "nonebot_plugin_alconna-0.31.3-py3-none-any.whl", hash = "sha256:ddd4a313d7203eee5686378adf2a96cea33210d99103512d408cff79d710d397"},
+    {file = "nonebot_plugin_alconna-0.31.3.tar.gz", hash = "sha256:4fa6c7c621aaaa589b3e920bbd8d6171d4e71a9abfda260c2d56530ca92e3145"},
 ]
 
 [package.dependencies]
@@ -1854,13 +1854,13 @@ typing-extensions = ">=4.0.0"
 
 [[package]]
 name = "nonebot-plugin-orm"
-version = "0.3.0"
+version = "0.4.1"
 description = "SQLAlchemy ORM support for nonebot"
 optional = false
 python-versions = "<4.0,>=3.8"
 files = [
-    {file = "nonebot_plugin_orm-0.3.0-py3-none-any.whl", hash = "sha256:1778cbc0080bbbd5b7201b946ae9b6037f55402c6f4f806d4aed559b369becf5"},
-    {file = "nonebot_plugin_orm-0.3.0.tar.gz", hash = "sha256:27dbbfa72d8a27fea9253c533ad3e5cc5d50a67698605900acafcc54c7e4c1fd"},
+    {file = "nonebot_plugin_orm-0.4.1-py3-none-any.whl", hash = "sha256:3b46cf1668946bc121d0e9102a3b98c4bd760efa758a516b29ac3b30f00c1b09"},
+    {file = "nonebot_plugin_orm-0.4.1.tar.gz", hash = "sha256:5833a7a337eba9592c95e10767b293f3bf8c6ab6031a6a13e714819e1d64ac6d"},
 ]
 
 [package.dependencies]
@@ -1935,13 +1935,13 @@ nonebot2 = {version = ">=2.0.1,<3.0.0", extras = ["fastapi"]}
 
 [[package]]
 name = "nonebot2"
-version = "2.1.1"
+version = "2.1.2"
 description = "An asynchronous python bot framework."
 optional = false
 python-versions = ">=3.8,<4.0"
 files = [
-    {file = "nonebot2-2.1.1-py3-none-any.whl", hash = "sha256:fe780eee116b2798e1db043b92aefa1b1f2bf1026725388a1dbbb211bbb4ef4b"},
-    {file = "nonebot2-2.1.1.tar.gz", hash = "sha256:e3937c28bca26f2f8717fedd8594e0cfc79faa2d99a3209c4a63706727d700f8"},
+    {file = "nonebot2-2.1.2-py3-none-any.whl", hash = "sha256:a4df78e4c8b81773ea70b4b68d4ac3a5027d69517661d756772f11edf3cd3b1f"},
+    {file = "nonebot2-2.1.2.tar.gz", hash = "sha256:afb3c141c67645cd038125287d0583aec2220eca998a8392e42ba87722f6659f"},
 ]
 
 [package.dependencies]
