@@ -103,13 +103,13 @@ zookeeper = ["kazoo"]
 
 [[package]]
 name = "arclet-alconna"
-version = "1.7.32"
+version = "1.7.38"
 description = "A High-performance, Generality, Humane Command Line Arguments Parser Library."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "arclet_alconna-1.7.32-py3-none-any.whl", hash = "sha256:25d7c19112a18a54688191b9ff95cfdf4c852b1340121719acba836c464d6280"},
-    {file = "arclet_alconna-1.7.32.tar.gz", hash = "sha256:7fb3424affe3085804b949b571a4119c5a5ecc29f79db31821801cd0d16c9b7a"},
+    {file = "arclet_alconna-1.7.38-py3-none-any.whl", hash = "sha256:e2248605bb7425c69a9cbe1e5f797d50945f30f054aaa9af73a237d8307d3432"},
+    {file = "arclet_alconna-1.7.38.tar.gz", hash = "sha256:90af6498993e7bc21223259758a021d811329b341a9add7868b9497705af050b"},
 ]
 
 [package.dependencies]
@@ -804,6 +804,16 @@ files = [
 docs = ["furo (>=2023.7.26)", "sphinx (>=7.1.2)", "sphinx-autodoc-typehints (>=1.24)"]
 testing = ["covdefaults (>=2.3)", "coverage (>=7.3)", "diff-cover (>=7.7)", "pytest (>=7.4)", "pytest-cov (>=4.1)", "pytest-mock (>=3.11.1)", "pytest-timeout (>=2.1)"]
 typing = ["typing-extensions (>=4.7.1)"]
+
+[[package]]
+name = "fleep"
+version = "1.0.1"
+description = "File format determination library"
+optional = false
+python-versions = ">=3.1"
+files = [
+    {file = "fleep-1.0.1.tar.gz", hash = "sha256:c8f62b258ee5364d7f6c1ed1f3f278e99020fc3f0a60a24ad1e10846e31d104c"},
+]
 
 [[package]]
 name = "fonttools"
@@ -1750,18 +1760,19 @@ typing-extensions = ">=4.0.0,<5.0.0"
 
 [[package]]
 name = "nonebot-plugin-alconna"
-version = "0.30.2"
+version = "0.33.8"
 description = "Alconna Adapter for Nonebot"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "nonebot_plugin_alconna-0.30.2-py3-none-any.whl", hash = "sha256:648a239576df44b9bdff7d37bcf21a04e0e6ceb0b8d7a124b5516eebfba347ac"},
-    {file = "nonebot_plugin_alconna-0.30.2.tar.gz", hash = "sha256:6f39cc6db54a824e7350e0d94f62acec6e0188d528ae69e4a045c4a29c68606c"},
+    {file = "nonebot_plugin_alconna-0.33.8-py3-none-any.whl", hash = "sha256:e33e75a4c534810756e7d743ae6a16c1996af8f6f5bc51ba8fa8ab8618ca3b55"},
+    {file = "nonebot_plugin_alconna-0.33.8.tar.gz", hash = "sha256:27ebdd8309db9d934ef703f3a0f6c8608e773cb2435cba0da29ac4936c105e19"},
 ]
 
 [package.dependencies]
-arclet-alconna = ">=1.7.31,<2.0.0"
+arclet-alconna = ">=1.7.38,<2.0.0"
 arclet-alconna-tools = ">=0.6.7,<0.7.0"
+fleep = ">=1.0.1"
 nepattern = ">=0.5.14,<0.6.0"
 nonebot2 = ">=2.1.0"
 
@@ -1854,13 +1865,13 @@ typing-extensions = ">=4.0.0"
 
 [[package]]
 name = "nonebot-plugin-orm"
-version = "0.3.0"
+version = "0.6.0"
 description = "SQLAlchemy ORM support for nonebot"
 optional = false
 python-versions = "<4.0,>=3.8"
 files = [
-    {file = "nonebot_plugin_orm-0.3.0-py3-none-any.whl", hash = "sha256:1778cbc0080bbbd5b7201b946ae9b6037f55402c6f4f806d4aed559b369becf5"},
-    {file = "nonebot_plugin_orm-0.3.0.tar.gz", hash = "sha256:27dbbfa72d8a27fea9253c533ad3e5cc5d50a67698605900acafcc54c7e4c1fd"},
+    {file = "nonebot_plugin_orm-0.6.0-py3-none-any.whl", hash = "sha256:482f35d102749eda93cd635608ec79e81718d080a80fa325c24d8fa7316f7d83"},
+    {file = "nonebot_plugin_orm-0.6.0.tar.gz", hash = "sha256:e1b4db52da60b53f33eac95bb4b9875d7000d71f47ec6a034aa908adde41c33e"},
 ]
 
 [package.dependencies]
@@ -1869,17 +1880,17 @@ alembic = ">=1.12,<2.0"
 click = ">=8.1,<9.0"
 importlib-metadata = {version = ">=6.8,<7.0", markers = "python_version < \"3.10\""}
 importlib-resources = {version = ">=6.1,<7.0", markers = "python_version < \"3.12\""}
-nonebot-plugin-localstore = {version = ">=0.5,<1.0", optional = true, markers = "extra == \"default\""}
+nonebot-plugin-localstore = ">=0.5,<1.0"
 nonebot2 = ">=2.1,<3.0"
 sqlalchemy = ">=2.0,<3.0"
-typing-extensions = {version = ">=4.8,<5.0", markers = "python_version < \"3.12\""}
+typing-extensions = {version = ">=4.8,<5.0", markers = "python_version < \"3.11\""}
 
 [package.extras]
 aiomysql = ["aiomysql (>=0.2,<1.0)"]
 aiosqlite = ["aiosqlite (>=0.19,<1.0)"]
 asyncmy = ["asyncmy (>=0.2,<1.0)"]
 asyncpg = ["asyncpg (>=0.28,<1.0)"]
-default = ["aiosqlite (>=0.19,<1.0)", "nonebot-plugin-localstore (>=0.5,<1.0)"]
+default = ["aiosqlite (>=0.19,<1.0)"]
 mysql = ["aiomysql (>=0.2,<1.0)"]
 postgresql = ["psycopg[binary] (>=3.1,<4.0)"]
 psycopg = ["psycopg[binary] (>=3.1,<4.0)"]
@@ -1935,13 +1946,13 @@ nonebot2 = {version = ">=2.0.1,<3.0.0", extras = ["fastapi"]}
 
 [[package]]
 name = "nonebot2"
-version = "2.1.1"
+version = "2.1.2"
 description = "An asynchronous python bot framework."
 optional = false
 python-versions = ">=3.8,<4.0"
 files = [
-    {file = "nonebot2-2.1.1-py3-none-any.whl", hash = "sha256:fe780eee116b2798e1db043b92aefa1b1f2bf1026725388a1dbbb211bbb4ef4b"},
-    {file = "nonebot2-2.1.1.tar.gz", hash = "sha256:e3937c28bca26f2f8717fedd8594e0cfc79faa2d99a3209c4a63706727d700f8"},
+    {file = "nonebot2-2.1.2-py3-none-any.whl", hash = "sha256:a4df78e4c8b81773ea70b4b68d4ac3a5027d69517661d756772f11edf3cd3b1f"},
+    {file = "nonebot2-2.1.2.tar.gz", hash = "sha256:afb3c141c67645cd038125287d0583aec2220eca998a8392e42ba87722f6659f"},
 ]
 
 [package.dependencies]
