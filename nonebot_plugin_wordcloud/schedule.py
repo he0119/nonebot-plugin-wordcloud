@@ -1,6 +1,5 @@
 from datetime import time
 from typing import Dict, Optional, Tuple
-from zoneinfo import ZoneInfo
 
 import nonebot_plugin_saa as saa
 from apscheduler.job import Job
@@ -11,6 +10,7 @@ from nonebot_plugin_cesaa import get_messages_plain_text
 from nonebot_plugin_orm import get_session
 from sqlalchemy import JSON, Select, cast, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from zoneinfo import ZoneInfo
 
 from .config import plugin_config
 from .data_source import get_wordcloud
@@ -50,7 +50,7 @@ class Scheduler:
             statement = (
                 select(Schedule.time)
                 .group_by(Schedule.time)
-                .where(Schedule.time != None)
+                .where(Schedule.time != None)  # noqa: E711
             )
             schedule_times = await session.scalars(statement)
             for schedule_time in schedule_times:
@@ -69,7 +69,9 @@ class Scheduler:
                         second=scheduler_time.second,
                         args=(schedule_time,),
                     )
-                    logger.debug(f"已添加每日词云定时发送任务，发送时间：{time_str} UTC")
+                    logger.debug(
+                        f"已添加每日词云定时发送任务，发送时间：{time_str} UTC"
+                    )
 
     async def run_task(self, time: Optional[time] = None):
         """执行定时任务

@@ -65,9 +65,23 @@ pythonPlatform = "All"
 typeCheckingMode = "basic"
 defineConstant = { PYDANTIC_V2 = true }
 
-[tool.ruff]
-select = ["E", "W", "F", "UP", "C", "T", "PYI", "Q"]
-ignore = ["E402", "E501", "E711", "C901", "UP037"]
+[tool.ruff.lint]
+select = [
+  "W",   # pycodestyle warnings
+  "E",   # pycodestyle errors
+  "F",   # Pyflakes
+  "UP",  # pyupgrade
+  "C4",  # flake8-comprehensions
+  "T10", # flake8-debugger
+  "T20", # flake8-print
+  "PYI", # flake8-pyi
+  "PT",  # flake8-pytest-style
+  "Q",   # flake8-quotes
+]
+ignore = [
+  "E402",  # module-import-not-at-top-of-file, Module level import not at top of cell
+  "UP037", # quoted-annotation,	Remove quotes from type annotation
+]
 
 [tool.coverage.run]
 # https://github.com/nedbat/coveragepy/issues/1082

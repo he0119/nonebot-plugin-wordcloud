@@ -3,7 +3,6 @@ from datetime import datetime
 from io import BytesIO
 from pathlib import Path
 from typing import List
-from zoneinfo import ZoneInfo
 
 import pytest
 from nonebot import get_driver
@@ -15,6 +14,7 @@ from nonebug import App
 from nonebug_saa import should_send_saa
 from PIL import Image, ImageChops
 from pytest_mock import MockerFixture
+from zoneinfo import ZoneInfo
 
 from .utils import (
     fake_channel_message_event_v12,
@@ -28,8 +28,8 @@ FAKE_IMAGE = BytesIO(
 )
 
 
-@pytest.fixture
-async def message_record(app: App):
+@pytest.fixture()
+async def _message_record(app: App):
     from nonebot_plugin_chatrecorder import serialize_message
     from nonebot_plugin_chatrecorder.model import MessageRecord
     from nonebot_plugin_orm import get_session
@@ -253,7 +253,8 @@ async def test_wordcloud_cmd(app: App):
         ctx.should_finished()
 
 
-async def test_today_wordcloud(app: App, mocker: MockerFixture, message_record: None):
+@pytest.mark.usefixtures("_message_record")
+async def test_today_wordcloud(app: App, mocker: MockerFixture):
     """测试今日词云"""
     from nonebot_plugin_chatrecorder import get_messages_plain_text
     from nonebot_plugin_saa import Image, MessageFactory
@@ -290,9 +291,8 @@ async def test_today_wordcloud(app: App, mocker: MockerFixture, message_record: 
     )
 
 
-async def test_my_today_wordcloud(
-    app: App, mocker: MockerFixture, message_record: None
-):
+@pytest.mark.usefixtures("_message_record")
+async def test_my_today_wordcloud(app: App, mocker: MockerFixture):
     """测试我的今日词云"""
     from nonebot_plugin_saa import Image, MessageFactory
 
@@ -326,9 +326,8 @@ async def test_my_today_wordcloud(
     mocked_get_wordcloud.assert_called_once_with(["10:1-2"], "qq_group-group_id=10000")
 
 
-async def test_yesterday_wordcloud(
-    app: App, mocker: MockerFixture, message_record: None
-):
+@pytest.mark.usefixtures("_message_record")
+async def test_yesterday_wordcloud(app: App, mocker: MockerFixture):
     """测试昨日词云"""
     from nonebot_plugin_saa import Image, MessageFactory
 
@@ -363,9 +362,8 @@ async def test_yesterday_wordcloud(
     )
 
 
-async def test_my_yesterday_wordcloud(
-    app: App, mocker: MockerFixture, message_record: None
-):
+@pytest.mark.usefixtures("_message_record")
+async def test_my_yesterday_wordcloud(app: App, mocker: MockerFixture):
     """测试我的昨日词云"""
     from nonebot_plugin_saa import Image, MessageFactory
 
@@ -399,7 +397,8 @@ async def test_my_yesterday_wordcloud(
     mocked_get_wordcloud.assert_called_once_with(["10:1-2"], "qq_group-group_id=10000")
 
 
-async def test_week_wordcloud(app: App, mocker: MockerFixture, message_record: None):
+@pytest.mark.usefixtures("_message_record")
+async def test_week_wordcloud(app: App, mocker: MockerFixture):
     """测试本周词云"""
     from nonebot_plugin_saa import Image, MessageFactory
 
@@ -434,9 +433,8 @@ async def test_week_wordcloud(app: App, mocker: MockerFixture, message_record: N
     )
 
 
-async def test_last_week_wordcloud(
-    app: App, mocker: MockerFixture, message_record: None
-):
+@pytest.mark.usefixtures("_message_record")
+async def test_last_week_wordcloud(app: App, mocker: MockerFixture):
     """测试上周词云"""
     from nonebot_plugin_saa import Image, MessageFactory
 
@@ -471,7 +469,8 @@ async def test_last_week_wordcloud(
     )
 
 
-async def test_month_wordcloud(app: App, mocker: MockerFixture, message_record: None):
+@pytest.mark.usefixtures("_message_record")
+async def test_month_wordcloud(app: App, mocker: MockerFixture):
     """测试本月词云"""
     from nonebot_plugin_saa import Image, MessageFactory
 
@@ -506,9 +505,8 @@ async def test_month_wordcloud(app: App, mocker: MockerFixture, message_record: 
     )
 
 
-async def test_last_month_wordcloud(
-    app: App, mocker: MockerFixture, message_record: None
-):
+@pytest.mark.usefixtures("_message_record")
+async def test_last_month_wordcloud(app: App, mocker: MockerFixture):
     """测试上月词云"""
     from nonebot_plugin_orm import get_session
 
@@ -549,7 +547,8 @@ async def test_last_month_wordcloud(
     )
 
 
-async def test_year_wordcloud(app: App, mocker: MockerFixture, message_record: None):
+@pytest.mark.usefixtures("_message_record")
+async def test_year_wordcloud(app: App, mocker: MockerFixture):
     """测试年度词云"""
     from nonebot_plugin_orm import get_session
 
@@ -591,7 +590,8 @@ async def test_year_wordcloud(app: App, mocker: MockerFixture, message_record: N
     )
 
 
-async def test_my_year_wordcloud(app: App, mocker: MockerFixture, message_record: None):
+@pytest.mark.usefixtures("_message_record")
+async def test_my_year_wordcloud(app: App, mocker: MockerFixture):
     """测试我的年度词云"""
     from nonebot_plugin_saa import Image, MessageFactory
 
@@ -627,7 +627,8 @@ async def test_my_year_wordcloud(app: App, mocker: MockerFixture, message_record
     )
 
 
-async def test_history_wordcloud(app: App, mocker: MockerFixture, message_record: None):
+@pytest.mark.usefixtures("_message_record")
+async def test_history_wordcloud(app: App, mocker: MockerFixture):
     """测试历史词云"""
     from nonebot_plugin_saa import Image, MessageFactory
 
@@ -656,9 +657,8 @@ async def test_history_wordcloud(app: App, mocker: MockerFixture, message_record
     )
 
 
-async def test_history_wordcloud_start_stop(
-    app: App, mocker: MockerFixture, message_record: None
-):
+@pytest.mark.usefixtures("_message_record")
+async def test_history_wordcloud_start_stop(app: App, mocker: MockerFixture):
     """测试历史词云，有起始时间的情况"""
     from nonebot_plugin_orm import get_session
 
@@ -695,9 +695,8 @@ async def test_history_wordcloud_start_stop(
     )
 
 
-async def test_history_wordcloud_start_stop_get_args(
-    app: App, mocker: MockerFixture, message_record: None
-):
+@pytest.mark.usefixtures("_message_record")
+async def test_history_wordcloud_start_stop_get_args(app: App, mocker: MockerFixture):
     """测试历史词云，获取起始时间参数的情况"""
     from nonebot_plugin_orm import get_session
 
@@ -724,12 +723,16 @@ async def test_history_wordcloud_start_stop_get_args(
 
         start_event = fake_group_message_event_v11(message=Message("2022-01-01"))
         ctx.receive_event(bot, start_event)
-        ctx.should_call_send(start_event, "请输入你要查询的结束日期（如 2022-02-22）", True)
+        ctx.should_call_send(
+            start_event, "请输入你要查询的结束日期（如 2022-02-22）", True
+        )
         ctx.should_rejected()
 
         invalid_stop_event = fake_group_message_event_v11(message=Message("2022-02-30"))
         ctx.receive_event(bot, invalid_stop_event)
-        ctx.should_call_send(invalid_stop_event, "请输入正确的日期，不然我没法理解呢！", True)
+        ctx.should_call_send(
+            invalid_stop_event, "请输入正确的日期，不然我没法理解呢！", True
+        )
         ctx.should_rejected()
 
         stop_event = fake_group_message_event_v11(message=Message("2022-02-22"))
@@ -781,9 +784,8 @@ async def test_history_wordcloud_invalid_input(app: App):
         ctx.should_finished()
 
 
-async def test_today_wordcloud_v12(
-    app: App, mocker: MockerFixture, message_record: None
-):
+@pytest.mark.usefixtures("_message_record")
+async def test_today_wordcloud_v12(app: App, mocker: MockerFixture):
     from nonebot_plugin_saa import Image, MessageFactory
 
     from nonebot_plugin_wordcloud import wordcloud_cmd
@@ -817,9 +819,8 @@ async def test_today_wordcloud_v12(
     )
 
 
-async def test_my_today_wordcloud_v12(
-    app: App, mocker: MockerFixture, message_record: None
-):
+@pytest.mark.usefixtures("_message_record")
+async def test_my_today_wordcloud_v12(app: App, mocker: MockerFixture):
     from nonebot_plugin_saa import Image, MessageFactory
 
     from nonebot_plugin_wordcloud import wordcloud_cmd
@@ -855,9 +856,8 @@ async def test_my_today_wordcloud_v12(
     )
 
 
-async def test_today_wordcloud_qq_group_v12(
-    app: App, mocker: MockerFixture, message_record: None
-):
+@pytest.mark.usefixtures("_message_record")
+async def test_today_wordcloud_qq_group_v12(app: App, mocker: MockerFixture):
     """测试 ob12 的 QQ群 今日词云"""
     from nonebot_plugin_saa import Image, MessageFactory
 
@@ -891,9 +891,8 @@ async def test_today_wordcloud_qq_group_v12(
     )
 
 
-async def test_today_wordcloud_exclude_user_ids(
-    app: App, mocker: MockerFixture, message_record: None
-):
+@pytest.mark.usefixtures("_message_record")
+async def test_today_wordcloud_exclude_user_ids(app: App, mocker: MockerFixture):
     """测试今日词云，排除特定用户"""
     from nonebot_plugin_saa import Image, MessageFactory
 

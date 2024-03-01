@@ -1,5 +1,5 @@
-""" 词云
-"""
+"""词云"""
+
 from nonebot import require
 
 require("nonebot_plugin_apscheduler")
@@ -86,7 +86,7 @@ __plugin_meta__ = PluginMetadata(
 格式：/词云每日定时发送状态
 /开启词云每日定时发送
 /开启词云每日定时发送 23:59
-/关闭词云每日定时发送""",
+/关闭词云每日定时发送""",  # noqa: E501
     homepage="https://github.com/he0119/nonebot-plugin-wordcloud",
     type="application",
     supported_adapters=inherit_supported_adapters(
@@ -109,7 +109,9 @@ wordcloud_cmd = on_alconna(
     Alconna(
         "词云",
         Option("--my", default=False, action=store_true),
-        Args["type?", ["今日", "昨日", "本周", "上周", "本月", "上月", "年度", "历史"]]["time?", str],
+        Args["type?", ["今日", "昨日", "本周", "上周", "本月", "上月", "年度", "历史"]][
+            "time?", str
+        ],
         behaviors=[SameTime()],
     ),
     use_cmd_start=True,
@@ -335,7 +337,9 @@ async def _(
 schedule_cmd = on_alconna(
     Alconna(
         "词云定时发送",
-        Option("--action", Args["action_type", ["状态", "开启", "关闭"]], default="状态"),
+        Option(
+            "--action", Args["action_type", ["状态", "开启", "关闭"]], default="状态"
+        ),
         Args["type", ["每日"]]["time?", str],
     ),
     permission=admin_permission(),
@@ -368,7 +372,9 @@ async def _(
     if action_type.result == "状态":
         schedule_time = await schedule_service.get_schedule(target)
         await schedule_cmd.finish(
-            f"词云每日定时发送已开启，发送时间为：{schedule_time}" if schedule_time else "词云每日定时发送未开启"
+            f"词云每日定时发送已开启，发送时间为：{schedule_time}"
+            if schedule_time
+            else "词云每日定时发送未开启"
         )
     elif action_type.result == "开启":
         schedule_time = None
@@ -381,7 +387,7 @@ async def _(
         await schedule_cmd.finish(
             f"已开启词云每日定时发送，发送时间为：{schedule_time}"
             if schedule_time
-            else f"已开启词云每日定时发送，发送时间为：{plugin_config.wordcloud_default_schedule_time}"
+            else f"已开启词云每日定时发送，发送时间为：{plugin_config.wordcloud_default_schedule_time}"  # noqa: E501
         )
     elif action_type.result == "关闭":
         await schedule_service.remove_schedule(target)
