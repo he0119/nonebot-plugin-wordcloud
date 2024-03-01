@@ -73,6 +73,9 @@ ignore = ["E402", "E501", "E711", "C901", "UP037"]
 # https://github.com/nedbat/coveragepy/issues/1082
 concurrency = ["thread", "gevent"]
 
+[tool.coverage.report]
+omit = ["*/compat.py"]
+
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
