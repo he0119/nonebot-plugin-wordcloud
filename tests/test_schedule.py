@@ -28,7 +28,9 @@ async def test_enable_schedule(app: App):
         )
         ctx.receive_event(bot, event)
         ctx.should_pass_permission(schedule_cmd)
-        ctx.should_call_send(event, "已开启词云每日定时发送，发送时间为：22:00:00+08:00", True)
+        ctx.should_call_send(
+            event, "已开启词云每日定时发送，发送时间为：22:00:00+08:00", True
+        )
         ctx.should_finished(schedule_cmd)
 
     assert len(schedule_service.schedules) == 1
@@ -41,7 +43,9 @@ async def test_enable_schedule(app: App):
 
         ctx.receive_event(bot, event)
         ctx.should_pass_permission(schedule_cmd)
-        ctx.should_call_send(event, "已开启词云每日定时发送，发送时间为：10:00:00+08:00", True)
+        ctx.should_call_send(
+            event, "已开启词云每日定时发送，发送时间为：10:00:00+08:00", True
+        )
         ctx.should_finished(schedule_cmd)
 
     assert len(schedule_service.schedules) == 2
@@ -60,22 +64,30 @@ async def test_enable_schedule(app: App):
     # OneBot V12
     async with app.test_matcher(schedule_cmd) as ctx:
         bot = ctx.create_bot(base=BotV12, platform="qq", impl="test")
-        event = fake_group_message_event_v12(message=MessageV12("/开启词云每日定时发送"))
+        event = fake_group_message_event_v12(
+            message=MessageV12("/开启词云每日定时发送")
+        )
 
         ctx.receive_event(bot, event)
         ctx.should_ignore_permission(schedule_cmd)
-        ctx.should_call_send(event, "已开启词云每日定时发送，发送时间为：22:00:00+08:00", True)
+        ctx.should_call_send(
+            event, "已开启词云每日定时发送，发送时间为：22:00:00+08:00", True
+        )
         ctx.should_finished(schedule_cmd)
 
     assert len(schedule_service.schedules) == 2
 
     async with app.test_matcher(schedule_cmd) as ctx:
         bot = ctx.create_bot(base=BotV12, platform="qq", impl="test")
-        event = fake_channel_message_event_v12(message=MessageV12("/开启词云每日定时发送 09:00"))
+        event = fake_channel_message_event_v12(
+            message=MessageV12("/开启词云每日定时发送 09:00")
+        )
 
         ctx.receive_event(bot, event)
         ctx.should_ignore_permission(schedule_cmd)
-        ctx.should_call_send(event, "已开启词云每日定时发送，发送时间为：09:00:00+08:00", True)
+        ctx.should_call_send(
+            event, "已开启词云每日定时发送，发送时间为：09:00:00+08:00", True
+        )
         ctx.should_finished(schedule_cmd)
 
     assert len(schedule_service.schedules) == 3
@@ -171,7 +183,9 @@ async def test_schedule_status(app: App):
         )
         ctx.receive_event(bot, event)
         ctx.should_pass_permission(schedule_cmd)
-        ctx.should_call_send(event, "词云每日定时发送已开启，发送时间为：22:00:00+08:00", True)
+        ctx.should_call_send(
+            event, "词云每日定时发送已开启，发送时间为：22:00:00+08:00", True
+        )
         ctx.should_finished(schedule_cmd)
 
     await schedule_service.add_schedule(TargetQQGroup(group_id=10000), time=time(23, 0))
@@ -183,7 +197,9 @@ async def test_schedule_status(app: App):
         )
         ctx.receive_event(bot, event)
         ctx.should_pass_permission(schedule_cmd)
-        ctx.should_call_send(event, "词云每日定时发送已开启，发送时间为：23:00:00+08:00", True)
+        ctx.should_call_send(
+            event, "词云每日定时发送已开启，发送时间为：23:00:00+08:00", True
+        )
         ctx.should_finished(schedule_cmd)
 
 
@@ -279,7 +295,9 @@ async def test_run_task_without_data(app: App, mocker: MockerFixture):
 
     async with app.test_api() as ctx:
         bot = ctx.create_bot(base=Bot)
-        should_send_saa(ctx, MessageFactory(Text("今天没有足够的数据生成词云")), bot, target=target)
+        should_send_saa(
+            ctx, MessageFactory(Text("今天没有足够的数据生成词云")), bot, target=target
+        )
         await schedule_service.run_task()
 
     mocked_get_messages_plain_text.assert_called_once()

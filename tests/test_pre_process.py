@@ -24,6 +24,6 @@ async def test_remove_http(app: App):
     msg = pre_precess(msg)
     assert msg == "1  2"
 
-    msg = "1 https://share.api.weibo.cn/share/312975272,4779675790873388.html?weibo_id=4779675790873388 2"
+    msg = "1 https://api.weibo.cn/share/312975272,470873388.html?weibo_id=4770873388 2"
     msg = pre_precess(msg)
     assert msg == "1  2"

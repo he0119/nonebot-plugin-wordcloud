@@ -18,7 +18,7 @@ def pytest_configure(config: pytest.Config) -> None:
     }
 
 
-@pytest.fixture
+@pytest.fixture()
 async def app(tmp_path: Path, mocker: MockerFixture):
     # 加载插件
     nonebot.require("nonebot_plugin_wordcloud")
@@ -49,7 +49,7 @@ async def app(tmp_path: Path, mocker: MockerFixture):
 
 
 @pytest.fixture(scope="session", autouse=True)
-def load_adapters(nonebug_init: None):
+def _load_adapters(nonebug_init: None):
     driver = nonebot.get_driver()
     driver.register_adapter(OnebotV11Adapter)
     driver.register_adapter(OnebotV12Adapter)
