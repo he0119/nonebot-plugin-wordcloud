@@ -3,22 +3,24 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Union
 from zoneinfo import ZoneInfo
 
-from nonebot import get_driver
+from nonebot import get_driver, get_plugin_config
 from nonebot_plugin_localstore import get_data_dir
-from pydantic import BaseModel, Extra, root_validator
+from pydantic import BaseModel
+
+from .compat import model_validator
 
 DATA_DIR = get_data_dir("nonebot_plugin_wordcloud")
 
 
-class Config(BaseModel, extra=Extra.ignore):
+class Config(BaseModel):
     wordcloud_width: int = 1920
     wordcloud_height: int = 1200
     wordcloud_background_color: str = "black"
     wordcloud_colormap: Union[str, List[str]] = "viridis"
     wordcloud_font_path: str
-    wordcloud_stopwords_path: Optional[Path]
-    wordcloud_userdict_path: Optional[Path]
-    wordcloud_timezone: Optional[str]
+    wordcloud_stopwords_path: Optional[Path] = None
+    wordcloud_userdict_path: Optional[Path] = None
+    wordcloud_timezone: Optional[str] = None
     wordcloud_default_schedule_time: time
     """ 默认定时发送时间
 
@@ -28,7 +30,7 @@ class Config(BaseModel, extra=Extra.ignore):
     wordcloud_exclude_user_ids: Set[str] = set()
     """排除的用户 ID 列表（全局，不区分平台）"""
 
-    @root_validator(pre=True, allow_reuse=True)
+    @model_validator(mode="before")
     def set_default_values(cls, values):
         if not values.get("wordcloud_font_path"):
             values["wordcloud_font_path"] = str(
@@ -63,4 +65,4 @@ class Config(BaseModel, extra=Extra.ignore):
 
 
 global_config = get_driver().config
-plugin_config = Config.parse_obj(global_config)
+plugin_config = get_plugin_config(Config)

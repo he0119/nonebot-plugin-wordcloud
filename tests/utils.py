@@ -41,9 +41,6 @@ def fake_group_message_event_v11(**field) -> "GroupMessageEventV11":
         )
         to_me: bool = False
 
-        class Config:
-            extra = "forbid"
-
     return FakeEvent(**field)
 
 
@@ -67,9 +64,6 @@ def fake_private_message_event_v11(**field) -> "PrivateMessageEventV11":
         font: int = 0
         sender: Sender = Sender(nickname="test")
         to_me: bool = False
-
-        class Config:
-            extra = "forbid"
 
     return FakeEvent(**field)
 
@@ -96,9 +90,6 @@ def fake_group_message_event_v12(**field) -> "GroupMessageEventV12":
         group_id: str = "10000"
         to_me: bool = False
 
-        class Config:
-            extra = "forbid"
-
     return FakeEvent(**field)
 
 
@@ -122,9 +113,6 @@ def fake_private_message_event_v12(**field) -> "PrivateMessageEventV12":
         alt_message: str = "test"
         user_id: str = "100"
         to_me: bool = False
-
-        class Config:
-            extra = "forbid"
 
     return FakeEvent(**field)
 
@@ -151,8 +139,5 @@ def fake_channel_message_event_v12(**field) -> "ChannelMessageEventV12":
         guild_id: str = "10000"
         channel_id: str = "100000"
         to_me: bool = False
-
-        class Config:
-            extra = "forbid"
 
     return FakeEvent(**field)

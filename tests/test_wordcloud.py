@@ -79,7 +79,7 @@ async def message_record(app: App):
         Session(
             bot_id="test",
             bot_type="OneBot V12",
-            platform="test",
+            platform="unknown",
             level=SessionLevel.LEVEL3,
             id1="10",
             id2="100000",
@@ -88,7 +88,7 @@ async def message_record(app: App):
         Session(
             bot_id="test",
             bot_type="OneBot V12",
-            platform="test",
+            platform="unknown",
             level=SessionLevel.LEVEL3,
             id1="11",
             id2="100000",
