@@ -3,6 +3,7 @@ from datetime import datetime, time, tzinfo
 from typing import Optional
 from zoneinfo import ZoneInfo
 
+from nonebot.compat import model_dump
 from nonebot.matcher import Matcher
 from nonebot.params import Depends
 from nonebot.permission import SUPERUSER
@@ -80,7 +81,7 @@ def get_mask_key(target: PlatformTarget = Depends(get_target)) -> str:
     mask_keys.extend(
         [
             f"{key}={value}"
-            for key, value in target.dict(exclude={"platform_type"}).items()
+            for key, value in model_dump(target, exclude={"platform_type"}).items()
             if value is not None
         ]
     )

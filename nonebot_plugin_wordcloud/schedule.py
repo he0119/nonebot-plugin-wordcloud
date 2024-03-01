@@ -4,6 +4,7 @@ from zoneinfo import ZoneInfo
 
 import nonebot_plugin_saa as saa
 from apscheduler.job import Job
+from nonebot.compat import model_dump
 from nonebot.log import logger
 from nonebot_plugin_apscheduler import scheduler
 from nonebot_plugin_cesaa import get_messages_plain_text
@@ -135,7 +136,7 @@ class Scheduler:
             if schedule := results.one_or_none():
                 schedule.time = time
             else:
-                schedule = Schedule(time=time, target=target.dict())
+                schedule = Schedule(time=time, target=model_dump(target))
                 session.add(schedule)
             await session.commit()
         await self.update()
@@ -159,8 +160,10 @@ class Scheduler:
         """
         engine = session.get_bind()
         if engine.dialect.name == "mysql":
-            return select(Schedule).where(Schedule.target == cast(target.dict(), JSON))
-        return select(Schedule).where(Schedule.target == target.dict())
+            return select(Schedule).where(
+                Schedule.target == cast(model_dump(target), JSON)
+            )
+        return select(Schedule).where(Schedule.target == model_dump(target))
 
 
 schedule_service = Scheduler()

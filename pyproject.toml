@@ -11,34 +11,35 @@ documentation = "https://github.com/he0119/nonebot-plugin-wordcloud#readme"
 
 [tool.poetry.dependencies]
 python = "^3.9"
-nonebot2 = { version = "^2.0.1", extras = ["fastapi"] }
-nonebot-plugin-apscheduler = "^0.3.0"
-nonebot-plugin-localstore = "^0.5.1"
-nonebot-plugin-orm = ">=0.3.0"
-nonebot-plugin-alconna = ">=0.19.2"
-nonebot-plugin-cesaa = "^0.3.0"
+nonebot2 = { version = "^2.2.0", extras = ["fastapi"] }
+nonebot-plugin-apscheduler = ">=0.4.0,<2.0.0"
+nonebot-plugin-localstore = ">=0.6.0,<2.0.0"
+nonebot-plugin-orm = ">=0.7.0,<1.0.0"
+nonebot-plugin-alconna = ">=0.38.0,<1.0.0"
+nonebot-plugin-cesaa = ">=0.4.0,<2.0.0"
 wordcloud = "^1.8.1"
 jieba = "^0.42.1"
 tzdata = "*"
 emoji = ">=1.6.3,<3.0.0"
-nonebot-plugin-datastore = { version = ">=1.0.0", optional = true }
+
+nonebot-plugin-datastore = { version = ">=1.2.0", optional = true }
 
 [tool.poetry.group.dev.dependencies]
+nb-cli = "^1.4.0"
 nonebug = "^0.3.1"
+nonebug-saa = "^0.4.0"
+nonebot-adapter-onebot = "^2.2.4"
+nonebot-plugin-orm = { extras = ["default"], version = ">=0.7.0" }
+nonebot-plugin-datastore = "^1.2.0"
 pytest-cov = "^4.0.0"
 pytest-xdist = "^3.1.0"
 pytest-mock = "^3.7.0"
 pytest-asyncio = "^0.21.0"
 asyncpg = "*"
 aiomysql = "*"
-nonebot-adapter-onebot = "^2.2.4"
-nb-cli = "^1.2.2"
-nonebug-saa = { git = "https://github.com/MountainDash/nonebug-saa.git" }
 respx = "^0.20.2"
 httpx = ">=0.24.1,<0.26.0"
 gevent = "^23.7.0"
-nonebot-plugin-orm = { extras = ["default"], version = ">=0.3.0" }
-nonebot-plugin-datastore = "^1.1.2"
 
 [tool.nonebot]
 plugins = ["nonebot_plugin_wordcloud"]
@@ -62,6 +63,7 @@ asyncio_mode = "auto"
 pythonVersion = "3.9"
 pythonPlatform = "All"
 typeCheckingMode = "basic"
+defineConstant = { PYDANTIC_V2 = true }
 
 [tool.ruff]
 select = ["E", "W", "F", "UP", "C", "T", "PYI", "Q"]
@@ -70,6 +72,9 @@ ignore = ["E402", "E501", "E711", "C901", "UP037"]
 [tool.coverage.run]
 # https://github.com/nedbat/coveragepy/issues/1082
 concurrency = ["thread", "gevent"]
+
+[tool.coverage.report]
+omit = ["*/compat.py"]
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
