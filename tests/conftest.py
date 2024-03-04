@@ -22,9 +22,10 @@ def pytest_configure(config: pytest.Config) -> None:
 async def app(tmp_path: Path, mocker: MockerFixture):
     # 加载插件
     nonebot.require("nonebot_plugin_wordcloud")
-    data_dir = tmp_path / "data"
-    data_dir.mkdir()
-    mocker.patch("nonebot_plugin_wordcloud.config.DATA_DIR", data_dir)
+    wordcloud_dir = tmp_path / "wordcloud"
+    wordcloud_dir.mkdir()
+    mocker.patch("nonebot_plugin_wordcloud.config.DATA_DIR", wordcloud_dir)
+    mocker.patch("nonebot_plugin_orm._data_dir", tmp_path / "orm")
     from nonebot_plugin_orm import get_session, init_orm
 
     from nonebot_plugin_wordcloud.schedule import schedule_service
