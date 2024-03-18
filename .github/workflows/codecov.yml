@@ -16,17 +16,15 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        python-version:
-          - "3.9"
-          - "3.10"
-          - "3.11"
-          - "3.12"
-        os:
-          - ubuntu-latest
-        db:
-          - sqlite+aiosqlite://
-          - postgresql+psycopg://postgres:postgres@localhost:5432/postgres
-          - mysql+aiomysql://mysql:mysql@localhost:3306/mymysql
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ['3.9', '3.10', '3.11', '3.12']
+        db: ['sqlite+aiosqlite://']
+
+        include:
+          - os: ubuntu-latest
+            db: postgresql+psycopg://postgres:postgres@localhost:5432/postgres
+          - os: ubuntu-latest
+            db: mysql+aiomysql://mysql:mysql@localhost:3306/mymysql
       fail-fast: false
     env:
       OS: ${{ matrix.os }}
