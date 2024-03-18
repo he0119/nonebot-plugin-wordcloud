@@ -55,7 +55,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set timezone
-        uses: szenius/set-timezone@ce9c440bc3af4f51b28d7ef7e5c47ee8f26c8dcb
+        uses: MathRobin/set-timezone@089a978eb83af183f6225bbfc010df73e083d523
         with:
           timezoneLinux: "Asia/Shanghai"
           timezoneMacos: "Asia/Shanghai"
