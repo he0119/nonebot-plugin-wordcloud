@@ -116,20 +116,23 @@ wordcloud_cmd = on_alconna(
     ),
     use_cmd_start=True,
 )
+
+
+def wrapper(slot: Union[int, str], content: Optional[str]) -> str:
+    if slot == "my" and content:
+        return "--my"
+    elif slot == "type" and content:
+        return content
+    return ""
+
+
 wordcloud_cmd.shortcut(
-    r"我的(?P<type>.+)词云",
+    r"(?P<my>我的)?(?P<type>今日|昨日|本周|上周|本月|上月|年度|历史)词云",
     {
         "prefix": True,
         "command": "词云",
-        "args": ["--my", "{type}"],
-    },
-)
-wordcloud_cmd.shortcut(
-    r"(?P<type>.+)词云",
-    {
-        "prefix": True,
-        "command": "词云",
-        "args": ["{type}"],
+        "wrapper": wrapper,
+        "args": ["{my}", "{type}"],
     },
 )
 
