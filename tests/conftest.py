@@ -15,6 +15,7 @@ def pytest_configure(config: pytest.Config) -> None:
         "sqlalchemy_engine_options": {"poolclass": StaticPool},
         "driver": "~fastapi+~httpx",
         "alembic_startup_check": False,
+        "command_start": {"/", ""},
     }
 
 
