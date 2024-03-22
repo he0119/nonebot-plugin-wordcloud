@@ -123,7 +123,7 @@ def wrapper(slot: Union[int, str], content: Optional[str]) -> str:
         return "--my"
     elif slot == "type" and content:
         return content
-    return ""
+    return ""  # pragma: no cover
 
 
 wordcloud_cmd.shortcut(
@@ -349,7 +349,7 @@ schedule_cmd = on_alconna(
     use_cmd_start=True,
 )
 schedule_cmd.shortcut(
-    r"词云(?P<type>.+)定时发送状态",
+    r"词云(?P<type>每日)定时发送状态",
     {
         "prefix": True,
         "command": "词云定时发送",
@@ -357,7 +357,7 @@ schedule_cmd.shortcut(
     },
 )
 schedule_cmd.shortcut(
-    r"(?P<action>.+)词云(?P<type>.+)定时发送",
+    r"(?P<action>开启|关闭)词云(?P<type>每日)定时发送",
     {
         "prefix": True,
         "command": "词云定时发送",
