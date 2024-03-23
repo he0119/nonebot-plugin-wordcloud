@@ -116,20 +116,23 @@ wordcloud_cmd = on_alconna(
     ),
     use_cmd_start=True,
 )
+
+
+def wrapper(slot: Union[int, str], content: Optional[str]) -> str:
+    if slot == "my" and content:
+        return "--my"
+    elif slot == "type" and content:
+        return content
+    return ""  # pragma: no cover
+
+
 wordcloud_cmd.shortcut(
-    r"我的(?P<type>.+)词云",
+    r"(?P<my>我的)?(?P<type>今日|昨日|本周|上周|本月|上月|年度|历史)词云",
     {
         "prefix": True,
         "command": "词云",
-        "args": ["--my", "{type}"],
-    },
-)
-wordcloud_cmd.shortcut(
-    r"(?P<type>.+)词云",
-    {
-        "prefix": True,
-        "command": "词云",
-        "args": ["{type}"],
+        "wrapper": wrapper,
+        "args": ["{my}", "{type}"],
     },
 )
 
@@ -346,7 +349,7 @@ schedule_cmd = on_alconna(
     use_cmd_start=True,
 )
 schedule_cmd.shortcut(
-    r"词云(?P<type>.+)定时发送状态",
+    r"词云(?P<type>每日)定时发送状态",
     {
         "prefix": True,
         "command": "词云定时发送",
@@ -354,7 +357,7 @@ schedule_cmd.shortcut(
     },
 )
 schedule_cmd.shortcut(
-    r"(?P<action>.+)词云(?P<type>.+)定时发送",
+    r"(?P<action>开启|关闭)词云(?P<type>每日)定时发送",
     {
         "prefix": True,
         "command": "词云定时发送",
