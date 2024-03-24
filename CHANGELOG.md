@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 ## [Unreleased]
 
+## [0.7.1] - 2024-03-24
+
+### Fixed
+
+- 修复 shortcut 匹配问题
+
 ## [0.7.0] - 2024-03-01
 
 ### Added
