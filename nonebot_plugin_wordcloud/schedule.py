@@ -101,11 +101,16 @@ class Scheduler:
                     exclude_id1s=plugin_config.wordcloud_exclude_user_ids,
                 )
                 mask_key = get_mask_key(target)
-                if not (image := await get_wordcloud(messages, mask_key)):
-                    await saa.Text("今天没有足够的数据生成词云").send_to(target)
-                    continue
 
-                await saa.Image(image).send_to(target)
+                if image := await get_wordcloud(messages, mask_key):
+                    msg = saa.Image(image)
+                else:
+                    msg = saa.Text("今天没有足够的数据生成词云")
+
+                try:
+                    await msg.send_to(target)
+                except Exception:
+                    logger.exception(f"{target} 发送词云失败")
 
     async def get_schedule(self, target: saa.PlatformTarget) -> Optional[time]:
         """获取定时任务时间"""

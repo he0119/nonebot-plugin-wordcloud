@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 ## [Unreleased]
 
+### Fixed
+
+- 修复某个群组定时发送词云失败时影响其他群组的问题
+
 ## [0.7.1] - 2024-03-24
 
 ### Fixed
