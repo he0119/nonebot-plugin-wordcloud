@@ -26,7 +26,7 @@ nonebot-plugin-datastore = { version = ">=1.2.0", optional = true }
 
 [tool.poetry.group.dev.dependencies]
 nb-cli = "^1.4.0"
-nonebug = "^0.3.1"
+nonebug = "^0.3.7"
 nonebug-saa = "^0.4.1"
 nonebot-adapter-onebot = "^2.2.4"
 nonebot-plugin-orm = { extras = ["default"], version = ">=0.7.0" }
@@ -88,7 +88,7 @@ ignore = [
 concurrency = ["thread", "gevent"]
 
 [tool.coverage.report]
-omit = ["*/compat.py"]
+omit = ["*/compat.py", "*/migrations/*"]
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
