@@ -331,3 +331,50 @@ async def test_run_task_remove_schedule(app: App):
 
     assert "15:00:00" not in schedule_service.schedules
     assert "16:00:00" in schedule_service.schedules
+
+
+async def test_run_task_send_error(app: App, mocker: MockerFixture):
+    """发送时出现错误"""
+    from nonebot_plugin_saa import Image, MessageFactory, TargetQQGroup
+
+    from nonebot_plugin_wordcloud import schedule_service
+
+    image = BytesIO(b"test")
+    target = TargetQQGroup(group_id=10000)
+    target2 = TargetQQGroup(group_id=10001)
+    await schedule_service.add_schedule(target)
+    await schedule_service.add_schedule(target2)
+
+    mocked_get_messages_plain_text = mocker.patch(
+        "nonebot_plugin_wordcloud.schedule.get_messages_plain_text",
+        return_value=["test"],
+    )
+    mocked_get_wordcloud = mocker.patch(
+        "nonebot_plugin_wordcloud.schedule.get_wordcloud", return_value=image
+    )
+
+    async with app.test_api() as ctx:
+        bot = ctx.create_bot(base=Bot)
+        should_send_saa(
+            ctx,
+            MessageFactory(Image(image)),
+            bot,
+            target=target,
+            exception=Exception("发送失败"),
+        )
+        # 如果第一个群组发送失败，不应该影响第二个群组
+        should_send_saa(
+            ctx,
+            MessageFactory(Image(image)),
+            bot,
+            target=target2,
+        )
+        await schedule_service.run_task()
+
+    assert mocked_get_messages_plain_text.call_count == 2
+    mocked_get_wordcloud.assert_has_calls(
+        [
+            mocker.call(["test"], "qq_group-group_id=10000"),
+            mocker.call(["test"], "qq_group-group_id=10001"),
+        ]  # type: ignore
+    )
