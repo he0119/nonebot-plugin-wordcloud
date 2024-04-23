@@ -31,15 +31,15 @@ nonebug-saa = "^0.4.1"
 nonebot-adapter-onebot = "^2.2.4"
 nonebot-plugin-orm = { extras = ["default"], version = ">=0.7.0" }
 nonebot-plugin-datastore = "^1.2.0"
-pytest-cov = "^4.0.0"
+pytest-cov = ">=4,<6"
 pytest-xdist = "^3.1.0"
 pytest-mock = "^3.7.0"
-pytest-asyncio = "^0.21.0"
+pytest-asyncio = ">=0.21,<0.24"
 asyncpg = "*"
 aiomysql = "*"
-respx = "^0.20.2"
-httpx = ">=0.24.1,<0.26.0"
-gevent = "^23.7.0"
+respx = ">=0.20.2,<0.22.0"
+httpx = ">=0.24.1,<0.28.0"
+gevent = ">=23.7,<25.0"
 
 [tool.nonebot]
 plugins = ["nonebot_plugin_wordcloud"]
