@@ -1,5 +1,5 @@
 from datetime import time
-from typing import Dict, Optional, Tuple
+from typing import Optional
 
 import nonebot_plugin_saa as saa
 from apscheduler.job import Job
@@ -29,7 +29,7 @@ class Scheduler:
     def __init__(self):
         # 默认定时任务的 key 为 default
         # 其他则为 ISO 8601 格式的时间字符串
-        self.schedules: Dict[str, Job] = {}
+        self.schedules: dict[str, Job] = {}
 
         # 转换到 APScheduler 的时区
         scheduler_time = get_time_with_scheduler_timezone(
@@ -160,7 +160,7 @@ class Scheduler:
     @staticmethod
     def select_target_statement(
         target: saa.PlatformTarget, session: AsyncSession
-    ) -> Select[Tuple[Schedule]]:
+    ) -> Select[tuple[Schedule]]:
         """获取查询目标的语句
 
         MySQL 需要手动将 JSON 类型的字段转换为 JSON 类型

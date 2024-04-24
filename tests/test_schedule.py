@@ -1,8 +1,9 @@
 from datetime import time
 from io import BytesIO
 
-from nonebot import get_driver
-from nonebot.adapters.onebot.v11 import Bot, Message
+from nonebot import get_adapter, get_driver
+from nonebot.adapters.onebot.v11 import Adapter, Bot, Message
+from nonebot.adapters.onebot.v12 import Adapter as AdapterV12
 from nonebot.adapters.onebot.v12 import Bot as BotV12
 from nonebot.adapters.onebot.v12 import Message as MessageV12
 from nonebug import App
@@ -22,7 +23,8 @@ async def test_enable_schedule(app: App):
     from nonebot_plugin_wordcloud import schedule_cmd, schedule_service
 
     async with app.test_matcher(schedule_cmd) as ctx:
-        bot = ctx.create_bot(base=Bot)
+        adapter = get_adapter(Adapter)
+        bot = ctx.create_bot(base=Bot, adapter=adapter, auto_connect=False)
         event = fake_group_message_event_v11(
             message=Message("/开启词云每日定时发送"), sender={"role": "admin"}
         )
@@ -36,7 +38,8 @@ async def test_enable_schedule(app: App):
     assert len(schedule_service.schedules) == 1
 
     async with app.test_matcher(schedule_cmd) as ctx:
-        bot = ctx.create_bot(base=Bot)
+        adapter = get_adapter(Adapter)
+        bot = ctx.create_bot(base=Bot, adapter=adapter, auto_connect=False)
         event = fake_group_message_event_v11(
             message=Message("/开启词云每日定时发送 10:00"), sender={"role": "admin"}
         )
@@ -51,7 +54,8 @@ async def test_enable_schedule(app: App):
     assert len(schedule_service.schedules) == 2
 
     async with app.test_matcher(schedule_cmd) as ctx:
-        bot = ctx.create_bot(base=Bot)
+        adapter = get_adapter(Adapter)
+        bot = ctx.create_bot(base=Bot, adapter=adapter, auto_connect=False)
         event = fake_group_message_event_v11(
             message=Message("/开启词云每日定时发送 10:"), sender={"role": "admin"}
         )
@@ -63,7 +67,10 @@ async def test_enable_schedule(app: App):
 
     # OneBot V12
     async with app.test_matcher(schedule_cmd) as ctx:
-        bot = ctx.create_bot(base=BotV12, platform="qq", impl="test")
+        adapter = get_adapter(AdapterV12)
+        bot = ctx.create_bot(
+            base=BotV12, adapter=adapter, auto_connect=False, platform="qq", impl="test"
+        )
         event = fake_group_message_event_v12(
             message=MessageV12("/开启词云每日定时发送")
         )
@@ -78,7 +85,10 @@ async def test_enable_schedule(app: App):
     assert len(schedule_service.schedules) == 2
 
     async with app.test_matcher(schedule_cmd) as ctx:
-        bot = ctx.create_bot(base=BotV12, platform="qq", impl="test")
+        adapter = get_adapter(AdapterV12)
+        bot = ctx.create_bot(
+            base=BotV12, adapter=adapter, auto_connect=False, platform="qq", impl="test"
+        )
         event = fake_channel_message_event_v12(
             message=MessageV12("/开启词云每日定时发送 09:00")
         )
@@ -102,7 +112,8 @@ async def test_enable_schedule_private(app: App, mocker: MockerFixture):
     mocker.patch.object(config, "superusers", {"10"})
 
     async with app.test_matcher(schedule_cmd) as ctx:
-        bot = ctx.create_bot(base=Bot)
+        adapter = get_adapter(Adapter)
+        bot = ctx.create_bot(base=Bot, adapter=adapter, auto_connect=False)
         event = fake_private_message_event_v11(message=Message("/开启词云每日定时发送"))
         ctx.receive_event(bot, event)
         ctx.should_pass_permission(schedule_cmd)
@@ -115,7 +126,8 @@ async def test_enable_schedule_without_permission(app: App, mocker: MockerFixtur
     from nonebot_plugin_wordcloud import schedule_cmd
 
     async with app.test_matcher(schedule_cmd) as ctx:
-        bot = ctx.create_bot(base=Bot)
+        adapter = get_adapter(Adapter)
+        bot = ctx.create_bot(base=Bot, adapter=adapter, auto_connect=False)
         event = fake_group_message_event_v11(message=Message("/开启词云每日定时发送"))
         ctx.receive_event(bot, event)
         ctx.should_not_pass_permission(schedule_cmd)
@@ -142,7 +154,8 @@ async def test_disable_schedule(app: App):
     assert len(schedule_service.schedules) == 2
 
     async with app.test_matcher(schedule_cmd) as ctx:
-        bot = ctx.create_bot(base=Bot)
+        adapter = get_adapter(Adapter)
+        bot = ctx.create_bot(base=Bot, adapter=adapter, auto_connect=False)
         event = fake_group_message_event_v11(
             message=Message("/关闭词云每日定时发送"), sender={"role": "admin"}
         )
@@ -165,7 +178,8 @@ async def test_schedule_status(app: App):
     from nonebot_plugin_wordcloud import schedule_cmd, schedule_service
 
     async with app.test_matcher(schedule_cmd) as ctx:
-        bot = ctx.create_bot(base=Bot)
+        adapter = get_adapter(Adapter)
+        bot = ctx.create_bot(base=Bot, adapter=adapter, auto_connect=False)
         event = fake_group_message_event_v11(
             message=Message("/词云每日定时发送状态"), sender={"role": "admin"}
         )
@@ -177,7 +191,8 @@ async def test_schedule_status(app: App):
     await schedule_service.add_schedule(TargetQQGroup(group_id=10000))
 
     async with app.test_matcher(schedule_cmd) as ctx:
-        bot = ctx.create_bot(base=Bot)
+        adapter = get_adapter(Adapter)
+        bot = ctx.create_bot(base=Bot, adapter=adapter, auto_connect=False)
         event = fake_group_message_event_v11(
             message=Message("/词云每日定时发送状态"), sender={"role": "admin"}
         )
@@ -191,7 +206,10 @@ async def test_schedule_status(app: App):
     await schedule_service.add_schedule(TargetQQGroup(group_id=10000), time=time(23, 0))
 
     async with app.test_matcher(schedule_cmd) as ctx:
-        bot = ctx.create_bot(base=Bot, self_id="test2")
+        adapter = get_adapter(Adapter)
+        bot = ctx.create_bot(
+            base=Bot, adapter=adapter, auto_connect=False, self_id="test2"
+        )
         event = fake_group_message_event_v11(
             message=Message("/词云每日定时发送状态"), sender={"role": "admin"}
         )
@@ -239,7 +257,7 @@ async def test_run_task_group(app: App, mocker: MockerFixture):
     )
 
     async with app.test_api() as ctx:
-        bot = ctx.create_bot(base=BotV12, impl="test", platform="qq")
+        bot = ctx.create_bot(base=BotV12, platform="qq", impl="test")
         should_send_saa(ctx, MessageFactory(Image(image)), bot, target=target)
         await schedule_service.run_task()
 
