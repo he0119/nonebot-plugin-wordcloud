@@ -19,12 +19,17 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
         python-version: ["3.9", "3.10", "3.11", "3.12"]
         db: ["sqlite+aiosqlite://"]
+        db-pool: ["StaticPool"]
 
         include:
           - os: ubuntu-latest
+            python-version: "3.10"
             db: postgresql+psycopg://postgres:postgres@localhost:5432/postgres
+            db-pool: "NullPool"
           - os: ubuntu-latest
+            python-version: "3.10"
             db: mysql+aiomysql://mysql:mysql@localhost:3306/mymysql
+            db-pool: "NullPool"
       fail-fast: false
     env:
       OS: ${{ matrix.os }}
@@ -53,7 +58,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set timezone
-        uses: MathRobin/set-timezone@089a978eb83af183f6225bbfc010df73e083d523
+        uses: szenius/set-timezone@1f9716b0f7120e344f0c62bb7b1ee98819aefd42
         with:
           timezoneLinux: "Asia/Shanghai"
           timezoneMacos: "Asia/Shanghai"
@@ -71,9 +76,13 @@ jobs:
         run: pipx run poetry run nb orm upgrade
 
       - name: Run tests
-        run: poetry run pytest -n auto --cov=nonebot_plugin_wordcloud --cov-report xml
+        run: |
+          sed -ie "s#sqlite+aiosqlite://#${SQLALCHEMY_DATABASE_URL}#g" tests/conftest.py
+          sed -ie "s#StaticPool#${SQLALCHEMY_POOL_CLASS}#g" tests/conftest.py
+          poetry run pytest -n auto --cov=nonebot_plugin_wordcloud --cov-report xml
         env:
           SQLALCHEMY_DATABASE_URL: ${{ matrix.db }}
+          SQLALCHEMY_POOL_CLASS: ${{ matrix.db-pool }}
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
