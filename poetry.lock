@@ -117,17 +117,17 @@ zookeeper = ["kazoo"]
 
 [[package]]
 name = "arclet-alconna"
-version = "1.8.1"
+version = "1.8.10"
 description = "A High-performance, Generality, Humane Command Line Arguments Parser Library."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "arclet_alconna-1.8.1-py3-none-any.whl", hash = "sha256:1e7ac67bc5e8fe62b126170bd2938aaccc3caecd4b2527f6348bd3f89453d629"},
-    {file = "arclet_alconna-1.8.1.tar.gz", hash = "sha256:a80857ab23da9c789a4704bd795c51f2b8c54eb98594224ba6e161cb8d15f724"},
+    {file = "arclet_alconna-1.8.10-py3-none-any.whl", hash = "sha256:6c4d464e3c1b3c03bce301f51370648fd006df2b820e6f926cb410ced97f0c2f"},
+    {file = "arclet_alconna-1.8.10.tar.gz", hash = "sha256:379e824919a2750f43a2b87a4a523bf06386b4469c5ace859d47213857606c3e"},
 ]
 
 [package.dependencies]
-nepattern = ">=0.6.4,<1.0.0"
+nepattern = ">=0.7.0,<1.0.0"
 tarina = ">=0.4.4"
 typing-extensions = ">=4.5.0"
 
@@ -136,18 +136,18 @@ full = ["arclet-alconna-tools (>=0.2.0)"]
 
 [[package]]
 name = "arclet-alconna-tools"
-version = "0.7.0"
+version = "0.7.3"
 description = "Builtin Tools for Alconna"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "arclet-alconna-tools-0.7.0.tar.gz", hash = "sha256:361a193239555d243d8738c39e89f536847d49fa9d74c0a2706b58514c8d8a70"},
-    {file = "arclet_alconna_tools-0.7.0-py3-none-any.whl", hash = "sha256:c4835d277c5927a2d036fba44a710471496b8086575fe3699dfbf256ca72bda2"},
+    {file = "arclet_alconna_tools-0.7.3-py3-none-any.whl", hash = "sha256:e7d70025900d348ced62c824a5d7569c140e64714903f8498ed4b8e5f0b2c8fe"},
+    {file = "arclet_alconna_tools-0.7.3.tar.gz", hash = "sha256:f150640182983902292ab1d50ca16a811ffd76bb46eac53fa2cd0479890da337"},
 ]
 
 [package.dependencies]
-arclet-alconna = ">=1.8.1"
-nepattern = ">=0.6.5,<1.0.0"
+arclet-alconna = ">=1.8.10"
+nepattern = ">=0.7.0,<1.0.0"
 
 [[package]]
 name = "arrow"
@@ -689,13 +689,13 @@ files = [
 
 [[package]]
 name = "emoji"
-version = "2.10.1"
+version = "2.11.1"
 description = "Emoji for Python"
 optional = false
-python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
+python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,>=2.7"
 files = [
-    {file = "emoji-2.10.1-py2.py3-none-any.whl", hash = "sha256:11fb369ea79d20c14efa4362c732d67126df294a7959a2c98bfd7447c12a218e"},
-    {file = "emoji-2.10.1.tar.gz", hash = "sha256:16287283518fb7141bde00198f9ffff4e1c1cb570efb68b2f1ec50975c3a581d"},
+    {file = "emoji-2.11.1-py2.py3-none-any.whl", hash = "sha256:b7ba25299bbf520cc8727848ae66b986da32aee27dc2887eaea2bff07226ce49"},
+    {file = "emoji-2.11.1.tar.gz", hash = "sha256:062ff0b3154b6219143f8b9f4b3e5c64c35bc2b146e6e2349ab5f29e218ce1ee"},
 ]
 
 [package.extras]
@@ -1691,13 +1691,13 @@ wcwidth = ">=0.2,<1.0"
 
 [[package]]
 name = "nepattern"
-version = "0.6.5"
+version = "0.7.1"
 description = "a complex pattern, support typing"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "nepattern-0.6.5-py3-none-any.whl", hash = "sha256:6c06dc6b2e06b9b2d98c4dee024c63e10d1301dc90091548b94cf76c7dfbd8fb"},
-    {file = "nepattern-0.6.5.tar.gz", hash = "sha256:dc91ad72cfa907b270ac1e99b6589cddb576d1ae52948b9f9367c86a58ec0ea8"},
+    {file = "nepattern-0.7.1-py3-none-any.whl", hash = "sha256:e5190a79d398dce72f972ffafc413653414cca12a1dac56d38fcf070d2f034bc"},
+    {file = "nepattern-0.7.1.tar.gz", hash = "sha256:14bae0dfa93241f3c2d8371cfc5e51072a186a295a7d35fbd7a60b08e83b2605"},
 ]
 
 [package.dependencies]
@@ -1723,20 +1723,20 @@ typing-extensions = ">=4.0.0,<5.0.0"
 
 [[package]]
 name = "nonebot-plugin-alconna"
-version = "0.38.0"
+version = "0.43.0"
 description = "Alconna Adapter for Nonebot"
 optional = false
-python-versions = ">=3.8"
+python-versions = ">=3.9"
 files = [
-    {file = "nonebot_plugin_alconna-0.38.0-py3-none-any.whl", hash = "sha256:aa3b85def4124bcfd673f6587eebcd16c337b9867339316728e2af673a9e6774"},
-    {file = "nonebot_plugin_alconna-0.38.0.tar.gz", hash = "sha256:ecf2dbff4c17dd04135d9674f563994087bbb1bc60ba9bef76cf7733df1bba9d"},
+    {file = "nonebot_plugin_alconna-0.43.0-py3-none-any.whl", hash = "sha256:8f9203e8b20315dec108612e27d6a7ba62516b4f775041ae57779425dc0aafa9"},
+    {file = "nonebot_plugin_alconna-0.43.0.tar.gz", hash = "sha256:860798ff9e22da09fd57a08a0730b5ba29164c6fbdd4abc2e903e0229ff02937"},
 ]
 
 [package.dependencies]
-arclet-alconna = ">=1.8.1"
-arclet-alconna-tools = ">=0.7.0"
-nepattern = ">=0.6.0"
-nonebot2 = ">=2.2.0"
+arclet-alconna = ">=1.8.10"
+arclet-alconna-tools = ">=0.7.3"
+nepattern = ">=0.7.0"
+nonebot2 = ">=2.2.1"
 
 [[package]]
 name = "nonebot-plugin-apscheduler"
