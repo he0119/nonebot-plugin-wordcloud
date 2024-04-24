@@ -1,4 +1,3 @@
-from typing import Dict
 from zoneinfo import ZoneInfo
 
 import pytest
@@ -17,7 +16,7 @@ from nonebug import App
         ),
     ],
 )
-async def test_default_schedule_time(app: App, default_config: Dict[str, str]):
+async def test_default_schedule_time(app: App, default_config: dict[str, str]):
     """测试设置默认定时发送时间"""
     from nonebot_plugin_wordcloud.config import Config
 
@@ -47,7 +46,7 @@ async def test_default_schedule_time(app: App, default_config: Dict[str, str]):
     ],
 )
 async def test_default_schedule_time_with_timezone(
-    app: App, default_config: Dict[str, str]
+    app: App, default_config: dict[str, str]
 ):
     """测试设置默认定时发送时间，同时设置时区"""
     from nonebot_plugin_wordcloud.config import Config

@@ -1,6 +1,6 @@
 from datetime import datetime, time
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Union
+from typing import Any, Optional, Union
 from zoneinfo import ZoneInfo
 
 from nonebot import get_driver, get_plugin_config
@@ -16,7 +16,7 @@ class Config(BaseModel):
     wordcloud_width: int = 1920
     wordcloud_height: int = 1200
     wordcloud_background_color: str = "black"
-    wordcloud_colormap: Union[str, List[str]] = "viridis"
+    wordcloud_colormap: Union[str, list[str]] = "viridis"
     wordcloud_font_path: str
     wordcloud_stopwords_path: Optional[Path] = None
     wordcloud_userdict_path: Optional[Path] = None
@@ -26,8 +26,8 @@ class Config(BaseModel):
 
     如果群内不单独设置则使用这个值，默认为晚上 10 点，时区为设定的时区
     """
-    wordcloud_options: Dict[str, Any] = {}
-    wordcloud_exclude_user_ids: Set[str] = set()
+    wordcloud_options: dict[str, Any] = {}
+    wordcloud_exclude_user_ids: set[str] = set()
     """排除的用户 ID 列表（全局，不区分平台）"""
 
     @model_validator(mode="before")

@@ -67,7 +67,8 @@ async def test_masked_by_command(app: App, mocker: MockerFixture):
         test_image = f.read()
 
     async with app.test_matcher(wordcloud_cmd) as ctx:
-        bot = ctx.create_bot(base=Bot)
+        adapter = get_adapter(Adapter)
+        bot = ctx.create_bot(base=Bot, adapter=adapter, auto_connect=False)
         event = fake_group_message_event_v11(message=Message("/今日词云"))
 
         ctx.receive_event(bot, event)
@@ -77,7 +78,7 @@ async def test_masked_by_command(app: App, mocker: MockerFixture):
             bot,
             event=event,
         )
-        ctx.should_finished()
+        ctx.should_finished(wordcloud_cmd)
 
     mocked_random.assert_called()
     mocked_get_messages_plain_text.assert_called_once()
@@ -203,7 +204,8 @@ async def test_set_mask_get_args(app: App, respx_mock: respx.MockRouter):
     )
 
     async with app.test_matcher(set_mask_cmd) as ctx:
-        bot = ctx.create_bot(base=Bot)
+        adapter = get_adapter(Adapter)
+        bot = ctx.create_bot(base=Bot, adapter=adapter, auto_connect=False)
         message = Message("/设置词云形状")
         event = fake_group_message_event_v11(message=message, sender={"role": "owner"})
 
@@ -291,7 +293,8 @@ async def test_remove_mask(app: App):
     assert mask_group_path.exists()
 
     async with app.test_matcher(remove_mask_cmd) as ctx:
-        bot = ctx.create_bot(base=Bot)
+        adapter = get_adapter(Adapter)
+        bot = ctx.create_bot(base=Bot, adapter=adapter, auto_connect=False)
         message = Message("/删除词云形状")
         event = fake_group_message_event_v11(message=message, sender={"role": "owner"})
 
@@ -312,7 +315,8 @@ async def test_set_mask_private(app: App, mocker: MockerFixture):
     mocker.patch.object(config, "superusers", {"10"})
 
     async with app.test_matcher(set_mask_cmd) as ctx:
-        bot = ctx.create_bot(base=Bot)
+        adapter = get_adapter(Adapter)
+        bot = ctx.create_bot(base=Bot, adapter=adapter, auto_connect=False)
         event = fake_private_message_event_v11(message=Message("/设置词云形状"))
 
         ctx.receive_event(bot, event)
@@ -333,7 +337,8 @@ async def test_remove_mask_private(app: App, mocker: MockerFixture):
     mocker.patch.object(config, "superusers", {"10"})
 
     async with app.test_matcher(remove_mask_cmd) as ctx:
-        bot = ctx.create_bot(base=Bot)
+        adapter = get_adapter(Adapter)
+        bot = ctx.create_bot(base=Bot, adapter=adapter, auto_connect=False)
         event = fake_private_message_event_v11(message=Message("/删除词云形状"))
 
         ctx.receive_event(bot, event)
