@@ -24,17 +24,19 @@ jobs:
         include:
           - os: ubuntu-latest
             python-version: "3.10"
-            db: postgresql+psycopg://postgres:postgres@localhost:5432/postgres
-            db-pool: "NullPool"
+            db: postgresql+asyncpg://postgres:postgres@localhost:5432/postgres
+            db-pool: NullPool
+
           - os: ubuntu-latest
             python-version: "3.10"
             db: mysql+aiomysql://mysql:mysql@localhost:3306/mymysql
-            db-pool: "NullPool"
+            db-pool: NullPool
       fail-fast: false
     env:
       OS: ${{ matrix.os }}
       PYTHON_VERSION: ${{ matrix.python-version }}
       SQLALCHEMY_DATABASE_URL: ${{ matrix.db }}
+      SQLALCHEMY_POOL_CLASS: ${{ matrix.db-pool }}
     services:
       postgresql:
         image: ${{ startsWith(matrix.db, 'postgresql') && 'postgres' || '' }}
@@ -80,15 +82,12 @@ jobs:
           sed -ie "s#sqlite+aiosqlite://#${SQLALCHEMY_DATABASE_URL}#g" tests/conftest.py
           sed -ie "s#StaticPool#${SQLALCHEMY_POOL_CLASS}#g" tests/conftest.py
           poetry run pytest -n auto --cov=nonebot_plugin_wordcloud --cov-report xml
-        env:
-          SQLALCHEMY_DATABASE_URL: ${{ matrix.db }}
-          SQLALCHEMY_POOL_CLASS: ${{ matrix.db-pool }}
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          env_vars: OS,PYTHON_VERSION,SQLALCHEMY_DATABASE_URL
+          env_vars: OS,PYTHON_VERSION,SQLALCHEMY_DATABASE_URL,SQLALCHEMY_POOL_CLASS
 
   check:
     if: always()

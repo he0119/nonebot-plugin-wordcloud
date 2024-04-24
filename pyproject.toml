@@ -32,7 +32,7 @@ nonebot-adapter-onebot = "^2.2.4"
 nonebot-plugin-orm = { extras = ["default"], version = ">=0.7.0" }
 nonebot-plugin-datastore = "^1.2.0"
 asyncpg = "*"
-aiomysql = "*"
+aiomysql = { extras = ["rsa"], version = "*" }
 pytest-cov = ">=4,<6"
 pytest-xdist = "^3.1.0"
 pytest-mock = "^3.7.0"
