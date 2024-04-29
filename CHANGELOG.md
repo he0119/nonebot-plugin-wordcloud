@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 ## [Unreleased]
 
+## [0.7.2] - 2024-04-29
+
 ### Fixed
 
 - 修复某个群组定时发送词云失败时影响其他群组的问题
@@ -285,7 +287,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 - 可以使用的版本。
 
-[unreleased]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.7.0...HEAD
+[unreleased]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.7.2...HEAD
+[0.7.2]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.7.1...v0.7.2
+[0.7.1]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.7.0...v0.7.1
 [0.7.0]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.6.1...v0.7.0
 [0.6.1]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.5.2...v0.6.0
