@@ -87,7 +87,7 @@ jobs:
         run: |
           sed -ie "s#sqlite+aiosqlite://#postgresql+asyncpg://postgres:postgres@localhost:5432/postgres#g" tests/conftest.py
           sed -ie "s#StaticPool#NullPool#g" tests/conftest.py
-          rye run test
+          rye run test:single
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
@@ -133,7 +133,7 @@ jobs:
         run: |
           sed -ie "s#sqlite+aiosqlite://#mysql+aiomysql://mysql:mysql@localhost:3306/test#g" tests/conftest.py
           sed -ie "s#StaticPool#NullPool#g" tests/conftest.py
-          rye run test
+          rye run test:single
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         with:

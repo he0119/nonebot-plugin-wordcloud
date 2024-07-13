@@ -65,6 +65,7 @@ dev-dependencies = [
 
 [tool.rye.scripts]
 test = "pytest --cov=nonebot_plugin_wordcloud --cov-report xml -n auto"
+"test:single" = "pytest --cov=nonebot_plugin_wordcloud --cov-report xml"
 
 [tool.pyright]
 pythonVersion = "3.9"
