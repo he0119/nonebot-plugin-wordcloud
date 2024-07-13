@@ -9,7 +9,7 @@ require("nonebot_plugin_cesaa")
 import re
 from datetime import datetime, timedelta
 from io import BytesIO
-from typing import Optional, Union
+from typing import Any, Optional, Union
 
 import nonebot_plugin_alconna as alc
 import nonebot_plugin_saa as saa
@@ -118,7 +118,9 @@ wordcloud_cmd = on_alconna(
 )
 
 
-def wrapper(slot: Union[int, str], content: Optional[str]) -> str:
+def wrapper(
+    slot: Union[int, str], content: Optional[str], context: dict[str, Any]
+) -> str:
     if slot == "my" and content:
         return "--my"
     elif slot == "type" and content:
