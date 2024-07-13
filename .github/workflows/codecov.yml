@@ -16,133 +16,83 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        python-version: ["3.9", "3.10", "3.11", "3.12"]
         os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
+        db: ["sqlite+aiosqlite://"]
+        db-pool: ["StaticPool"]
+
+        include:
+          - os: ubuntu-latest
+            python-version: "3.10"
+            db: postgresql+asyncpg://postgres:postgres@localhost:5432/postgres
+            db-pool: NullPool
+
+          - os: ubuntu-latest
+            python-version: "3.10"
+            db: mysql+aiomysql://mysql:mysql@localhost:3306/mymysql
+            db-pool: NullPool
       fail-fast: false
     env:
       OS: ${{ matrix.os }}
       PYTHON_VERSION: ${{ matrix.python-version }}
-      DB: sqlite
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Set timezone
-        uses: szenius/set-timezone@1f9716b0f7120e344f0c62bb7b1ee98819aefd42
-        with:
-          timezoneLinux: "Asia/Shanghai"
-          timezoneMacos: "Asia/Shanghai"
-          timezoneWindows: "China Standard Time"
-      - name: Setup rye
-        uses: eifinger/setup-rye@b0de59c61cc78ac1f58cbcb6e15e04ebd31b984b
-        with:
-          enable-cache: true
-          cache-prefix: ${{ env.PYTHON_VERSION }}
-      - name: Install prerequisites
-        run: |
-          rye pin ${{ env.PYTHON_VERSION }}
-          rye sync
-      - name: Run tests
-        run: rye run test
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          env_vars: OS,PYTHON_VERSION,DB
-  test-pg:
-    name: Test PostgreSQL
-    runs-on: ubuntu-latest
-    env:
-      OS: ubuntu-latest
-      PYTHON_VERSION: "3.10"
-      DB: postgresql
+      SQLALCHEMY_DATABASE_URL: ${{ matrix.db }}
+      SQLALCHEMY_POOL_CLASS: ${{ matrix.db-pool }}
     services:
-      postgres:
-        image: postgres
+      postgresql:
+        image: ${{ startsWith(matrix.db, 'postgresql') && 'postgres' || '' }}
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: postgres
         ports:
           - 5432:5432
-        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Set timezone
-        uses: szenius/set-timezone@1f9716b0f7120e344f0c62bb7b1ee98819aefd42
-        with:
-          timezoneLinux: "Asia/Shanghai"
-          timezoneMacos: "Asia/Shanghai"
-          timezoneWindows: "China Standard Time"
-      - name: Setup rye
-        uses: eifinger/setup-rye@b0de59c61cc78ac1f58cbcb6e15e04ebd31b984b
-        with:
-          enable-cache: true
-          cache-prefix: ${{ env.PYTHON_VERSION }}
-      - name: Install prerequisites
-        run: |
-          rye pin ${{ env.PYTHON_VERSION }}
-          rye sync
-      - name: Run tests
-        run: |
-          sed -ie "s#sqlite+aiosqlite://#postgresql+asyncpg://postgres:postgres@localhost:5432/postgres#g" tests/conftest.py
-          sed -ie "s#StaticPool#NullPool#g" tests/conftest.py
-          rye run test:single
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          env_vars: OS,PYTHON_VERSION,DB
-  test-mysql:
-    name: Test MySQL
-    runs-on: ubuntu-latest
-    env:
-      OS: ubuntu-latest
-      PYTHON_VERSION: "3.10"
-      DB: mysql
-    services:
       mysql:
-        image: mysql
+        image: ${{ startsWith(matrix.db, 'mysql') && 'mysql' || '' }}
         env:
           MYSQL_ROOT_PASSWORD: mysql
           MYSQL_USER: mysql
           MYSQL_PASSWORD: mysql
-          MYSQL_DATABASE: test
+          MYSQL_DATABASE: mymysql
         ports:
           - 3306:3306
-        options: --health-cmd "mysqladmin ping -h localhost -umysql -pmysql" --health-interval 10s --health-timeout 5s --health-retries 5
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
       - name: Set timezone
         uses: szenius/set-timezone@1f9716b0f7120e344f0c62bb7b1ee98819aefd42
         with:
           timezoneLinux: "Asia/Shanghai"
           timezoneMacos: "Asia/Shanghai"
           timezoneWindows: "China Standard Time"
+
       - name: Setup rye
         uses: eifinger/setup-rye@b0de59c61cc78ac1f58cbcb6e15e04ebd31b984b
         with:
           enable-cache: true
           cache-prefix: ${{ env.PYTHON_VERSION }}
+
       - name: Install prerequisites
         run: |
           rye pin ${{ env.PYTHON_VERSION }}
           rye sync
+
       - name: Run tests
+        shell: bash
         run: |
-          sed -ie "s#sqlite+aiosqlite://#mysql+aiomysql://mysql:mysql@localhost:3306/test#g" tests/conftest.py
-          sed -ie "s#StaticPool#NullPool#g" tests/conftest.py
+          sed -ie "s#sqlite+aiosqlite://#${SQLALCHEMY_DATABASE_URL}#g" tests/conftest.py
+          sed -ie "s#StaticPool#${SQLALCHEMY_POOL_CLASS}#g" tests/conftest.py
           rye run test:single
+
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          env_vars: OS,PYTHON_VERSION,DB
+          env_vars: OS,PYTHON_VERSION,SQLALCHEMY_DATABASE_URL,SQLALCHEMY_POOL_CLASS
 
   check:
     if: always()
-    needs: [test, test-pg, test-mysql]
+    needs: test
     runs-on: ubuntu-latest
     steps:
       - name: Decide whether the needed jobs succeeded or failed
