@@ -4,10 +4,10 @@
 # last locked with the following flags:
 #   pre: false
 #   features: []
-#   all-features: false
+#   all-features: true
 #   with-sources: false
 #   generate-hashes: false
-#   universal: false
+#   universal: true
 
 -e file:.
 aiomysql==0.2.0
@@ -46,7 +46,7 @@ certifi==2024.7.4
     # via httpcore
     # via httpx
     # via requests
-cffi==1.16.0
+cffi==1.16.0 ; platform_python_implementation == 'CPython' and sys_platform == 'win32'
     # via gevent
 chardet==5.2.0
     # via binaryornot
@@ -58,7 +58,7 @@ click==8.1.7
     # via nonebot-plugin-orm
     # via typer
     # via uvicorn
-colorama==0.4.6
+colorama==0.4.6 ; platform_system == 'Windows' or sys_platform == 'win32'
     # via click
     # via loguru
     # via pytest
@@ -164,6 +164,7 @@ nonebot-plugin-cesaa==0.4.0
 nonebot-plugin-chatrecorder==0.6.0
     # via nonebot-plugin-cesaa
 nonebot-plugin-datastore==1.3.0
+    # via nonebot-plugin-wordcloud
 nonebot-plugin-localstore==0.7.0
     # via nonebot-plugin-chatrecorder
     # via nonebot-plugin-datastore
@@ -221,7 +222,7 @@ pluggy==1.5.0
     # via pytest
 prompt-toolkit==3.0.47
     # via noneprompt
-pycparser==2.22
+pycparser==2.22 ; platform_python_implementation == 'CPython' and sys_platform == 'win32'
     # via cffi
 pydantic==2.8.2
     # via fastapi
@@ -337,6 +338,8 @@ urllib3==2.2.2
 uvicorn==0.30.1
     # via fastapi
     # via nonebot2
+uvloop==0.19.0 ; sys_platform != 'win32' and (platform_python_implementation != 'PyPy' and sys_platform != 'cygwin')
+    # via uvicorn
 virtualenv==20.26.3
     # via nb-cli
 watchfiles==0.22.0
@@ -347,7 +350,7 @@ wcwidth==0.2.13
     # via prompt-toolkit
 websockets==12.0
     # via uvicorn
-win32-setctime==1.1.0
+win32-setctime==1.1.0 ; sys_platform == 'win32'
     # via loguru
 wordcloud==1.9.3
     # via nonebot-plugin-wordcloud

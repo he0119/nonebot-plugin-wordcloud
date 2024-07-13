@@ -17,13 +17,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: he0119/setup-python@main
+      - name: Setup rye
+        uses: eifinger/setup-rye@b0de59c61cc78ac1f58cbcb6e15e04ebd31b984b
+        with:
+          enable-cache: true
+
+      - name: Install prerequisites
+        run: rye sync
 
       - name: Get Version
         id: version
         run: |
-          echo "VERSION=$(poetry version -s)" >> $GITHUB_OUTPUT
+          echo "VERSION=$(rye version)" >> $GITHUB_OUTPUT
           echo "TAG_VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
           echo "TAG_NAME=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
 
@@ -32,7 +37,7 @@ jobs:
         run: exit 1
 
       - name: Build
-        run: poetry build
+        run: rye build
 
       - name: Publish a Python distribution to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1

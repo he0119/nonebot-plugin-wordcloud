@@ -19,17 +19,14 @@ readme = "README.md"
 license = { file = "LICENSE" }
 requires-python = ">= 3.9"
 
-[project.optional-dependencies]
-datastore = ["nonebot-plugin-datastore>=1.2.0"]
-
 [project.urls]
 Homepage = "https://github.com/he0119/nonebot-plugin-wordcloud"
 Repository = "https://github.com/he0119/nonebot-plugin-wordcloud.git"
 Issues = "https://github.com/he0119/nonebot-plugin-wordcloud/issues"
 Changelog = "https://github.com/he0119/nonebot-plugin-wordcloud/blob/main/CHANGELOG.md"
 
-[tool.rye.scripts]
-test = "pytest --cov=nonebot_plugin_wordcloud --cov-report xml -n auto"
+[project.optional-dependencies]
+datastore = ["nonebot-plugin-datastore>=1.2.0"]
 
 [build-system]
 requires = ["hatchling"]
@@ -41,8 +38,12 @@ allow-direct-references = true
 [tool.hatch.build.targets.wheel]
 packages = ["nonebot_plugin_wordcloud"]
 
+[tool.hatch.build.targets.sdist]
+only-include = ["nonebot_plugin_wordcloud"]
+
 [tool.rye]
 managed = true
+universal = true
 dev-dependencies = [
     "nb-cli>=1.4.1",
     "nonebug>=0.3.7",
@@ -61,12 +62,8 @@ dev-dependencies = [
     "gevent>=24.2.1",
 ]
 
-[tool.nonebot]
-plugins = ["nonebot_plugin_wordcloud"]
-adapters = [
-    { name = "OneBot V12", module_name = "nonebot.adapters.onebot.v12", project_link = "nonebot-adapter-onebot", desc = "OneBot V12 协议" },
-    { name = "OneBot V11", module_name = "nonebot.adapters.onebot.v11", project_link = "nonebot-adapter-onebot", desc = "OneBot V11 协议" },
-]
+[tool.rye.scripts]
+test = "pytest --cov=nonebot_plugin_wordcloud --cov-report xml -n auto"
 
 [tool.pyright]
 pythonVersion = "3.9"
@@ -95,13 +92,29 @@ ignore = [
     "E402", # module-import-not-at-top-of-file
 ]
 
-[tool.pytest.ini_options]
-addopts = ["--import-mode=importlib"]
-asyncio_mode = "auto"
+[tool.nonebot]
+plugins = ["nonebot_plugin_wordcloud"]
+adapters = [
+    { name = "OneBot V12", module_name = "nonebot.adapters.onebot.v12", project_link = "nonebot-adapter-onebot", desc = "OneBot V12 协议" },
+    { name = "OneBot V11", module_name = "nonebot.adapters.onebot.v11", project_link = "nonebot-adapter-onebot", desc = "OneBot V11 协议" },
+]
 
 [tool.coverage.run]
 # https://github.com/nedbat/coveragepy/issues/1082
 concurrency = ["thread", "gevent"]
 
 [tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "@overload",
+    "except ImportError:",
+]
 omit = ["*/compat.py", "*/migrations/*"]
+
+
+[tool.pytest.ini_options]
+addopts = ["--import-mode=importlib"]
+asyncio_mode = "auto"
