@@ -1,6 +1,6 @@
 [project]
 name = "nonebot-plugin-wordcloud"
-version = "0.7.2"
+version = "0.7.3"
 description = "适用于 NoneBot2 的词云插件"
 authors = [{ name = "uy_sun", email = "hmy0119@gmail.com" }]
 dependencies = [
