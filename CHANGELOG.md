@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 ## [Unreleased]
 
+### Fixed
+
+- 适配 Alconna 0.49.0
+
 ## [0.7.2] - 2024-04-29
 
 ### Fixed
