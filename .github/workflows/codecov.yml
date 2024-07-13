@@ -78,6 +78,7 @@ jobs:
           rye sync
 
       - name: Run tests
+        shell: bash
         run: |
           sed -ie "s#sqlite+aiosqlite://#${SQLALCHEMY_DATABASE_URL}#g" tests/conftest.py
           sed -ie "s#StaticPool#${SQLALCHEMY_POOL_CLASS}#g" tests/conftest.py
