@@ -46,7 +46,8 @@ certifi==2024.7.4
     # via httpcore
     # via httpx
     # via requests
-cffi==1.16.0 ; platform_python_implementation == 'CPython' and sys_platform == 'win32'
+cffi==1.16.0 ; platform_python_implementation != 'PyPy' or (platform_python_implementation == 'CPython' and sys_platform == 'win32')
+    # via cryptography
     # via gevent
 chardet==5.2.0
     # via binaryornot
@@ -69,6 +70,7 @@ cookiecutter==2.6.0
     # via nb-cli
 coverage==7.5.4
     # via pytest-cov
+cryptography==42.0.8
 cycler==0.12.1
     # via matplotlib
 distlib==0.3.8
@@ -222,7 +224,7 @@ pluggy==1.5.0
     # via pytest
 prompt-toolkit==3.0.47
     # via noneprompt
-pycparser==2.22 ; platform_python_implementation == 'CPython' and sys_platform == 'win32'
+pycparser==2.22 ; platform_python_implementation != 'PyPy' or (platform_python_implementation == 'CPython' and sys_platform == 'win32')
     # via cffi
 pydantic==2.8.2
     # via fastapi
