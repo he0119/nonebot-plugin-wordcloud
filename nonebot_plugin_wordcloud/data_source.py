@@ -1,57 +1,28 @@
 import asyncio
 import concurrent.futures
 import contextlib
-import re
+from collections.abc import Iterable
 from functools import partial
 from io import BytesIO
 from random import choice
 from typing import Optional
 
-import jieba
-import jieba.analyse
 import numpy as np
-from emoji import replace_emoji
+from nonebot.utils import resolve_dot_notation
 from PIL import Image
 from wordcloud import WordCloud
 
 from .config import global_config, plugin_config
+from .processors import Processor
 
-
-def pre_precess(msg: str) -> str:
-    """对消息进行预处理"""
-    # 去除网址
-    # https://stackoverflow.com/a/17773849/9212748
-    url_regex = re.compile(
-        r"(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]"
-        r"+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})"
-    )
-    msg = url_regex.sub("", msg)
-
-    # 去除 \u200b
-    msg = re.sub(r"\u200b", "", msg)
-
-    # 去除 emoji
-    # https://github.com/carpedm20/emoji
-    msg = replace_emoji(msg)
-
-    return msg
-
-
-def analyse_message(msg: str) -> dict[str, float]:
-    """分析消息
-
-    分词，并统计词频
-    """
-    # 设置停用词表
-    if plugin_config.wordcloud_stopwords_path:
-        jieba.analyse.set_stop_words(plugin_config.wordcloud_stopwords_path)
-    # 加载用户词典
-    if plugin_config.wordcloud_userdict_path:
-        jieba.load_userdict(str(plugin_config.wordcloud_userdict_path))
-    # 基于 TF-IDF 算法的关键词抽取
-    # 返回所有关键词，因为设置了数量其实也只是 tags[:topK]，不如交给词云库处理
-    words = jieba.analyse.extract_tags(msg, topK=0, withWeight=True)
-    return dict(words)
+MSGS_PROCESSORS: list[Processor] = [
+    resolve_dot_notation(
+        processor,
+        "Processor",
+        "nonebot_plugin_wordcloud.processors.",
+    )()
+    for processor in plugin_config.worodcloud_msgs_processors
+]
 
 
 def get_mask(key: str):
@@ -65,14 +36,38 @@ def get_mask(key: str):
         return np.array(Image.open(default_mask_path))
 
 
-def _get_wordcloud(messages: list[str], mask_key: str) -> Optional[bytes]:
+def get_frequencies(words: Iterable[str]) -> dict[str, float]:
+    """获取词频"""
+    stopwords = set()
+    if plugin_config.wordcloud_stopwords_path:
+        with open(plugin_config.wordcloud_stopwords_path, encoding="utf8") as f:
+            stopwords = set(f.read().splitlines())
+
+    frequencies: dict[str, float] = {}
+    for word in words:
+        if word in stopwords:
+            continue
+        frequencies[word] = frequencies.get(word, 0) + 1
+    return frequencies
+
+
+def analyse_messages(msgs: Iterable[str]) -> dict[str, float]:
+    """分析消息，获取词频"""
     # 过滤掉命令
     command_start = tuple(i for i in global_config.command_start if i)
-    message = " ".join(m for m in messages if not m.startswith(command_start))
-    # 预处理
-    message = pre_precess(message)
-    # 分析消息。分词，并统计词频
-    frequency = analyse_message(message)
+    msgs = (m for m in msgs if not m.startswith(command_start))
+    # 处理消息
+    for processor in MSGS_PROCESSORS:
+        msgs = processor.process_msgs(msgs)
+        if isinstance(msgs, dict):
+            return msgs
+    # 统计消息频率
+    frequencies = get_frequencies(msgs)
+    return frequencies
+
+
+def _get_wordcloud(msgs: list[str], mask_key: str) -> Optional[bytes]:
+    frequencies = analyse_messages(msgs)
     # 词云参数
     wordcloud_options = {}
     wordcloud_options.update(plugin_config.wordcloud_options)
@@ -92,15 +87,15 @@ def _get_wordcloud(messages: list[str], mask_key: str) -> Optional[bytes]:
     wordcloud_options.setdefault("mask", get_mask(mask_key))
     with contextlib.suppress(ValueError):
         wordcloud = WordCloud(**wordcloud_options)
-        image = wordcloud.generate_from_frequencies(frequency).to_image()
+        image = wordcloud.generate_from_frequencies(frequencies).to_image()
         image_bytes = BytesIO()
         image.save(image_bytes, format="PNG")
         return image_bytes.getvalue()
 
 
-async def get_wordcloud(messages: list[str], mask_key: str) -> Optional[bytes]:
+async def get_wordcloud(msgs: list[str], mask_key: str) -> Optional[bytes]:
     loop = asyncio.get_running_loop()
-    pfunc = partial(_get_wordcloud, messages, mask_key)
+    pfunc = partial(_get_wordcloud, msgs, mask_key)
     # 虽然不知道具体是哪里泄漏了，但是通过每次关闭线程池可以避免这个问题
     # https://github.com/he0119/nonebot-plugin-wordcloud/issues/99
     with concurrent.futures.ThreadPoolExecutor() as pool:
