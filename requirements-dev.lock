@@ -40,6 +40,9 @@ async-asgi-testclient==1.4.11
 asyncpg==0.29.0
 binaryornot==0.4.4
     # via cookiecutter
+bracex==2.5
+    # via wcmatch
+bump-my-version==0.25.4
 cashews==7.2.0
     # via nb-cli
 certifi==2024.7.4
@@ -54,9 +57,11 @@ chardet==5.2.0
 charset-normalizer==3.3.2
     # via requests
 click==8.1.7
+    # via bump-my-version
     # via cookiecutter
     # via nb-cli
     # via nonebot-plugin-orm
+    # via rich-click
     # via uvicorn
 colorama==0.4.6 ; platform_system == 'Windows' or sys_platform == 'win32'
     # via click
@@ -210,11 +215,13 @@ platformdirs==4.2.2
     # via virtualenv
 pluggy==1.5.0
     # via pytest
-prompt-toolkit==3.0.47
+prompt-toolkit==3.0.36
     # via noneprompt
+    # via questionary
 pycparser==2.22 ; platform_python_implementation != 'PyPy' or (platform_python_implementation == 'CPython' and sys_platform == 'win32')
     # via cffi
 pydantic==2.8.2
+    # via bump-my-version
     # via fastapi
     # via nb-cli
     # via nonebot-adapter-onebot
@@ -222,8 +229,11 @@ pydantic==2.8.2
     # via nonebot-plugin-localstore
     # via nonebot-plugin-send-anything-anywhere
     # via nonebot2
+    # via pydantic-settings
 pydantic-core==2.20.1
     # via pydantic
+pydantic-settings==2.4.0
+    # via bump-my-version
 pyfiglet==1.0.2
     # via nb-cli
 pygments==2.18.0
@@ -250,6 +260,7 @@ python-dateutil==2.9.0.post0
     # via matplotlib
 python-dotenv==1.0.1
     # via nonebot2
+    # via pydantic-settings
     # via uvicorn
 python-slugify==8.0.4
     # via cookiecutter
@@ -258,12 +269,18 @@ pytz==2024.1
 pyyaml==6.0.2
     # via cookiecutter
     # via uvicorn
+questionary==2.0.1
+    # via bump-my-version
 requests==2.32.3
     # via async-asgi-testclient
     # via cookiecutter
 respx==0.21.1
 rich==13.7.1
+    # via bump-my-version
     # via cookiecutter
+    # via rich-click
+rich-click==1.8.3
+    # via bump-my-version
 setuptools==72.2.0
     # via zope-event
     # via zope-interface
@@ -289,6 +306,7 @@ tarina==0.5.5
 text-unidecode==1.3
     # via python-slugify
 tomlkit==0.13.2
+    # via bump-my-version
     # via nb-cli
 types-python-dateutil==2.9.0.20240316
     # via arrow
@@ -306,6 +324,7 @@ typing-extensions==4.12.2
     # via nonebug
     # via pydantic
     # via pydantic-core
+    # via rich-click
     # via sqlalchemy
     # via tarina
 tzdata==2024.1
@@ -324,6 +343,8 @@ virtualenv==20.26.3
 watchfiles==0.23.0
     # via nb-cli
     # via uvicorn
+wcmatch==9.0
+    # via bump-my-version
 wcwidth==0.2.13
     # via nb-cli
     # via prompt-toolkit
