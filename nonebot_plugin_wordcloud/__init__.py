@@ -27,6 +27,7 @@ from nonebot_plugin_alconna import (
     AlconnaMatcher,
     AlconnaQuery,
     Args,
+    CommandMeta,
     Match,
     Option,
     Query,
@@ -108,11 +109,35 @@ class SameTime(ArparmaBehavior):
 wordcloud_cmd = on_alconna(
     Alconna(
         "词云",
-        Option("--my", default=False, action=store_true),
+        Option(
+            "--my",
+            default=False,
+            action=store_true,
+            help_text="获取自己的词云",
+        ),
         Args["type?", ["今日", "昨日", "本周", "上周", "本月", "上月", "年度", "历史"]][
             "time?", str
         ],
         behaviors=[SameTime()],
+        meta=CommandMeta(
+            description="利用群消息生成词云",
+            usage=(
+                "- 通过快捷命令，以获取常见时间段内的词云\n"
+                "格式：/<时间段>词云\n"
+                "时间段关键词有：今日，昨日，本周，上周，本月，上月，年度\n"
+                "- 提供日期与时间，以获取指定时间段内的词云\n"
+                "（支持 ISO8601 格式的日期与时间，如 2022-02-22T22:22:22）\n"
+                "格式：/历史词云 [日期或时间段]"
+            ),
+            example=(
+                "/今日词云\n"
+                "/昨日词云\n"
+                "/历史词云\n"
+                "/历史词云 2022-01-01\n"
+                "/历史词云 2022-01-01~2022-02-22\n"
+                "/历史词云 2022-02-22T11:11:11~2022-02-22T22:22:22"
+            ),
+        ),
     ),
     use_cmd_start=True,
 )
@@ -258,8 +283,12 @@ async def handle_wordcloud(
 set_mask_cmd = on_alconna(
     Alconna(
         "设置词云形状",
-        Option("--default", default=False, action=store_true),
+        Option("--default", default=False, action=store_true, help_text="默认形状"),
         Args["img?", alc.Image],
+        meta=CommandMeta(
+            description="设置自定义词云形状",
+            example="/设置词云形状\n/设置词云默认形状",
+        ),
     ),
     permission=admin_permission(),
     use_cmd_start=True,
@@ -305,7 +334,11 @@ async def handle_save_mask(
 remove_mask_cmd = on_alconna(
     Alconna(
         "删除词云形状",
-        Option("--default", default=False, action=store_true),
+        Option("--default", default=False, action=store_true, help_text="默认形状"),
+        meta=CommandMeta(
+            description="删除自定义词云形状",
+            example="/删除词云形状\n/删除词云默认形状",
+        ),
     ),
     permission=admin_permission(),
     use_cmd_start=True,
@@ -343,9 +376,22 @@ schedule_cmd = on_alconna(
     Alconna(
         "词云定时发送",
         Option(
-            "--action", Args["action_type", ["状态", "开启", "关闭"]], default="状态"
+            "--action",
+            Args["action_type", ["状态", "开启", "关闭"]],
+            default="状态",
+            help_text="操作类型",
         ),
         Args["type", ["每日"]]["time?", str],
+        meta=CommandMeta(
+            description="设置定时发送词云",
+            usage="当前仅支持每日定时发送",
+            example=(
+                "/词云每日定时发送状态\n"
+                "/开启词云每日定时发送\n"
+                "/开启词云每日定时发送 23:59\n"
+                "/关闭词云每日定时发送"
+            ),
+        ),
     ),
     permission=admin_permission(),
     use_cmd_start=True,

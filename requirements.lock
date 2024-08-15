@@ -24,17 +24,16 @@ anyio==4.4.0
     # via watchfiles
 apscheduler==3.10.4
     # via nonebot-plugin-apscheduler
-arclet-alconna==1.8.18
+arclet-alconna==1.8.26
     # via arclet-alconna-tools
     # via nonebot-plugin-alconna
-arclet-alconna-tools==0.7.6
+arclet-alconna-tools==0.7.9
     # via nonebot-plugin-alconna
 certifi==2024.7.4
     # via httpcore
     # via httpx
 click==8.1.7
     # via nonebot-plugin-orm
-    # via typer
     # via uvicorn
 colorama==0.4.6 ; platform_system == 'Windows' or sys_platform == 'win32'
     # via click
@@ -44,16 +43,10 @@ contourpy==1.2.1
     # via matplotlib
 cycler==0.12.1
     # via matplotlib
-dnspython==2.6.1
-    # via email-validator
-email-validator==2.2.0
-    # via fastapi
 emoji==2.12.1
     # via nonebot-plugin-wordcloud
-fastapi==0.111.0
+fastapi==0.112.0
     # via nonebot2
-fastapi-cli==0.0.4
-    # via fastapi
 filetype==1.2.0
     # via nonebot-plugin-send-anything-anywhere
 fonttools==4.53.1
@@ -72,43 +65,34 @@ httpcore==1.0.5
 httptools==0.6.1
     # via uvicorn
 httpx==0.27.0
-    # via fastapi
     # via nonebot2
 hyperframe==6.0.1
     # via h2
 idna==3.7
     # via anyio
-    # via email-validator
     # via httpx
     # via yarl
-importlib-metadata==8.0.0
+importlib-metadata==8.2.0
     # via nonebot-plugin-alconna
 jieba==0.42.1
     # via nonebot-plugin-wordcloud
-jinja2==3.1.4
-    # via fastapi
 kiwisolver==1.4.5
     # via matplotlib
 loguru==0.7.2
     # via nonebot2
 mako==1.3.5
     # via alembic
-markdown-it-py==3.0.0
-    # via rich
 markupsafe==2.1.5
-    # via jinja2
     # via mako
-matplotlib==3.9.1
+matplotlib==3.9.2
     # via wordcloud
-mdurl==0.1.2
-    # via markdown-it-py
 multidict==6.0.5
     # via yarl
-nepattern==0.7.4
+nepattern==0.7.6
     # via arclet-alconna
     # via arclet-alconna-tools
     # via nonebot-plugin-alconna
-nonebot-plugin-alconna==0.49.0
+nonebot-plugin-alconna==0.51.4
     # via nonebot-plugin-wordcloud
 nonebot-plugin-apscheduler==0.5.0
     # via nonebot-plugin-wordcloud
@@ -118,23 +102,23 @@ nonebot-plugin-chatrecorder==0.6.0
     # via nonebot-plugin-cesaa
 nonebot-plugin-datastore==1.3.0
     # via nonebot-plugin-wordcloud
-nonebot-plugin-localstore==0.7.0
+nonebot-plugin-localstore==0.7.1
     # via nonebot-plugin-chatrecorder
     # via nonebot-plugin-datastore
     # via nonebot-plugin-orm
     # via nonebot-plugin-wordcloud
-nonebot-plugin-orm==0.7.4
+nonebot-plugin-orm==0.7.6
     # via nonebot-plugin-chatrecorder
     # via nonebot-plugin-session-orm
     # via nonebot-plugin-wordcloud
 nonebot-plugin-send-anything-anywhere==0.6.1
     # via nonebot-plugin-cesaa
-nonebot-plugin-session==0.3.1
+nonebot-plugin-session==0.3.2
     # via nonebot-plugin-chatrecorder
     # via nonebot-plugin-session-orm
 nonebot-plugin-session-orm==0.2.0
     # via nonebot-plugin-chatrecorder
-nonebot-plugin-waiter==0.6.2
+nonebot-plugin-waiter==0.7.1
     # via nonebot-plugin-alconna
 nonebot2==2.3.2
     # via nonebot-plugin-alconna
@@ -149,12 +133,10 @@ nonebot2==2.3.2
     # via nonebot-plugin-session-orm
     # via nonebot-plugin-waiter
     # via nonebot-plugin-wordcloud
-numpy==2.0.0
+numpy==2.0.1
     # via contourpy
     # via matplotlib
     # via wordcloud
-orjson==3.10.6
-    # via fastapi
 packaging==24.1
     # via matplotlib
 pillow==10.4.0
@@ -168,8 +150,6 @@ pydantic==2.8.2
     # via nonebot2
 pydantic-core==2.20.1
     # via pydantic
-pygments==2.18.0
-    # via rich
 pygtrie==2.5.0
     # via nonebot2
 pyparsing==3.1.2
@@ -179,23 +159,17 @@ python-dateutil==2.9.0.post0
 python-dotenv==1.0.1
     # via nonebot2
     # via uvicorn
-python-multipart==0.0.9
-    # via fastapi
 pytz==2024.1
     # via apscheduler
-pyyaml==6.0.1
+pyyaml==6.0.2
     # via uvicorn
-rich==13.7.1
-    # via typer
-shellingham==1.5.4
-    # via typer
 six==1.16.0
     # via apscheduler
     # via python-dateutil
 sniffio==1.3.1
     # via anyio
     # via httpx
-sqlalchemy==2.0.31
+sqlalchemy==2.0.32
     # via alembic
     # via nonebot-plugin-datastore
     # via nonebot-plugin-orm
@@ -204,12 +178,10 @@ starlette==0.37.2
 strenum==0.4.15
     # via nonebot-plugin-send-anything-anywhere
     # via nonebot-plugin-session
-tarina==0.5.4
+tarina==0.5.5
     # via arclet-alconna
     # via nepattern
     # via nonebot-plugin-alconna
-typer==0.12.3
-    # via fastapi-cli
 typing-extensions==4.12.2
     # via aiosqlite
     # via alembic
@@ -223,20 +195,16 @@ typing-extensions==4.12.2
     # via pydantic-core
     # via sqlalchemy
     # via tarina
-    # via typer
 tzdata==2024.1
     # via nonebot-plugin-wordcloud
     # via tzlocal
 tzlocal==5.2
     # via apscheduler
-ujson==5.10.0
-    # via fastapi
-uvicorn==0.30.1
-    # via fastapi
+uvicorn==0.30.6
     # via nonebot2
-uvloop==0.19.0 ; sys_platform != 'win32' and (platform_python_implementation != 'PyPy' and sys_platform != 'cygwin')
+uvloop==0.19.0 ; platform_python_implementation != 'PyPy' and sys_platform != 'cygwin' and sys_platform != 'win32'
     # via uvicorn
-watchfiles==0.22.0
+watchfiles==0.23.0
     # via uvicorn
 websockets==12.0
     # via uvicorn
@@ -246,5 +214,5 @@ wordcloud==1.9.3
     # via nonebot-plugin-wordcloud
 yarl==1.9.4
     # via nonebot2
-zipp==3.19.2
+zipp==3.20.0
     # via importlib-metadata
