@@ -140,6 +140,7 @@ wordcloud_cmd = on_alconna(
         ),
     ),
     use_cmd_start=True,
+    block=True,
 )
 
 
@@ -292,6 +293,7 @@ set_mask_cmd = on_alconna(
     ),
     permission=admin_permission(),
     use_cmd_start=True,
+    block=True,
 )
 set_mask_cmd.shortcut(
     "设置词云默认形状",
@@ -342,6 +344,7 @@ remove_mask_cmd = on_alconna(
     ),
     permission=admin_permission(),
     use_cmd_start=True,
+    block=True,
 )
 remove_mask_cmd.shortcut(
     "删除词云默认形状",
@@ -395,6 +398,7 @@ schedule_cmd = on_alconna(
     ),
     permission=admin_permission(),
     use_cmd_start=True,
+    block=True,
 )
 schedule_cmd.shortcut(
     r"词云(?P<type>每日)定时发送状态",

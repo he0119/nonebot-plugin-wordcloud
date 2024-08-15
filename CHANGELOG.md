@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 - 添加命令的帮助信息
 
+### Changed
+
+- 事件响应器现在将阻断事件的传播
+
 ## [0.7.3] - 2024-07-13
 
 ### Fixed
