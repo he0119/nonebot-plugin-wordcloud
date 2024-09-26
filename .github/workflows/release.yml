@@ -18,7 +18,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup rye
-        uses: eifinger/setup-rye@77afcf35e64d9b0e210a77e85176c9165a9bf668
+        uses: eifinger/setup-rye@b910382edf1a55807692bc038f7cc9c4d92da955
         with:
           enable-cache: true
 
