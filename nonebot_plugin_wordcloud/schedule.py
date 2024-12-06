@@ -1,9 +1,8 @@
 from datetime import time
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 from zoneinfo import ZoneInfo
 
 import nonebot_plugin_saa as saa
-from apscheduler.job import Job
 from nonebot.compat import model_dump
 from nonebot.log import logger
 from nonebot_plugin_apscheduler import scheduler
@@ -21,6 +20,9 @@ from .utils import (
     get_time_with_scheduler_timezone,
     time_astimezone,
 )
+
+if TYPE_CHECKING:
+    from apscheduler.job import Job
 
 saa.enable_auto_select_bot()
 
