@@ -3,6 +3,9 @@ name = "nonebot-plugin-wordcloud"
 version = "0.8.0"
 description = "适用于 NoneBot2 的词云插件"
 authors = [{ name = "uy_sun", email = "hmy0119@gmail.com" }]
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">= 3.9"
 dependencies = [
   "nonebot2[fastapi]>=2.2.0",
   "nonebot-plugin-apscheduler>=0.4.0",
@@ -15,9 +18,6 @@ dependencies = [
   "tzdata",
   "emoji>=1.6.3",
 ]
-readme = "README.md"
-license = { file = "LICENSE" }
-requires-python = ">= 3.9"
 
 [project.urls]
 Homepage = "https://github.com/he0119/nonebot-plugin-wordcloud"
@@ -41,9 +41,7 @@ packages = ["nonebot_plugin_wordcloud"]
 [tool.hatch.build.targets.sdist]
 only-include = ["nonebot_plugin_wordcloud"]
 
-[tool.rye]
-managed = true
-universal = true
+[tool.uv]
 dev-dependencies = [
   "nb-cli>=1.4.1",
   "nonebug>=0.3.7",
@@ -62,11 +60,15 @@ dev-dependencies = [
   "gevent>=24.2.1",
   "cryptography>=42.0.8",
   "bump-my-version>=0.25.4",
+  "poethepoet>=0.31.1",
 ]
 
-[tool.rye.scripts]
-test = "pytest --cov=nonebot_plugin_wordcloud --cov-report xml -n auto"
-"test:single" = "pytest --cov=nonebot_plugin_wordcloud --cov-report xml"
+[tool.uv.pip]
+universal = true
+
+[tool.poe.tasks]
+test = "pytest --cov=nonebot_plugin_wordcloud --cov-report xml --junitxml=./junit.xml -n auto"
+"test:single" = "pytest --cov=nonebot_plugin_wordcloud --cov-report xml --junitxml=./junit.xml"
 bump = "bump-my-version bump"
 show-bump = "bump-my-version show-bump"
 
@@ -92,9 +94,15 @@ select = [
   "PYI", # flake8-pyi
   "PT",  # flake8-pytest-style
   "Q",   # flake8-quotes
+  "TC",  # flake8-type-checking
+  "RUF", # Ruff-specific rules
+  "I",   # isort
 ]
 ignore = [
-  "E402", # module-import-not-at-top-of-file
+  "E402",   # module-import-not-at-top-of-file
+  "RUF001", # ambiguous-unicode-character-string
+  "RUF002", # ambiguous-unicode-character-docstring
+  "RUF003", # ambiguous-unicode-character-comment
 ]
 
 [tool.nonebot]
@@ -122,6 +130,7 @@ omit = ["*/compat.py", "*/migrations/*"]
 [tool.pytest.ini_options]
 addopts = ["--import-mode=importlib"]
 asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "session"
 
 [tool.bumpversion]
 current_version = "0.8.0"
@@ -141,5 +150,5 @@ replace = "[Unreleased]\n\n## [{new_version}] - {now:%Y-%m-%d}"
 [[tool.bumpversion.files]]
 filename = "CHANGELOG.md"
 regex = true
-search = "\\[unreleased\\]: (https://.+?)v{current_version}\\.\\.\\.HEAD"
-replace = "[unreleased]: \\1v{new_version}...HEAD\n[{new_version}]: \\1v{current_version}...v{new_version}"
+search = "\\[Unreleased\\]: (https://.+?)v{current_version}\\.\\.\\.HEAD"
+replace = "[Unreleased]: \\1v{new_version}...HEAD\n[{new_version}]: \\1v{current_version}...v{new_version}"

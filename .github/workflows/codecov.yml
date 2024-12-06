@@ -66,23 +66,25 @@ jobs:
           timezoneMacos: "Asia/Shanghai"
           timezoneWindows: "China Standard Time"
 
-      - name: Setup rye
-        uses: eifinger/setup-rye@77afcf35e64d9b0e210a77e85176c9165a9bf668
+      - name: Install the latest version of uv
+        uses: astral-sh/setup-uv@v4
         with:
           enable-cache: true
-          cache-prefix: ${{ env.PYTHON_VERSION }}
-
-      - name: Install prerequisites
-        run: |
-          rye pin ${{ env.PYTHON_VERSION }}
-          rye sync
+          python-version: ${{ matrix.python-version }}
 
       - name: Run tests
         shell: bash
         run: |
           sed -ie "s#sqlite+aiosqlite://#${SQLALCHEMY_DATABASE_URL}#g" tests/conftest.py
           sed -ie "s#StaticPool#${SQLALCHEMY_POOL_CLASS}#g" tests/conftest.py
-          rye run test:single
+          uv run poe test:single
+
+      - name: Upload test results to Codecov
+        if: ${{ !cancelled() }}
+        uses: codecov/test-results-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          env_vars: OS,PYTHON_VERSION,SQLALCHEMY_DATABASE_URL,SQLALCHEMY_POOL_CLASS
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
