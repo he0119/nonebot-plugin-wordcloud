@@ -71,6 +71,7 @@ jobs:
         with:
           enable-cache: true
           python-version: ${{ matrix.python-version }}
+          cache-suffix: ${{ matrix.python-version }}
 
       - name: Run tests
         shell: bash
