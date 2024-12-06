@@ -19,7 +19,7 @@ def pytest_configure(config: pytest.Config) -> None:
     }
 
 
-@pytest.fixture()
+@pytest.fixture
 async def app(tmp_path: Path, mocker: MockerFixture):
     # 加载插件
     nonebot.require("nonebot_plugin_wordcloud")
