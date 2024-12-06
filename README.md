@@ -21,7 +21,7 @@ _✨ NoneBot 词云插件 ✨_
   </a>
   <img src="https://img.shields.io/badge/python-3.9+-blue.svg" alt="python">
   <a href="https://codecov.io/gh/he0119/nonebot-plugin-wordcloud">
-    <img src="https://codecov.io/gh/he0119/nonebot-plugin-wordcloud/branch/main/graph/badge.svg?token=e2ECtMI91C"/>
+    <img src="https://codecov.io/gh/he0119/nonebot-plugin-wordcloud/branch/main/graph/badge.svg?token=e2ECtMI91C" alt="codecov/>
   </a>
   <a href="https://jq.qq.com/?_wv=1027&k=7zQUpiGp">
     <img src="https://img.shields.io/badge/QQ%E7%BE%A4-730374631-orange?style=flat-square" alt="QQ Chat Group">
@@ -106,5 +106,5 @@ nb plugin install nonebot-plugin-wordcloud
 感谢以下开发者作出的贡献：
 
 <a href="https://github.com/he0119/nonebot-plugin-wordcloud/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=he0119/nonebot-plugin-wordcloud&max=1000" />
+  <img src="https://contrib.rocks/image?repo=he0119/nonebot-plugin-wordcloud&max=1000" alt="contributors" />
 </a>
