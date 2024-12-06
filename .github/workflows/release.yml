@@ -17,18 +17,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup rye
-        uses: eifinger/setup-rye@77afcf35e64d9b0e210a77e85176c9165a9bf668
+      - name: Install the latest version of uv
+        uses: astral-sh/setup-uv@v4
         with:
           enable-cache: true
-
-      - name: Install prerequisites
-        run: rye sync
 
       - name: Get Version
         id: version
         run: |
-          echo "VERSION=$(rye version)" >> $GITHUB_OUTPUT
+          echo "VERSION=$(uvx --from=toml-cli toml get --toml-path=pyproject.toml project.version)" >> $GITHUB_OUTPUT
           echo "TAG_VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
           echo "TAG_NAME=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
 
@@ -37,7 +34,7 @@ jobs:
         run: exit 1
 
       - name: Build
-        run: rye build
+        run: uv build
 
       - name: Publish a Python distribution to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1

@@ -13,7 +13,7 @@ class Schedule(Model):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     target: Mapped[dict] = mapped_column(JSON().with_variant(JSONB, "postgresql"))
-    time: Mapped[Optional["time"]]
+    time: Mapped[Optional[time]]
     """ UTC 时间 """
 
     @property

@@ -1,8 +1,8 @@
 from datetime import time
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
+from zoneinfo import ZoneInfo
 
 import nonebot_plugin_saa as saa
-from apscheduler.job import Job
 from nonebot.compat import model_dump
 from nonebot.log import logger
 from nonebot_plugin_apscheduler import scheduler
@@ -10,7 +10,6 @@ from nonebot_plugin_cesaa import get_messages_plain_text
 from nonebot_plugin_orm import get_session
 from sqlalchemy import JSON, Select, cast, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from zoneinfo import ZoneInfo
 
 from .config import plugin_config
 from .data_source import get_wordcloud
@@ -21,6 +20,9 @@ from .utils import (
     get_time_with_scheduler_timezone,
     time_astimezone,
 )
+
+if TYPE_CHECKING:
+    from apscheduler.job import Job
 
 saa.enable_auto_select_bot()
 
