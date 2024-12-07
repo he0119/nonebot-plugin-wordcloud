@@ -4,7 +4,7 @@ import nonebot
 import pytest
 from nonebot.adapters.onebot.v11 import Adapter as OnebotV11Adapter
 from nonebot.adapters.onebot.v12 import Adapter as OnebotV12Adapter
-from nonebug import NONEBOT_INIT_KWARGS, App
+from nonebug import NONEBOT_INIT_KWARGS, NONEBOT_START_LIFESPAN, App
 from pytest_asyncio import is_async_test
 from pytest_mock import MockerFixture
 from sqlalchemy import StaticPool, delete
@@ -18,6 +18,7 @@ def pytest_configure(config: pytest.Config) -> None:
         "alembic_startup_check": False,
         "command_start": {"/", ""},
     }
+    config.stash[NONEBOT_START_LIFESPAN] = False
 
 
 def pytest_collection_modifyitems(items: list[pytest.Item]):
@@ -33,6 +34,10 @@ async def after_nonebot_init(after_nonebot_init: None):
     driver = nonebot.get_driver()
     driver.register_adapter(OnebotV11Adapter)
     driver.register_adapter(OnebotV12Adapter)
+
+    # 手动启动生命周期
+    # 在加载 orm 之前运行，避免 orm 因未 mock 数据目录导致并发时出错
+    await driver._lifespan.startup()
 
     # 加载插件
     nonebot.load_plugin("nonebot_plugin_wordcloud")
