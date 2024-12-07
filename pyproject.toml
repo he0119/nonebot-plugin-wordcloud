@@ -71,6 +71,8 @@ test = "pytest --cov=nonebot_plugin_wordcloud --cov-report xml --junitxml=./juni
 "test:single" = "pytest --cov=nonebot_plugin_wordcloud --cov-report xml --junitxml=./junit.xml"
 # https://github.com/nedbat/coveragepy/issues/1082
 "test:gevent" = "coverage run --concurrency=thread,gevent -m pytest --cov=nonebot_plugin_wordcloud --cov-report xml --junitxml=./junit.xml -n auto"
+"test:sysmon".ref = "test"
+"test:sysmon".env = { "COVERAGE_CORE" = "sysmon" }
 bump = "bump-my-version bump"
 show-bump = "bump-my-version show-bump"
 
