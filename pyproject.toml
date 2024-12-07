@@ -69,8 +69,11 @@ universal = true
 [tool.poe.tasks]
 test = "pytest --cov=nonebot_plugin_wordcloud --cov-report xml --junitxml=./junit.xml -n auto"
 "test:single" = "pytest --cov=nonebot_plugin_wordcloud --cov-report xml --junitxml=./junit.xml"
+# async sqlalchemy 需要使用 gevent 才能获得正确覆盖率
 # https://github.com/nedbat/coveragepy/issues/1082
 "test:gevent" = "coverage run --concurrency=thread,gevent -m pytest --cov=nonebot_plugin_wordcloud --cov-report xml --junitxml=./junit.xml -n auto"
+# Python 3.12 下需要启用 sysmon 模式，否则测试速度非常慢
+# https://github.com/nedbat/coveragepy/issues/1665
 "test:sysmon".ref = "test"
 "test:sysmon".env = { "COVERAGE_CORE" = "sysmon" }
 bump = "bump-my-version bump"
