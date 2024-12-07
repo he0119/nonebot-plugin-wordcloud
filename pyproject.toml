@@ -44,7 +44,7 @@ only-include = ["nonebot_plugin_wordcloud"]
 [tool.uv]
 dev-dependencies = [
   "nb-cli>=1.4.1",
-  "nonebug>=0.4.2",
+  "nonebug>=0.4.3",
   "nonebug-saa>=0.5.0",
   "nonebot-adapter-onebot>=2.4.4",
   "nonebot-plugin-orm[default]>=0.7.4",
@@ -56,7 +56,7 @@ dev-dependencies = [
   "pytest-mock>=3.14.0",
   "pytest-asyncio>=0.23.7",
   "respx>=0.21.1",
-  "httpx>=0.27.0,!=0.28.0",
+  "httpx>=0.27.0,<0.28.0",
   "gevent>=24.2.1",
   "cryptography>=42.0.8",
   "bump-my-version>=0.25.4",
@@ -69,6 +69,13 @@ universal = true
 [tool.poe.tasks]
 test = "pytest --cov=nonebot_plugin_wordcloud --cov-report xml --junitxml=./junit.xml -n auto"
 "test:single" = "pytest --cov=nonebot_plugin_wordcloud --cov-report xml --junitxml=./junit.xml"
+# async sqlalchemy 需要使用 gevent 才能获得正确覆盖率
+# https://github.com/nedbat/coveragepy/issues/1082
+"test:gevent" = "coverage run --concurrency=thread,gevent -m pytest --cov=nonebot_plugin_wordcloud --cov-report xml --junitxml=./junit.xml -n auto"
+# Python 3.12 下需要启用 sysmon 模式，否则测试速度非常慢
+# https://github.com/nedbat/coveragepy/issues/1665
+"test:sysmon".ref = "test"
+"test:sysmon".env = { "COVERAGE_CORE" = "sysmon" }
 bump = "bump-my-version bump"
 show-bump = "bump-my-version show-bump"
 
@@ -111,10 +118,6 @@ adapters = [
   { name = "OneBot V12", module_name = "nonebot.adapters.onebot.v12", project_link = "nonebot-adapter-onebot", desc = "OneBot V12 协议" },
   { name = "OneBot V11", module_name = "nonebot.adapters.onebot.v11", project_link = "nonebot-adapter-onebot", desc = "OneBot V11 协议" },
 ]
-
-[tool.coverage.run]
-# https://github.com/nedbat/coveragepy/issues/1082
-concurrency = ["thread", "gevent"]
 
 [tool.coverage.report]
 exclude_lines = [
