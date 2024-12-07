@@ -78,10 +78,12 @@ jobs:
         run: |
           sed -ie "s#sqlite+aiosqlite://#${SQLALCHEMY_DATABASE_URL}#g" tests/conftest.py
           sed -ie "s#StaticPool#${SQLALCHEMY_POOL_CLASS}#g" tests/conftest.py
-          if [[ "${SQLALCHEMY_DATABASE_URL}" != sqlite* ]]; then
+          if [[ "${PYTHON_VERSION}" == "3.12" ]]; then
+            COVERAGE_CORE="sysmon" uv run poe test
+          elif [[ "${SQLALCHEMY_DATABASE_URL}" != sqlite* ]]; then
             uv run poe test:single
           else
-            uv run poe test
+            uv run poe test:gevent
           fi
 
       - name: Upload test results to Codecov

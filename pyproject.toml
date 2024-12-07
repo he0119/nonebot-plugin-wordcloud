@@ -69,6 +69,8 @@ universal = true
 [tool.poe.tasks]
 test = "pytest --cov=nonebot_plugin_wordcloud --cov-report xml --junitxml=./junit.xml -n auto"
 "test:single" = "pytest --cov=nonebot_plugin_wordcloud --cov-report xml --junitxml=./junit.xml"
+# https://github.com/nedbat/coveragepy/issues/1082
+"test:gevent" = "coverage run --concurrency=thread,gevent -m pytest --cov=nonebot_plugin_wordcloud --cov-report xml --junitxml=./junit.xml -n auto"
 bump = "bump-my-version bump"
 show-bump = "bump-my-version show-bump"
 
@@ -111,10 +113,6 @@ adapters = [
   { name = "OneBot V12", module_name = "nonebot.adapters.onebot.v12", project_link = "nonebot-adapter-onebot", desc = "OneBot V12 协议" },
   { name = "OneBot V11", module_name = "nonebot.adapters.onebot.v11", project_link = "nonebot-adapter-onebot", desc = "OneBot V11 协议" },
 ]
-
-[tool.coverage.run]
-# https://github.com/nedbat/coveragepy/issues/1082
-concurrency = ["thread", "gevent"]
 
 [tool.coverage.report]
 exclude_lines = [
