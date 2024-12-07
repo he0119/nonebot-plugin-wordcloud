@@ -978,6 +978,24 @@ wheels = [
 ]
 
 [[package]]
+name = "hanlp-common"
+version = "0.0.22"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "phrasetree" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/01/8f/0127b3a0fc02aabc1ba8499e2fc928dbfeb9c8748a501cc7281c0584a9e9/hanlp_common-0.0.22.tar.gz", hash = "sha256:701f560b6aacbff0a7ca846b0c74802d60aee29247d72508ba1a905b01ade6c6", size = 28640 }
+
+[[package]]
+name = "hanlp-restful"
+version = "0.0.23"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "hanlp-common" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/4e/01/64fe6779b2373fe6d8c8a5af25adbee3f839ad4d7405a36d2a3c230787cf/hanlp_restful-0.0.23.tar.gz", hash = "sha256:f4f129bef4c283e8b824041b9c94e69e94116d8281feff99aa951f5e8d472e62", size = 11689 }
+
+[[package]]
 name = "hpack"
 version = "4.0.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1830,7 +1848,6 @@ version = "0.8.1"
 source = { editable = "." }
 dependencies = [
     { name = "emoji" },
-    { name = "jieba" },
     { name = "nonebot-plugin-alconna" },
     { name = "nonebot-plugin-apscheduler" },
     { name = "nonebot-plugin-cesaa" },
@@ -1845,6 +1862,12 @@ dependencies = [
 [package.optional-dependencies]
 datastore = [
     { name = "nonebot-plugin-datastore" },
+]
+hanlp = [
+    { name = "hanlp-restful" },
+]
+jieba = [
+    { name = "jieba" },
 ]
 
 [package.dev-dependencies]
@@ -1872,7 +1895,8 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "emoji", specifier = ">=1.6.3" },
-    { name = "jieba", specifier = ">=0.42.1" },
+    { name = "hanlp-restful", marker = "extra == 'hanlp'", specifier = ">=0.0.23" },
+    { name = "jieba", marker = "extra == 'jieba'", specifier = ">=0.42.1" },
     { name = "nonebot-plugin-alconna", specifier = ">=0.49.0" },
     { name = "nonebot-plugin-apscheduler", specifier = ">=0.4.0" },
     { name = "nonebot-plugin-cesaa", specifier = ">=0.5.0" },
@@ -2124,6 +2148,12 @@ sdist = { url = "https://files.pythonhosted.org/packages/76/f1/4594f5e0fcddb6953
 wheels = [
     { url = "https://files.pythonhosted.org/packages/aa/18/a8444036c6dd65ba3624c63b734d3ba95ba63ace513078e1580590075d21/pastel-0.2.1-py2.py3-none-any.whl", hash = "sha256:4349225fcdf6c2bb34d483e523475de5bb04a5c10ef711263452cb37d7dd4364", size = 5955 },
 ]
+
+[[package]]
+name = "phrasetree"
+version = "0.0.9"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/44/31/b9d9df3cddabd2f9da83f38f5521cc0cd74d204487ef1bd020f48d7ea737/phrasetree-0.0.9.tar.gz", hash = "sha256:cd0fc8f64be43b4742953f4a8172e369c805b5bdd70a6325f532465032b506e7", size = 42176 }
 
 [[package]]
 name = "pillow"

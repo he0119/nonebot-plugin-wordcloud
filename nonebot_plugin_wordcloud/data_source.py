@@ -7,14 +7,20 @@ from io import BytesIO
 from random import choice
 from typing import Optional
 
-import jieba
-import jieba.analyse
 import numpy as np
 from emoji import replace_emoji
+from nonebot.utils import resolve_dot_notation
 from PIL import Image
 from wordcloud import WordCloud
 
 from .config import global_config, plugin_config
+from .tokenizer import Tokenizer
+
+tokenizer: Tokenizer = resolve_dot_notation(
+    plugin_config.worodcloud_tokenizer,
+    "Tokenizer",
+    "nonebot_plugin_wordcloud.tokenizer.",
+)()
 
 
 def pre_precess(msg: str) -> str:
@@ -37,23 +43,6 @@ def pre_precess(msg: str) -> str:
     return msg
 
 
-def analyse_message(msg: str) -> dict[str, float]:
-    """分析消息
-
-    分词，并统计词频
-    """
-    # 设置停用词表
-    if plugin_config.wordcloud_stopwords_path:
-        jieba.analyse.set_stop_words(plugin_config.wordcloud_stopwords_path)
-    # 加载用户词典
-    if plugin_config.wordcloud_userdict_path:
-        jieba.load_userdict(str(plugin_config.wordcloud_userdict_path))
-    # 基于 TF-IDF 算法的关键词抽取
-    # 返回所有关键词，因为设置了数量其实也只是 tags[:topK]，不如交给词云库处理
-    words = jieba.analyse.extract_tags(msg, topK=0, withWeight=True)
-    return dict(words)
-
-
 def get_mask(key: str):
     """获取 mask"""
     mask_path = plugin_config.get_mask_path(key)
@@ -72,7 +61,7 @@ def _get_wordcloud(messages: list[str], mask_key: str) -> Optional[bytes]:
     # 预处理
     message = pre_precess(message)
     # 分析消息。分词，并统计词频
-    frequency = analyse_message(message)
+    frequency = tokenizer.cut_msgs([message])
     # 词云参数
     wordcloud_options = {}
     wordcloud_options.update(plugin_config.wordcloud_options)

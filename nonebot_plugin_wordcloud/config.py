@@ -29,6 +29,8 @@ class Config(BaseModel):
     wordcloud_options: dict[str, Any] = {}
     wordcloud_exclude_user_ids: set[str] = set()
     """排除的用户 ID 列表（全局，不区分平台）"""
+    worodcloud_tokenizer: str = "~jieba"
+    """分词器，默认为 jieba"""
 
     @model_validator(mode="before")
     def set_default_values(cls, values):
