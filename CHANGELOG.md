@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 ### Added
 
 - 给快捷命令添加人类可读描述
+- 支持不同的分词器
 
 ## [0.8.0] - 2024-08-15
 

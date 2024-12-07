@@ -14,9 +14,8 @@ dependencies = [
   "nonebot-plugin-alconna>=0.49.0",
   "nonebot-plugin-cesaa>=0.4.0",
   "wordcloud>=1.8.1",
-  "jieba>=0.42.1",
-  "tzdata",
   "emoji>=1.6.3",
+  "tzdata",
 ]
 
 [project.urls]
@@ -27,6 +26,8 @@ Changelog = "https://github.com/he0119/nonebot-plugin-wordcloud/blob/main/CHANGE
 
 [project.optional-dependencies]
 datastore = ["nonebot-plugin-datastore>=1.2.0"]
+jieba = ["jieba>=0.42.1"]
+hanlp = ["hanlp-restful>=0.0.23"]
 
 [build-system]
 requires = ["hatchling"]
