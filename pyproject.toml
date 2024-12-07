@@ -44,7 +44,7 @@ only-include = ["nonebot_plugin_wordcloud"]
 [tool.uv]
 dev-dependencies = [
   "nb-cli>=1.4.1",
-  "nonebug>=0.4.2",
+  "nonebug>=0.4.3",
   "nonebug-saa>=0.5.0",
   "nonebot-adapter-onebot>=2.4.4",
   "nonebot-plugin-orm[default]>=0.7.4",
