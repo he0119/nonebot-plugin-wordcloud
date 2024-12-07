@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 ## [Unreleased]
 
+### Added
+
+- 给快捷命令添加人类可读描述
+
 ## [0.8.0] - 2024-08-15
 
 ### Added

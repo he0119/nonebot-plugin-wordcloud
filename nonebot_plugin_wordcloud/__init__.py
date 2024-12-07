@@ -161,6 +161,7 @@ wordcloud_cmd.shortcut(
         "command": "词云",
         "wrapper": wrapper,
         "args": ["{my}", "{type}"],
+        "humanized": "[我的]<类型>词云",
     },
 )
 
@@ -406,6 +407,7 @@ schedule_cmd.shortcut(
         "prefix": True,
         "command": "词云定时发送",
         "args": ["--action", "状态", "{type}"],
+        "humanized": "词云每日定时发送状态",
     },
 )
 schedule_cmd.shortcut(
@@ -414,6 +416,7 @@ schedule_cmd.shortcut(
         "prefix": True,
         "command": "词云定时发送",
         "args": ["--action", "{action}", "{type}"],
+        "humanized": "<开启|关闭>词云每日定时发送",
     },
 )
 
