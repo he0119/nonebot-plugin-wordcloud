@@ -57,7 +57,7 @@ async def app(tmp_path: Path, mocker: MockerFixture):
     yield App()
 
     from nonebot_plugin_chatrecorder.model import MessageRecord
-    from nonebot_plugin_session_orm import SessionModel
+    from nonebot_plugin_uninfo.orm import SessionModel
 
     from nonebot_plugin_wordcloud.model import Schedule
 
