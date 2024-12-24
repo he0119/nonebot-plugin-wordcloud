@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 - 给快捷命令添加人类可读描述
 
+### Fixed
+
+- 限制 chatrecorder 的版本并添加 session 依赖
+
 ## [0.8.0] - 2024-08-15
 
 ### Added
