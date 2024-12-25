@@ -42,9 +42,49 @@ async def after_nonebot_init(after_nonebot_init: None):
     # 加载插件
     nonebot.load_plugin("nonebot_plugin_wordcloud")
 
+    # 手动缓存 uninfo 所需信息
+    from nonebot_plugin_uninfo import (
+        Scene,
+        SceneType,
+        Session,
+        SupportAdapter,
+        SupportScope,
+        User,
+    )
+    from nonebot_plugin_uninfo.adapters.onebot11.main import fetcher as onebot11_fetcher
+    from nonebot_plugin_uninfo.adapters.onebot12.main import fetcher as onebot12_fetcher
+
+    onebot11_fetcher.session_cache = {
+        "group_10000_10": Session(
+            self_id="test",
+            adapter=SupportAdapter.onebot11,
+            scope=SupportScope.qq_client,
+            scene=Scene("10000", SceneType.GROUP),
+            user=User("10"),
+        )
+    }
+    onebot12_fetcher.session_cache = {
+        "group_10000_100": Session(
+            self_id="test",
+            adapter=SupportAdapter.onebot12,
+            scope=SupportScope.qq_client,
+            scene=Scene("10000", SceneType.GROUP),
+            user=User("100"),
+        ),
+        "guild_10000_channel_100000_10": Session(
+            self_id="test",
+            adapter=SupportAdapter.onebot12,
+            scope=SupportScope.qq_guild,
+            scene=Scene(
+                "100000", SceneType.CHANNEL_TEXT, parent=Scene("10000", SceneType.GUILD)
+            ),
+            user=User("10"),
+        ),
+    }
+
 
 @pytest.fixture
-async def app(tmp_path: Path, mocker: MockerFixture):
+async def app(app: App, tmp_path: Path, mocker: MockerFixture):
     wordcloud_dir = tmp_path / "wordcloud"
     wordcloud_dir.mkdir()
     mocker.patch("nonebot_plugin_wordcloud.config.DATA_DIR", wordcloud_dir)
@@ -54,7 +94,7 @@ async def app(tmp_path: Path, mocker: MockerFixture):
     from nonebot_plugin_wordcloud.schedule import schedule_service
 
     await init_orm()
-    yield App()
+    yield app
 
     from nonebot_plugin_chatrecorder.model import MessageRecord
     from nonebot_plugin_uninfo.orm import SessionModel
@@ -64,8 +104,8 @@ async def app(tmp_path: Path, mocker: MockerFixture):
     # 清理数据
     async with get_session() as session, session.begin():
         await session.execute(delete(MessageRecord))
-        await session.execute(delete(SessionModel))
         await session.execute(delete(Schedule))
+        await session.execute(delete(SessionModel))
 
     keys = [key for key in schedule_service.schedules.keys() if key != "default"]
     for key in keys:
