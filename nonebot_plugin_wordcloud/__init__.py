@@ -4,7 +4,7 @@ from nonebot import require
 
 require("nonebot_plugin_apscheduler")
 require("nonebot_plugin_alconna")
-require("nonebot_plugin_session")
+require("nonebot_plugin_uninfo")
 require("nonebot_plugin_cesaa")
 
 import re
@@ -37,7 +37,7 @@ from nonebot_plugin_alconna import (
     store_true,
 )
 from nonebot_plugin_cesaa import get_messages_plain_text
-from nonebot_plugin_session import Session, SessionIdType, extract_session
+from nonebot_plugin_uninfo import Session, UniSession
 from PIL import Image
 
 from . import migrations
@@ -259,7 +259,7 @@ async def handle_first_receive(
 )
 async def handle_wordcloud(
     my: Query[bool] = AlconnaQuery("my.value", False),
-    session: Session = Depends(extract_session),
+    session: Session = UniSession(),
     start: datetime = Arg(),
     stop: datetime = Arg(),
     mask_key: str = Depends(get_mask_key),
@@ -267,18 +267,16 @@ async def handle_wordcloud(
     """生成词云"""
     messages = await get_messages_plain_text(
         session=session,
-        id_type=SessionIdType.GROUP_USER if my.result else SessionIdType.GROUP,
-        include_bot_id=False,
-        include_bot_type=False,
+        filter_user=my.result,
+        filter_adapter=False,
         types=["message"],  # 排除机器人自己发的消息
         time_start=start,
         time_stop=stop,
-        exclude_id1s=plugin_config.wordcloud_exclude_user_ids,
+        exclude_user_ids=plugin_config.wordcloud_exclude_user_ids,
     )
 
     if not (image := await get_wordcloud(messages, mask_key)):
         await wordcloud_cmd.finish("没有足够的数据生成词云", at_sender=my.result)
-        return  # pragma: no cover
 
     await saa.Image(image, "wordcloud.png").finish(at_sender=my.result)
 

@@ -32,8 +32,15 @@ async def _message_record(app: App):
     from nonebot_plugin_chatrecorder import serialize_message
     from nonebot_plugin_chatrecorder.model import MessageRecord
     from nonebot_plugin_orm import get_session
-    from nonebot_plugin_session import Session, SessionLevel
-    from nonebot_plugin_session_orm import get_session_persist_id
+    from nonebot_plugin_uninfo import (
+        Scene,
+        SceneType,
+        Session,
+        SupportAdapter,
+        SupportScope,
+        User,
+    )
+    from nonebot_plugin_uninfo.orm import get_session_persist_id
 
     async with app.test_api() as ctx:
         adapter = Adapter(get_driver())
@@ -49,49 +56,43 @@ async def _message_record(app: App):
 
     sessions = [
         Session(
-            bot_id="test",
-            bot_type="OneBot V11",
-            platform="qq",
-            level=SessionLevel.LEVEL2,
-            id1="bot",
-            id2="10000",
-            id3=None,
+            self_id="test",
+            adapter=SupportAdapter.onebot11,
+            scope=SupportScope.qq_client,
+            scene=Scene("10000", SceneType.GROUP),
+            user=User("bot"),
         ),
         Session(
-            bot_id="test",
-            bot_type="OneBot V11",
-            platform="qq",
-            level=SessionLevel.LEVEL2,
-            id1="10",
-            id2="10000",
-            id3=None,
+            self_id="test",
+            adapter=SupportAdapter.onebot11,
+            scope=SupportScope.qq_client,
+            scene=Scene("10000", SceneType.GROUP),
+            user=User("10"),
         ),
         Session(
-            bot_id="test",
-            bot_type="OneBot V11",
-            platform="qq",
-            level=SessionLevel.LEVEL2,
-            id1="11",
-            id2="10000",
-            id3=None,
+            self_id="test",
+            adapter=SupportAdapter.onebot11,
+            scope=SupportScope.qq_client,
+            scene=Scene("10000", SceneType.GROUP),
+            user=User("11"),
         ),
         Session(
-            bot_id="test",
-            bot_type="OneBot V12",
-            platform="unknown",
-            level=SessionLevel.LEVEL3,
-            id1="10",
-            id2="100000",
-            id3="10000",
+            self_id="test",
+            adapter=SupportAdapter.onebot12,
+            scope=SupportScope.qq_guild,
+            scene=Scene(
+                "100000", SceneType.CHANNEL_TEXT, parent=Scene("10000", SceneType.GUILD)
+            ),
+            user=User("10"),
         ),
         Session(
-            bot_id="test",
-            bot_type="OneBot V12",
-            platform="unknown",
-            level=SessionLevel.LEVEL3,
-            id1="11",
-            id2="100000",
-            id3="10000",
+            self_id="test",
+            adapter=SupportAdapter.onebot12,
+            scope=SupportScope.qq_guild,
+            scene=Scene(
+                "100000", SceneType.CHANNEL_TEXT, parent=Scene("10000", SceneType.GUILD)
+            ),
+            user=User("11"),
         ),
     ]
     session_ids: list[int] = []

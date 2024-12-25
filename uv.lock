@@ -1702,32 +1702,31 @@ wheels = [
 
 [[package]]
 name = "nonebot-plugin-cesaa"
-version = "0.4.2"
+version = "0.5.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "nonebot-plugin-chatrecorder" },
     { name = "nonebot-plugin-send-anything-anywhere" },
     { name = "nonebot2" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/f3/a6/a5608adf9d9763e34b606c244a28d56d7f98a3c66c8206f786bc30197dc0/nonebot_plugin_cesaa-0.4.2.tar.gz", hash = "sha256:719460b40c9d9d0ad67630a186e924ef9d6c58fdc4449844162d724b9e3fe808", size = 6666 }
+sdist = { url = "https://files.pythonhosted.org/packages/8e/2c/f0f119835a8d0037c68293c82d83a46de2fed1c4c953856f49f4824fd884/nonebot_plugin_cesaa-0.5.0.tar.gz", hash = "sha256:f9489fdc26b32c48abba754e401f759a1b633aeeee8bcaaced28bc260d770019", size = 6902 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/3a/49/204ab8df9b084ba52437ca27ff217d5cb4cb1fede02d749aa46d5a5c7d27/nonebot_plugin_cesaa-0.4.2-py3-none-any.whl", hash = "sha256:9f36b0617b7c46eddd315bc853948ba931fcc78af97cbe56867d513e416f24a6", size = 6020 },
+    { url = "https://files.pythonhosted.org/packages/92/9c/1a60949be080bbb1d6cba5137b1a0aa3054fbc63569c30e7428bb34f2d3f/nonebot_plugin_cesaa-0.5.0-py3-none-any.whl", hash = "sha256:3b012631fc3779acfc75297f5ec8b3dca613a777fd47ced202d7d11e9e728a17", size = 6295 },
 ]
 
 [[package]]
 name = "nonebot-plugin-chatrecorder"
-version = "0.6.2"
+version = "0.7.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "nonebot-plugin-localstore" },
     { name = "nonebot-plugin-orm" },
-    { name = "nonebot-plugin-session" },
-    { name = "nonebot-plugin-session-orm" },
+    { name = "nonebot-plugin-uninfo" },
     { name = "nonebot2" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/00/b9/c4afde39e1297b65871e3fe46bf1d4019b75e4027ad2a19e659fb8252369/nonebot_plugin_chatrecorder-0.6.2.tar.gz", hash = "sha256:4bdd892eb00e16f3d75e7edfc85b6bfd7e0fd17be82de164bd9b275cc1ea6974", size = 17887 }
+sdist = { url = "https://files.pythonhosted.org/packages/d0/6d/77fd9f23c20a84118cc26223c309c895ae808099f672f3cf2cbcff89ef29/nonebot_plugin_chatrecorder-0.7.0.tar.gz", hash = "sha256:5b63a92733307c4cd739bb1bb6d2af949811ff6882ce49e73d42735cfd6e820d", size = 17224 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/c2/c5/d90b841411f422353b8ea913c051e7f6aa74ac8fd4de5be82116ba8f593d/nonebot_plugin_chatrecorder-0.6.2-py3-none-any.whl", hash = "sha256:70df4bc7bf1a8d9a5e84f6bf8d0c473095a581150e118fb29c340a1abf5e39f3", size = 30536 },
+    { url = "https://files.pythonhosted.org/packages/fb/49/f6529eec6b57d4e0eefc289ae2d2fa7237645effd66ed2767f152ebca6ab/nonebot_plugin_chatrecorder-0.7.0-py3-none-any.whl", hash = "sha256:56cfb306cc85c602c8c97e7f1a63328d075ac8fd2349ddefcb501600f416d544", size = 28422 },
 ]
 
 [[package]]
@@ -1801,30 +1800,16 @@ wheels = [
 ]
 
 [[package]]
-name = "nonebot-plugin-session"
-version = "0.3.2"
+name = "nonebot-plugin-uninfo"
+version = "0.6.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
+    { name = "importlib-metadata" },
     { name = "nonebot2" },
-    { name = "strenum" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/09/1a/95a465074f566a1552c00a0045d9e67fea41401eaf6af3f7c88b644da0f1/nonebot_plugin_session-0.3.2.tar.gz", hash = "sha256:da0dabe9108151052a6e83d9923068d2ec43a93810ad37b264ed65aee2c69f93", size = 10378 }
+sdist = { url = "https://files.pythonhosted.org/packages/b6/98/d861e72dad163d3aa6d7f34ceaf72afab47fab179432dd04344615cc0d1b/nonebot_plugin_uninfo-0.6.2.tar.gz", hash = "sha256:8f8b1351d4ae1a34766c68dee2b05f358416b310314fead4d9d6776a4b3535f3", size = 34682 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/b2/81/07c38c920dc6bab000a12d79af78482dcf0695f8a6e0b7b85fd993ef7483/nonebot_plugin_session-0.3.2-py3-none-any.whl", hash = "sha256:785e74ff656e46d84c4dbbac125f9a9adebcc4b9ff7db700527e6e47d47aabd6", size = 14815 },
-]
-
-[[package]]
-name = "nonebot-plugin-session-orm"
-version = "0.2.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "nonebot-plugin-orm" },
-    { name = "nonebot-plugin-session" },
-    { name = "nonebot2", extra = ["fastapi"] },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/bf/74/566617f4d38daf43f673820d362863e81741a386df2d79ba40fe42f4e78c/nonebot_plugin_session_orm-0.2.0.tar.gz", hash = "sha256:420e210898a3f348cebbb4ea0816bab66f3299c7b0c01e929a01967d60cc438c", size = 5040 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/37/7f/d1e2e4a6a3b4c0f8489697ab04ed1136bc67982116c6df2ff7dfb092c381/nonebot_plugin_session_orm-0.2.0-py3-none-any.whl", hash = "sha256:e0a6009803feccf4e98db483e1f9072122ddbca40df0b2d1b45741c8e5332acb", size = 6846 },
+    { url = "https://files.pythonhosted.org/packages/fe/9c/c2b3b16d9e4d898aeb582c15eff3ab31585228c31e61ec21e0819802726f/nonebot_plugin_uninfo-0.6.2-py3-none-any.whl", hash = "sha256:6d53559ab3ef23fe750a445cbc1ffd6abbbd7ba6dd6ab375a0c7d7d55bdc5175", size = 54535 },
 ]
 
 [[package]]
@@ -1841,7 +1826,7 @@ wheels = [
 
 [[package]]
 name = "nonebot-plugin-wordcloud"
-version = "0.8.0"
+version = "0.8.1"
 source = { editable = "." }
 dependencies = [
     { name = "emoji" },
@@ -1851,7 +1836,7 @@ dependencies = [
     { name = "nonebot-plugin-cesaa" },
     { name = "nonebot-plugin-localstore" },
     { name = "nonebot-plugin-orm" },
-    { name = "nonebot-plugin-session" },
+    { name = "nonebot-plugin-uninfo" },
     { name = "nonebot2", extra = ["fastapi"] },
     { name = "tzdata" },
     { name = "wordcloud" },
@@ -1890,11 +1875,11 @@ requires-dist = [
     { name = "jieba", specifier = ">=0.42.1" },
     { name = "nonebot-plugin-alconna", specifier = ">=0.49.0" },
     { name = "nonebot-plugin-apscheduler", specifier = ">=0.4.0" },
-    { name = "nonebot-plugin-cesaa", specifier = ">=0.4.0,<0.5.0" },
+    { name = "nonebot-plugin-cesaa", specifier = ">=0.5.0" },
     { name = "nonebot-plugin-datastore", marker = "extra == 'datastore'", specifier = ">=1.2.0" },
     { name = "nonebot-plugin-localstore", specifier = ">=0.6.0" },
     { name = "nonebot-plugin-orm", specifier = ">=0.7.0" },
-    { name = "nonebot-plugin-session", specifier = ">=0.3.0" },
+    { name = "nonebot-plugin-uninfo", specifier = ">=0.6.2" },
     { name = "nonebot2", extras = ["fastapi"], specifier = ">=2.2.0" },
     { name = "tzdata" },
     { name = "wordcloud", specifier = ">=1.8.1" },

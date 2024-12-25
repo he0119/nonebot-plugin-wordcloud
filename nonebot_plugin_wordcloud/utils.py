@@ -9,7 +9,7 @@ from nonebot.params import Depends
 from nonebot.permission import SUPERUSER
 from nonebot_plugin_apscheduler import scheduler
 from nonebot_plugin_saa import PlatformTarget, get_target
-from nonebot_plugin_session import Session, SessionLevel, extract_session
+from nonebot_plugin_uninfo import SceneType, Session, UniSession
 
 from .config import plugin_config
 
@@ -88,7 +88,11 @@ def get_mask_key(target: PlatformTarget = Depends(get_target)) -> str:
     return "-".join(mask_keys)
 
 
-async def ensure_group(matcher: Matcher, session: Session = Depends(extract_session)):
+async def ensure_group(matcher: Matcher, session: Session = UniSession()):
     """确保在群组中使用"""
-    if session.level not in [SessionLevel.LEVEL2, SessionLevel.LEVEL3]:
+    if session.scene.type not in [
+        SceneType.GROUP,
+        SceneType.GUILD,
+        SceneType.CHANNEL_TEXT,
+    ]:
         await matcher.finish("请在群组中使用！")
