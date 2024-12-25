@@ -63,7 +63,7 @@ async def _message_record(app: App):
             user=User("bot"),
         ),
         Session(
-            self_id="test",
+            self_id="test1",
             adapter=SupportAdapter.onebot11,
             scope=SupportScope.qq_client,
             scene=Scene("10000", SceneType.GROUP),
@@ -77,7 +77,7 @@ async def _message_record(app: App):
             user=User("11"),
         ),
         Session(
-            self_id="test",
+            self_id="test1",
             adapter=SupportAdapter.onebot12,
             scope=SupportScope.qq_guild,
             scene=Scene(

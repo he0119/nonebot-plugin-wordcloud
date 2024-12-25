@@ -268,6 +268,7 @@ async def handle_wordcloud(
     messages = await get_messages_plain_text(
         session=session,
         filter_user=my.result,
+        filter_self_id=False,
         filter_adapter=False,
         types=["message"],  # 排除机器人自己发的消息
         time_start=start,
