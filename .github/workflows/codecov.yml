@@ -66,12 +66,11 @@ jobs:
           timezoneMacos: "Asia/Shanghai"
           timezoneWindows: "China Standard Time"
 
-      - name: Install the latest version of uv
+      - name: Setup uv
         uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
           python-version: ${{ matrix.python-version }}
-          cache-suffix: ${{ matrix.python-version }}
 
       - name: Run tests
         shell: bash
