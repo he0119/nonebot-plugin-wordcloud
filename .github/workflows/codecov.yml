@@ -20,7 +20,6 @@ jobs:
         python-version: ["3.9", "3.10", "3.11", "3.12"]
         db: ["sqlite+aiosqlite://"]
         db-pool: ["StaticPool"]
-
         include:
           - os: ubuntu-latest
             python-version: "3.10"
@@ -37,6 +36,7 @@ jobs:
       PYTHON_VERSION: ${{ matrix.python-version }}
       SQLALCHEMY_DATABASE_URL: ${{ matrix.db }}
       SQLALCHEMY_POOL_CLASS: ${{ matrix.db-pool }}
+      TZ: "Asia/Shanghai"
     services:
       postgresql:
         image: ${{ startsWith(matrix.db, 'postgresql') && 'postgres' || '' }}
