@@ -253,7 +253,9 @@ async def test_wordcloud_cmd(app: App):
         event = fake_group_message_event_v11(message=Message("/今日词云"))
 
         ctx.receive_event(bot, event)
-        ctx.should_call_send(event, "没有足够的数据生成词云", True, at_sender=False)
+        ctx.should_call_send(
+            event, "没有足够的数据生成词云", True, at_sender=False, reply=False
+        )
         ctx.should_finished()
 
 
@@ -967,3 +969,48 @@ async def test_today_wordcloud_exclude_user_ids(app: App, mocker: MockerFixture)
 
     mocked_datetime_now.assert_called_once_with()
     mocked_get_wordcloud.assert_called_once_with(["11:1-2"], "qq_group-group_id=10000")
+
+
+@pytest.mark.usefixtures("_message_record")
+async def test_today_wordcloud_reply_message(app: App, mocker: MockerFixture):
+    """测试今日词云回复消息"""
+    from nonebot_plugin_chatrecorder import get_messages_plain_text
+    from nonebot_plugin_saa import Image, MessageFactory
+
+    from nonebot_plugin_wordcloud import plugin_config, wordcloud_cmd
+
+    mocker.patch.object(plugin_config, "wordcloud_reply_message", True)
+
+    # 排除机器人自己的消息
+    messages = await get_messages_plain_text()
+    assert len(messages) == 9
+
+    mocked_datetime_now = mocker.patch(
+        "nonebot_plugin_wordcloud.get_datetime_now_with_timezone",
+        return_value=datetime(2022, 1, 2, 23, tzinfo=ZoneInfo("Asia/Shanghai")),
+    )
+
+    mocked_get_wordcloud = mocker.patch(
+        "nonebot_plugin_wordcloud.get_wordcloud",
+        return_value=FAKE_IMAGE,
+    )
+
+    async with app.test_matcher(wordcloud_cmd) as ctx:
+        adapter = get_adapter(Adapter)
+        bot = ctx.create_bot(base=Bot, adapter=adapter, auto_connect=False)
+        event = fake_group_message_event_v11(message=Message("/今日词云"))
+
+        ctx.receive_event(bot, event)
+        should_send_saa(
+            ctx,
+            MessageFactory(Image(FAKE_IMAGE, "wordcloud.png")),
+            bot,
+            event=event,
+            reply=True,
+        )
+        ctx.should_finished()
+
+    mocked_datetime_now.assert_called_once_with()
+    mocked_get_wordcloud.assert_called_once_with(
+        ["10:1-2", "11:1-2"], "qq_group-group_id=10000"
+    )

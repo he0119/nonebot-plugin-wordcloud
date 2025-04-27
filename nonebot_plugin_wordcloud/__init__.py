@@ -277,9 +277,16 @@ async def handle_wordcloud(
     )
 
     if not (image := await get_wordcloud(messages, mask_key)):
-        await wordcloud_cmd.finish("没有足够的数据生成词云", at_sender=my.result)
+        await wordcloud_cmd.finish(
+            "没有足够的数据生成词云",
+            at_sender=my.result,
+            reply=plugin_config.wordcloud_reply_message,
+        )
 
-    await saa.Image(image, "wordcloud.png").finish(at_sender=my.result)
+    await saa.Image(image, "wordcloud.png").finish(
+        at_sender=my.result,
+        reply=plugin_config.wordcloud_reply_message,
+    )
 
 
 set_mask_cmd = on_alconna(
