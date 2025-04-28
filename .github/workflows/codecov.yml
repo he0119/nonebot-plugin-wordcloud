@@ -67,7 +67,7 @@ jobs:
           timezoneWindows: "China Standard Time"
 
       - name: Setup uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v6
         with:
           enable-cache: true
           python-version: ${{ matrix.python-version }}
