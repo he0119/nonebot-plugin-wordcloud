@@ -1095,14 +1095,14 @@ async def test_group_year_wordcloud(app: App, mocker: MockerFixture):
 
 
 @pytest.mark.usefixtures("_message_record")
-async def test_config_default_group_behavior(app: App, mocker: MockerFixture):
-    """测试配置为默认群组行为时的今日词云"""
+async def test_config_default_personal_behavior(app: App, mocker: MockerFixture):
+    """测试配置为默认个人行为时的今日词云"""
     from nonebot_plugin_saa import Image, MessageFactory
 
     from nonebot_plugin_wordcloud import plugin_config, wordcloud_cmd
 
-    # Mock the config to use group as default
-    mocker.patch.object(plugin_config, "wordcloud_default_personal", False)
+    # Mock the config to use personal as default
+    mocker.patch.object(plugin_config, "wordcloud_default_personal", True)
 
     mocked_datetime_now = mocker.patch(
         "nonebot_plugin_wordcloud.get_datetime_now_with_timezone",
@@ -1121,11 +1121,13 @@ async def test_config_default_group_behavior(app: App, mocker: MockerFixture):
 
         ctx.receive_event(bot, event)
         should_send_saa(
-            ctx, MessageFactory(Image(FAKE_IMAGE, "wordcloud.png")), bot, event=event
+            ctx,
+            MessageFactory(Image(FAKE_IMAGE, "wordcloud.png")),
+            bot,
+            event=event,
+            at_sender=True,
         )
         ctx.should_finished()
 
     mocked_datetime_now.assert_called_once_with()
-    mocked_get_wordcloud.assert_called_once_with(
-        ["10:1-2", "11:1-2"], "qq_group-group_id=10000"
-    )
+    mocked_get_wordcloud.assert_called_once_with(["10:1-2"], "qq_group-group_id=10000")
