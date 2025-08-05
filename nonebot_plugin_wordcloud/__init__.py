@@ -292,7 +292,7 @@ async def handle_wordcloud(
     else:
         # 使用配置中的默认行为
         filter_user = plugin_config.wordcloud_default_personal
-    
+
     messages = await get_messages_plain_text(
         session=session,
         filter_user=filter_user,
