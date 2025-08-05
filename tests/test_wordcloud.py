@@ -293,7 +293,9 @@ async def test_today_wordcloud(app: App, mocker: MockerFixture):
         ctx.should_finished()
 
     mocked_datetime_now.assert_called_once_with()
-    mocked_get_wordcloud.assert_called_once_with(["10:1-2"], "qq_group-group_id=10000")
+    mocked_get_wordcloud.assert_called_once_with(
+        ["10:1-2", "11:1-2"], "qq_group-group_id=10000"
+    )
 
 
 @pytest.mark.usefixtures("_message_record")
@@ -364,7 +366,9 @@ async def test_yesterday_wordcloud(app: App, mocker: MockerFixture):
         ctx.should_finished()
 
     mocked_datetime_now.assert_called_once_with()
-    mocked_get_wordcloud.assert_called_once_with(["10:1-2"], "qq_group-group_id=10000")
+    mocked_get_wordcloud.assert_called_once_with(
+        ["10:1-2", "11:1-2"], "qq_group-group_id=10000"
+    )
 
 
 @pytest.mark.usefixtures("_message_record")
@@ -435,7 +439,9 @@ async def test_week_wordcloud(app: App, mocker: MockerFixture):
         ctx.should_finished()
 
     mocked_datetime_now.assert_called_once_with()
-    mocked_get_wordcloud.assert_called_once_with(["10:1-3"], "qq_group-group_id=10000")
+    mocked_get_wordcloud.assert_called_once_with(
+        ["10:1-3", "11:1-3"], "qq_group-group_id=10000"
+    )
 
 
 @pytest.mark.usefixtures("_message_record")
@@ -470,7 +476,9 @@ async def test_last_week_wordcloud(app: App, mocker: MockerFixture):
         ctx.should_finished()
 
     mocked_datetime_now.assert_called_once_with()
-    mocked_get_wordcloud.assert_called_once_with(["10:1-2"], "qq_group-group_id=10000")
+    mocked_get_wordcloud.assert_called_once_with(
+        ["10:1-2", "11:1-2"], "qq_group-group_id=10000"
+    )
 
 
 @pytest.mark.usefixtures("_message_record")
@@ -505,7 +513,9 @@ async def test_month_wordcloud(app: App, mocker: MockerFixture):
         ctx.should_finished()
 
     mocked_datetime_now.assert_called_once_with()
-    mocked_get_wordcloud.assert_called_once_with(["10:2-1"], "qq_group-group_id=10000")
+    mocked_get_wordcloud.assert_called_once_with(
+        ["10:2-1", "11:2-1"], "qq_group-group_id=10000"
+    )
 
 
 @pytest.mark.usefixtures("_message_record")
@@ -547,7 +557,7 @@ async def test_last_month_wordcloud(app: App, mocker: MockerFixture):
 
     mocked_datetime_now.assert_called_once_with()
     mocked_get_wordcloud.assert_called_once_with(
-        ["10:1-2", "10:1-3"], "qq_group-group_id=10000"
+        ["10:1-2", "11:1-2", "10:1-3", "11:1-3"], "qq_group-group_id=10000"
     )
 
 
@@ -590,7 +600,7 @@ async def test_year_wordcloud(app: App, mocker: MockerFixture):
 
     mocked_datetime_now.assert_called_once_with()
     mocked_get_wordcloud.assert_called_once_with(
-        ["10:1-2", "10:1-3", "10:2-1"],
+        ["10:1-2", "11:1-2", "10:1-3", "11:1-3", "10:2-1", "11:2-1"],
         "qq_group-group_id=10000",
     )
 
@@ -659,7 +669,9 @@ async def test_history_wordcloud(app: App, mocker: MockerFixture):
         )
         ctx.should_finished()
 
-    mocked_get_wordcloud.assert_called_once_with(["10:1-2"], "qq_group-group_id=10000")
+    mocked_get_wordcloud.assert_called_once_with(
+        ["10:1-2", "11:1-2"], "qq_group-group_id=10000"
+    )
 
 
 @pytest.mark.usefixtures("_message_record")
@@ -697,7 +709,7 @@ async def test_history_wordcloud_start_stop(app: App, mocker: MockerFixture):
         ctx.should_finished()
 
     mocked_get_wordcloud.assert_called_once_with(
-        ["10:1-3", "10:2-1"], "qq_group-group_id=10000"
+        ["10:1-3", "11:1-3", "10:2-1", "11:2-1"], "qq_group-group_id=10000"
     )
 
 
@@ -831,7 +843,7 @@ async def test_today_wordcloud_v12(app: App, mocker: MockerFixture):
 
     mocked_datetime_now.assert_called_once_with()
     mocked_get_wordcloud.assert_called_once_with(
-        ["v12-10:1-2"],
+        ["v12-10:1-2", "v12-11:1-2"],
         "unknown_ob12-platform=qq-detail_type=channel-guild_id=10000-channel_id=100000",
     )
 
@@ -917,7 +929,9 @@ async def test_today_wordcloud_qq_group_v12(app: App, mocker: MockerFixture):
         ctx.should_finished()
 
     mocked_datetime_now.assert_called_once_with()
-    mocked_get_wordcloud.assert_called_once_with(["10:1-2"], "qq_group-group_id=10000")
+    mocked_get_wordcloud.assert_called_once_with(
+        ["10:1-2", "11:1-2"], "qq_group-group_id=10000"
+    )
 
 
 @pytest.mark.usefixtures("_message_record")
@@ -997,7 +1011,9 @@ async def test_today_wordcloud_reply_message(app: App, mocker: MockerFixture):
         ctx.should_finished()
 
     mocked_datetime_now.assert_called_once_with()
-    mocked_get_wordcloud.assert_called_once_with(["10:1-2"], "qq_group-group_id=10000")
+    mocked_get_wordcloud.assert_called_once_with(
+        ["10:1-2", "11:1-2"], "qq_group-group_id=10000"
+    )
 
 
 @pytest.mark.usefixtures("_message_record")
