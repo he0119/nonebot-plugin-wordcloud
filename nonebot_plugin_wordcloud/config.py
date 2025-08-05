@@ -31,6 +31,8 @@ class Config(BaseModel):
     """排除的用户 ID 列表（全局，不区分平台）"""
     wordcloud_reply_message: bool = False
     """是否回复消息，默认不回复"""
+    wordcloud_default_personal: bool = True
+    """默认获取个人数据而不是群组数据，默认为 True"""
 
     @model_validator(mode="before")
     def set_default_values(cls, values):
