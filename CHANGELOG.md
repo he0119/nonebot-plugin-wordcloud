@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 ### Added
 
 - 添加是否发送词云图片时回复消息的配置项
+- 添加是否默认获取个人数据的配置项
 
 ## [0.9.0] - 2025-01-14
 

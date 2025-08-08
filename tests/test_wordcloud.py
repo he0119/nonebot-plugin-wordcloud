@@ -27,6 +27,16 @@ FAKE_IMAGE = BytesIO(
 )
 
 
+def assert_wordcloud_called_with_unordered(
+    mocked_get_wordcloud, expected_messages: set[str], expected_mask_key: str
+):
+    """验证 get_wordcloud 被调用，使用集合比较忽略消息顺序"""
+    assert mocked_get_wordcloud.call_count == 1
+    call_args = mocked_get_wordcloud.call_args
+    assert set(call_args[0][0]) == expected_messages
+    assert call_args[0][1] == expected_mask_key
+
+
 @pytest.fixture
 async def _message_record(app: App):
     from nonebot_plugin_chatrecorder import serialize_message
@@ -293,8 +303,10 @@ async def test_today_wordcloud(app: App, mocker: MockerFixture):
         ctx.should_finished()
 
     mocked_datetime_now.assert_called_once_with()
-    mocked_get_wordcloud.assert_called_once_with(
-        ["10:1-2", "11:1-2"], "qq_group-group_id=10000"
+    assert_wordcloud_called_with_unordered(
+        mocked_get_wordcloud,
+        {"10:1-2", "11:1-2"},
+        "qq_group-group_id=10000",
     )
 
 
@@ -331,7 +343,11 @@ async def test_my_today_wordcloud(app: App, mocker: MockerFixture):
         ctx.should_finished()
 
     mocked_datetime_now.assert_called_once_with()
-    mocked_get_wordcloud.assert_called_once_with(["10:1-2"], "qq_group-group_id=10000")
+    assert_wordcloud_called_with_unordered(
+        mocked_get_wordcloud,
+        {"10:1-2"},
+        "qq_group-group_id=10000",
+    )
 
 
 @pytest.mark.usefixtures("_message_record")
@@ -366,8 +382,10 @@ async def test_yesterday_wordcloud(app: App, mocker: MockerFixture):
         ctx.should_finished()
 
     mocked_datetime_now.assert_called_once_with()
-    mocked_get_wordcloud.assert_called_once_with(
-        ["10:1-2", "11:1-2"], "qq_group-group_id=10000"
+    assert_wordcloud_called_with_unordered(
+        mocked_get_wordcloud,
+        {"10:1-2", "11:1-2"},
+        "qq_group-group_id=10000",
     )
 
 
@@ -404,7 +422,11 @@ async def test_my_yesterday_wordcloud(app: App, mocker: MockerFixture):
         ctx.should_finished()
 
     mocked_datetime_now.assert_called_once_with()
-    mocked_get_wordcloud.assert_called_once_with(["10:1-2"], "qq_group-group_id=10000")
+    assert_wordcloud_called_with_unordered(
+        mocked_get_wordcloud,
+        {"10:1-2"},
+        "qq_group-group_id=10000",
+    )
 
 
 @pytest.mark.usefixtures("_message_record")
@@ -439,8 +461,10 @@ async def test_week_wordcloud(app: App, mocker: MockerFixture):
         ctx.should_finished()
 
     mocked_datetime_now.assert_called_once_with()
-    mocked_get_wordcloud.assert_called_once_with(
-        ["10:1-3", "11:1-3"], "qq_group-group_id=10000"
+    assert_wordcloud_called_with_unordered(
+        mocked_get_wordcloud,
+        {"10:1-3", "11:1-3"},
+        "qq_group-group_id=10000",
     )
 
 
@@ -476,8 +500,10 @@ async def test_last_week_wordcloud(app: App, mocker: MockerFixture):
         ctx.should_finished()
 
     mocked_datetime_now.assert_called_once_with()
-    mocked_get_wordcloud.assert_called_once_with(
-        ["10:1-2", "11:1-2"], "qq_group-group_id=10000"
+    assert_wordcloud_called_with_unordered(
+        mocked_get_wordcloud,
+        {"10:1-2", "11:1-2"},
+        "qq_group-group_id=10000",
     )
 
 
@@ -513,20 +539,16 @@ async def test_month_wordcloud(app: App, mocker: MockerFixture):
         ctx.should_finished()
 
     mocked_datetime_now.assert_called_once_with()
-    mocked_get_wordcloud.assert_called_once_with(
-        ["10:2-1", "11:2-1"], "qq_group-group_id=10000"
+    assert_wordcloud_called_with_unordered(
+        mocked_get_wordcloud,
+        {"10:2-1", "11:2-1"},
+        "qq_group-group_id=10000",
     )
 
 
 @pytest.mark.usefixtures("_message_record")
 async def test_last_month_wordcloud(app: App, mocker: MockerFixture):
     """测试上月词云"""
-    from nonebot_plugin_orm import get_session
-
-    engine = get_session().get_bind()
-    if engine.dialect.name == "mysql":
-        pytest.skip("MySQL 上获取消息的顺序不同")
-
     from nonebot_plugin_saa import Image, MessageFactory
 
     from nonebot_plugin_wordcloud import wordcloud_cmd
@@ -556,20 +578,17 @@ async def test_last_month_wordcloud(app: App, mocker: MockerFixture):
         ctx.should_finished()
 
     mocked_datetime_now.assert_called_once_with()
-    mocked_get_wordcloud.assert_called_once_with(
-        ["10:1-2", "11:1-2", "10:1-3", "11:1-3"], "qq_group-group_id=10000"
+    # 验证调用参数，使用集合比较忽略顺序
+    assert_wordcloud_called_with_unordered(
+        mocked_get_wordcloud,
+        {"10:1-2", "11:1-2", "10:1-3", "11:1-3"},
+        "qq_group-group_id=10000",
     )
 
 
 @pytest.mark.usefixtures("_message_record")
 async def test_year_wordcloud(app: App, mocker: MockerFixture):
     """测试年度词云"""
-    from nonebot_plugin_orm import get_session
-
-    engine = get_session().get_bind()
-    if engine.dialect.name == "mysql":
-        pytest.skip("MySQL 上获取消息的顺序不同")
-
     from nonebot_plugin_saa import Image, MessageFactory
 
     from nonebot_plugin_wordcloud import wordcloud_cmd
@@ -599,8 +618,10 @@ async def test_year_wordcloud(app: App, mocker: MockerFixture):
         ctx.should_finished()
 
     mocked_datetime_now.assert_called_once_with()
-    mocked_get_wordcloud.assert_called_once_with(
-        ["10:1-2", "11:1-2", "10:1-3", "11:1-3", "10:2-1", "11:2-1"],
+    # 验证调用参数，使用集合比较忽略顺序
+    assert_wordcloud_called_with_unordered(
+        mocked_get_wordcloud,
+        {"10:1-2", "11:1-2", "10:1-3", "11:1-3", "10:2-1", "11:2-1"},
         "qq_group-group_id=10000",
     )
 
@@ -638,8 +659,10 @@ async def test_my_year_wordcloud(app: App, mocker: MockerFixture):
         ctx.should_finished()
 
     mocked_datetime_now.assert_called_once_with()
-    mocked_get_wordcloud.assert_called_once_with(
-        ["10:1-2", "10:1-3", "10:2-1"], "qq_group-group_id=10000"
+    assert_wordcloud_called_with_unordered(
+        mocked_get_wordcloud,
+        {"10:1-2", "10:1-3", "10:2-1"},
+        "qq_group-group_id=10000",
     )
 
 
@@ -669,20 +692,16 @@ async def test_history_wordcloud(app: App, mocker: MockerFixture):
         )
         ctx.should_finished()
 
-    mocked_get_wordcloud.assert_called_once_with(
-        ["10:1-2", "11:1-2"], "qq_group-group_id=10000"
+    assert_wordcloud_called_with_unordered(
+        mocked_get_wordcloud,
+        {"10:1-2", "11:1-2"},
+        "qq_group-group_id=10000",
     )
 
 
 @pytest.mark.usefixtures("_message_record")
 async def test_history_wordcloud_start_stop(app: App, mocker: MockerFixture):
     """测试历史词云，有起始时间的情况"""
-    from nonebot_plugin_orm import get_session
-
-    engine = get_session().get_bind()
-    if engine.dialect.name == "mysql":
-        pytest.skip("MySQL 上获取消息的顺序不同")
-
     from nonebot_plugin_saa import Image, MessageFactory
 
     from nonebot_plugin_wordcloud import wordcloud_cmd
@@ -708,20 +727,17 @@ async def test_history_wordcloud_start_stop(app: App, mocker: MockerFixture):
         )
         ctx.should_finished()
 
-    mocked_get_wordcloud.assert_called_once_with(
-        ["10:1-3", "11:1-3", "10:2-1", "11:2-1"], "qq_group-group_id=10000"
+    # 验证调用参数，使用集合比较忽略顺序
+    assert_wordcloud_called_with_unordered(
+        mocked_get_wordcloud,
+        {"10:1-3", "11:1-3", "10:2-1", "11:2-1"},
+        "qq_group-group_id=10000",
     )
 
 
 @pytest.mark.usefixtures("_message_record")
 async def test_history_wordcloud_start_stop_get_args(app: App, mocker: MockerFixture):
     """测试历史词云，获取起始时间参数的情况"""
-    from nonebot_plugin_orm import get_session
-
-    engine = get_session().get_bind()
-    if engine.dialect.name == "mysql":
-        pytest.skip("MySQL 上获取消息的顺序不同")
-
     from nonebot_plugin_saa import Image, MessageFactory
 
     from nonebot_plugin_wordcloud import wordcloud_cmd
@@ -764,8 +780,10 @@ async def test_history_wordcloud_start_stop_get_args(app: App, mocker: MockerFix
         )
         ctx.should_finished()
 
-    mocked_get_wordcloud.assert_called_once_with(
-        ["10:1-2", "11:1-2", "10:1-3", "11:1-3", "10:2-1", "11:2-1"],
+    # 验证调用参数，使用集合比较忽略顺序
+    assert_wordcloud_called_with_unordered(
+        mocked_get_wordcloud,
+        {"10:1-2", "11:1-2", "10:1-3", "11:1-3", "10:2-1", "11:2-1"},
         "qq_group-group_id=10000",
     )
 
@@ -842,8 +860,9 @@ async def test_today_wordcloud_v12(app: App, mocker: MockerFixture):
         ctx.should_finished()
 
     mocked_datetime_now.assert_called_once_with()
-    mocked_get_wordcloud.assert_called_once_with(
-        ["v12-10:1-2", "v12-11:1-2"],
+    assert_wordcloud_called_with_unordered(
+        mocked_get_wordcloud,
+        {"v12-10:1-2", "v12-11:1-2"},
         "unknown_ob12-platform=qq-detail_type=channel-guild_id=10000-channel_id=100000",
     )
 
@@ -886,8 +905,9 @@ async def test_my_today_wordcloud_v12(app: App, mocker: MockerFixture):
         ctx.should_finished()
 
     mocked_datetime_now.assert_called_once_with()
-    mocked_get_wordcloud.assert_called_once_with(
-        ["v12-10:1-2"],
+    assert_wordcloud_called_with_unordered(
+        mocked_get_wordcloud,
+        {"v12-10:1-2"},
         "unknown_ob12-platform=qq-detail_type=channel-guild_id=10000-channel_id=100000",
     )
 
@@ -929,8 +949,10 @@ async def test_today_wordcloud_qq_group_v12(app: App, mocker: MockerFixture):
         ctx.should_finished()
 
     mocked_datetime_now.assert_called_once_with()
-    mocked_get_wordcloud.assert_called_once_with(
-        ["10:1-2", "11:1-2"], "qq_group-group_id=10000"
+    assert_wordcloud_called_with_unordered(
+        mocked_get_wordcloud,
+        {"10:1-2", "11:1-2"},
+        "qq_group-group_id=10000",
     )
 
 
@@ -968,7 +990,11 @@ async def test_today_wordcloud_exclude_user_ids(app: App, mocker: MockerFixture)
         ctx.should_finished()
 
     mocked_datetime_now.assert_called_once_with()
-    mocked_get_wordcloud.assert_called_once_with(["11:1-2"], "qq_group-group_id=10000")
+    assert_wordcloud_called_with_unordered(
+        mocked_get_wordcloud,
+        {"11:1-2"},
+        "qq_group-group_id=10000",
+    )
 
 
 @pytest.mark.usefixtures("_message_record")
@@ -1011,6 +1037,127 @@ async def test_today_wordcloud_reply_message(app: App, mocker: MockerFixture):
         ctx.should_finished()
 
     mocked_datetime_now.assert_called_once_with()
-    mocked_get_wordcloud.assert_called_once_with(
-        ["10:1-2", "11:1-2"], "qq_group-group_id=10000"
+    assert_wordcloud_called_with_unordered(
+        mocked_get_wordcloud,
+        {"10:1-2", "11:1-2"},
+        "qq_group-group_id=10000",
+    )
+
+
+@pytest.mark.usefixtures("_message_record")
+async def test_group_today_wordcloud(app: App, mocker: MockerFixture):
+    """测试本群今日词云"""
+    from nonebot_plugin_saa import Image, MessageFactory
+
+    from nonebot_plugin_wordcloud import wordcloud_cmd
+
+    mocked_datetime_now = mocker.patch(
+        "nonebot_plugin_wordcloud.get_datetime_now_with_timezone",
+        return_value=datetime(2022, 1, 2, 23, tzinfo=ZoneInfo("Asia/Shanghai")),
+    )
+
+    mocked_get_wordcloud = mocker.patch(
+        "nonebot_plugin_wordcloud.get_wordcloud",
+        return_value=FAKE_IMAGE,
+    )
+
+    async with app.test_matcher(wordcloud_cmd) as ctx:
+        adapter = get_adapter(Adapter)
+        bot = ctx.create_bot(base=Bot, adapter=adapter, auto_connect=False)
+        event = fake_group_message_event_v11(message=Message("/本群今日词云"))
+
+        ctx.receive_event(bot, event)
+        should_send_saa(
+            ctx, MessageFactory(Image(FAKE_IMAGE, "wordcloud.png")), bot, event=event
+        )
+        ctx.should_finished()
+
+    mocked_datetime_now.assert_called_once_with()
+    assert_wordcloud_called_with_unordered(
+        mocked_get_wordcloud,
+        {"10:1-2", "11:1-2"},
+        "qq_group-group_id=10000",
+    )
+
+
+@pytest.mark.usefixtures("_message_record")
+async def test_group_year_wordcloud(app: App, mocker: MockerFixture):
+    """测试本群年度词云"""
+    from nonebot_plugin_saa import Image, MessageFactory
+
+    from nonebot_plugin_wordcloud import wordcloud_cmd
+
+    mocked_datetime_now = mocker.patch(
+        "nonebot_plugin_wordcloud.get_datetime_now_with_timezone",
+        return_value=datetime(2022, 12, 1, 2, tzinfo=ZoneInfo("Asia/Shanghai")),
+    )
+
+    mocked_get_wordcloud = mocker.patch(
+        "nonebot_plugin_wordcloud.get_wordcloud",
+        return_value=FAKE_IMAGE,
+    )
+
+    async with app.test_matcher(wordcloud_cmd) as ctx:
+        adapter = get_adapter(Adapter)
+        bot = ctx.create_bot(base=Bot, adapter=adapter, auto_connect=False)
+        event = fake_group_message_event_v11(message=Message("/本群年度词云"))
+
+        ctx.receive_event(bot, event)
+        should_send_saa(
+            ctx,
+            MessageFactory(Image(FAKE_IMAGE, "wordcloud.png")),
+            bot,
+            event=event,
+        )
+        ctx.should_finished()
+
+    mocked_datetime_now.assert_called_once_with()
+    # 验证调用参数，使用集合比较忽略顺序
+    assert_wordcloud_called_with_unordered(
+        mocked_get_wordcloud,
+        {"10:1-2", "11:1-2", "10:1-3", "11:1-3", "10:2-1", "11:2-1"},
+        "qq_group-group_id=10000",
+    )
+
+
+@pytest.mark.usefixtures("_message_record")
+async def test_config_default_personal_behavior(app: App, mocker: MockerFixture):
+    """测试配置为默认个人行为时的今日词云"""
+    from nonebot_plugin_saa import Image, MessageFactory
+
+    from nonebot_plugin_wordcloud import plugin_config, wordcloud_cmd
+
+    # Mock the config to use personal as default
+    mocker.patch.object(plugin_config, "wordcloud_default_personal", True)
+
+    mocked_datetime_now = mocker.patch(
+        "nonebot_plugin_wordcloud.get_datetime_now_with_timezone",
+        return_value=datetime(2022, 1, 2, 23, tzinfo=ZoneInfo("Asia/Shanghai")),
+    )
+
+    mocked_get_wordcloud = mocker.patch(
+        "nonebot_plugin_wordcloud.get_wordcloud",
+        return_value=FAKE_IMAGE,
+    )
+
+    async with app.test_matcher(wordcloud_cmd) as ctx:
+        adapter = get_adapter(Adapter)
+        bot = ctx.create_bot(base=Bot, adapter=adapter, auto_connect=False)
+        event = fake_group_message_event_v11(message=Message("/今日词云"))
+
+        ctx.receive_event(bot, event)
+        should_send_saa(
+            ctx,
+            MessageFactory(Image(FAKE_IMAGE, "wordcloud.png")),
+            bot,
+            event=event,
+            at_sender=True,
+        )
+        ctx.should_finished()
+
+    mocked_datetime_now.assert_called_once_with()
+    assert_wordcloud_called_with_unordered(
+        mocked_get_wordcloud,
+        {"10:1-2"},
+        "qq_group-group_id=10000",
     )

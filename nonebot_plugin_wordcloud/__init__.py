@@ -55,26 +55,48 @@ from .utils import (
 
 get_driver().on_startup(schedule_service.update)
 
-__plugin_meta__ = PluginMetadata(
-    name="词云",
-    description="利用群消息生成词云",
-    usage="""\
+
+def get_usage() -> str:
+    """根据配置生成使用说明"""
+    if plugin_config.wordcloud_default_personal:
+        # 默认个人数据
+        default_behavior = '- 默认获取个人数据，如需获取群组数据请添加前缀"本群"'
+        prefix_examples = """\
+格式：/本群<时间段>词云
+示例：/本群今日词云
+/本群年度词云
+- 在上方所给的命令格式基础上，还可以添加前缀"我的"，以明确获取自己的词云
+格式：/我的<基本命令格式>
+示例：/我的今日词云
+/我的昨日词云"""
+    else:
+        # 默认群组数据
+        default_behavior = '- 默认获取群组数据，如需获取个人数据请添加前缀"我的"'
+        prefix_examples = """\
+格式：/我的<时间段>词云
+示例：/我的今日词云
+/我的昨日词云
+- 在上方所给的命令格式基础上，还可以添加前缀"本群"，以明确获取群组数据
+格式：/本群<基本命令格式>
+示例：/本群今日词云
+/本群年度词云"""
+
+    return f"""\
 - 通过快捷命令，以获取常见时间段内的词云
 格式：/<时间段>词云
 时间段关键词有：今日，昨日，本周，上周，本月，上月，年度
 示例：/今日词云，/昨日词云
 
-- 提供日期与时间，以获取指定时间段内的词云（支持 ISO8601 格式的日期与时间，如 2022-02-22T22:22:22）
+- 提供日期与时间，以获取指定时间段内的词云
+（支持 ISO8601 格式的日期与时间，如 2022-02-22T22:22:22）
 格式：/历史词云 [日期或时间段]
 示例：/历史词云
 /历史词云 2022-01-01
 /历史词云 2022-01-01~2022-02-22
 /历史词云 2022-02-22T11:11:11~2022-02-22T22:22:22
 
-- 在上方所给的命令格式基础上，还可以添加前缀“我的”，以获取自己的词云
-格式：/我的<基本命令格式>
-示例：/我的今日词云
-/我的昨日词云
+{default_behavior}
+{prefix_examples}
 
 - 设置自定义词云形状
 格式：/设置词云形状
@@ -88,7 +110,39 @@ __plugin_meta__ = PluginMetadata(
 格式：/词云每日定时发送状态
 /开启词云每日定时发送
 /开启词云每日定时发送 23:59
-/关闭词云每日定时发送""",  # noqa: E501
+/关闭词云每日定时发送"""
+
+
+def get_wordcloud_cmd_usage() -> str:
+    """根据配置生成词云命令简短使用说明"""
+
+    usage = (
+        "- 通过快捷命令，以获取常见时间段内的词云\n"
+        "格式：/<时间段>词云\n"
+        "时间段关键词有：今日，昨日，本周，上周，本月，上月，年度\n"
+        "- 提供日期与时间，以获取指定时间段内的词云\n"
+        "（支持 ISO8601 格式的日期与时间，如 2022-02-22T22:22:22）\n"
+        "格式：/历史词云 [日期或时间段]\n"
+    )
+
+    if plugin_config.wordcloud_default_personal:
+        usage += (
+            "- 默认获取个人数据，如需获取群组数据请使用'本群'前缀\n"
+            "- 可以添加前缀'我的'来明确获取个人数据"
+        )
+    else:
+        usage += (
+            "- 默认获取群组数据，如需获取个人数据请使用'我的'前缀\n"
+            "- 可以添加前缀'本群'来明确获取群组数据"
+        )
+
+    return usage
+
+
+__plugin_meta__ = PluginMetadata(
+    name="词云",
+    description="利用群消息生成词云",
+    usage=get_usage(),
     homepage="https://github.com/he0119/nonebot-plugin-wordcloud",
     type="application",
     supported_adapters=inherit_supported_adapters(
@@ -116,23 +170,23 @@ wordcloud_cmd = on_alconna(
             action=store_true,
             help_text="获取自己的词云",
         ),
+        Option(
+            "--group",
+            default=False,
+            action=store_true,
+            help_text="获取群组的词云",
+        ),
         Args["type?", ["今日", "昨日", "本周", "上周", "本月", "上月", "年度", "历史"]][
             "time?", str
         ],
         behaviors=[SameTime()],
         meta=CommandMeta(
             description="利用群消息生成词云",
-            usage=(
-                "- 通过快捷命令，以获取常见时间段内的词云\n"
-                "格式：/<时间段>词云\n"
-                "时间段关键词有：今日，昨日，本周，上周，本月，上月，年度\n"
-                "- 提供日期与时间，以获取指定时间段内的词云\n"
-                "（支持 ISO8601 格式的日期与时间，如 2022-02-22T22:22:22）\n"
-                "格式：/历史词云 [日期或时间段]"
-            ),
+            usage=get_wordcloud_cmd_usage(),
             example=(
                 "/今日词云\n"
-                "/昨日词云\n"
+                "/我的昨日词云\n"
+                "/本群今日词云\n"
                 "/历史词云\n"
                 "/历史词云 2022-01-01\n"
                 "/历史词云 2022-01-01~2022-02-22\n"
@@ -150,19 +204,21 @@ def wrapper(
 ) -> str:
     if slot == "my" and content:
         return "--my"
+    elif slot == "group" and content:
+        return "--group"
     elif slot == "type" and content:
         return content
     return ""  # pragma: no cover
 
 
 wordcloud_cmd.shortcut(
-    r"(?P<my>我的)?(?P<type>今日|昨日|本周|上周|本月|上月|年度|历史)词云",
+    r"(?P<group>本群)?(?P<my>我的)?(?P<type>今日|昨日|本周|上周|本月|上月|年度|历史)词云",
     {
         "prefix": True,
         "command": "词云",
         "wrapper": wrapper,
-        "args": ["{my}", "{type}"],
-        "humanized": "[我的]<类型>词云",
+        "args": ["{group}", "{my}", "{type}"],
+        "humanized": "[本群|我的]<类型>词云",
     },
 )
 
@@ -259,15 +315,28 @@ async def handle_first_receive(
 )
 async def handle_wordcloud(
     my: Query[bool] = AlconnaQuery("my.value", False),
+    group: Query[bool] = AlconnaQuery("group.value", False),
     session: Session = UniSession(),
     start: datetime = Arg(),
     stop: datetime = Arg(),
     mask_key: str = Depends(get_mask_key),
 ):
     """生成词云"""
+    # 决定是否过滤用户数据
+    # 如果显式指定了 --my，则获取个人数据
+    # 如果显式指定了 --group，则获取群组数据
+    # 如果都没有指定，则根据配置决定默认行为
+    if my.result:
+        filter_user = True
+    elif group.result:
+        filter_user = False
+    else:
+        # 使用配置中的默认行为
+        filter_user = plugin_config.wordcloud_default_personal
+
     messages = await get_messages_plain_text(
         session=session,
-        filter_user=my.result,
+        filter_user=filter_user,
         filter_self_id=False,
         filter_adapter=False,
         types=["message"],  # 排除机器人自己发的消息
@@ -279,12 +348,12 @@ async def handle_wordcloud(
     if not (image := await get_wordcloud(messages, mask_key)):
         await wordcloud_cmd.finish(
             "没有足够的数据生成词云",
-            at_sender=my.result,
+            at_sender=filter_user,
             reply=plugin_config.wordcloud_reply_message,
         )
 
     await saa.Image(image, "wordcloud.png").finish(
-        at_sender=my.result,
+        at_sender=filter_user,
         reply=plugin_config.wordcloud_reply_message,
     )
 
