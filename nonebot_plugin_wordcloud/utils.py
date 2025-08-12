@@ -3,12 +3,9 @@ from datetime import datetime, time, tzinfo
 from typing import Optional
 from zoneinfo import ZoneInfo
 
-from nonebot.compat import model_dump
 from nonebot.matcher import Matcher
-from nonebot.params import Depends
 from nonebot.permission import SUPERUSER
 from nonebot_plugin_apscheduler import scheduler
-from nonebot_plugin_saa import PlatformTarget, get_target
 from nonebot_plugin_uninfo import SceneType, Session, UniSession
 
 from .config import plugin_config
@@ -70,22 +67,12 @@ def admin_permission():
     return permission
 
 
-def get_mask_key(target: PlatformTarget = Depends(get_target)) -> str:
+def get_mask_key(session: Session = UniSession()) -> str:
     """获取 mask key
 
-    例如：
-    qq_group-group_id=10000
-    qq_guild_channel-channel_id=100000
+    平台名称和会话场景 ID 组成，例如 `QQClient_123456789` 和用户插件保持一致。
     """
-    mask_keys = [f"{target.platform_type.name}"]
-    mask_keys.extend(
-        [
-            f"{key}={value}"
-            for key, value in model_dump(target, exclude={"platform_type"}).items()
-            if value is not None
-        ]
-    )
-    return "-".join(mask_keys)
+    return f"{session.scope}_{session.scene_path}"
 
 
 async def ensure_group(matcher: Matcher, session: Session = UniSession()):

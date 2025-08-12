@@ -1,19 +1,17 @@
 """词云"""
 
-from nonebot import require
-
-require("nonebot_plugin_apscheduler")
-require("nonebot_plugin_alconna")
-require("nonebot_plugin_uninfo")
-require("nonebot_plugin_cesaa")
-
 import re
 from datetime import datetime, timedelta
 from io import BytesIO
 from typing import Any, Optional, Union
 
-import nonebot_plugin_alconna as alc
-import nonebot_plugin_saa as saa
+import PIL.Image
+from nonebot import require
+
+require("nonebot_plugin_apscheduler")
+require("nonebot_plugin_alconna")
+require("nonebot_plugin_uninfo")
+require("nonebot_plugin_chatrecorder")
 from arclet.alconna import ArparmaBehavior
 from arclet.alconna.arparma import Arparma
 from nonebot import get_driver
@@ -29,6 +27,7 @@ from nonebot_plugin_alconna import (
     AlconnaQuery,
     Args,
     CommandMeta,
+    Image,
     Match,
     Option,
     Query,
@@ -36,11 +35,9 @@ from nonebot_plugin_alconna import (
     on_alconna,
     store_true,
 )
-from nonebot_plugin_cesaa import get_messages_plain_text
+from nonebot_plugin_chatrecorder import get_messages_plain_text
 from nonebot_plugin_uninfo import Session, UniSession
-from PIL import Image
 
-from . import migrations
 from .config import Config, plugin_config
 from .data_source import get_wordcloud
 from .schedule import schedule_service
@@ -146,10 +143,9 @@ __plugin_meta__ = PluginMetadata(
     homepage="https://github.com/he0119/nonebot-plugin-wordcloud",
     type="application",
     supported_adapters=inherit_supported_adapters(
-        "nonebot_plugin_chatrecorder", "nonebot_plugin_saa", "nonebot_plugin_alconna"
+        "nonebot_plugin_chatrecorder", "nonebot_plugin_uninfo", "nonebot_plugin_alconna"
     ),
     config=Config,
-    extra={"orm_version_location": migrations},
 )
 
 
@@ -352,7 +348,8 @@ async def handle_wordcloud(
             reply=plugin_config.wordcloud_reply_message,
         )
 
-    await saa.Image(image, "wordcloud.png").finish(
+    await wordcloud_cmd.finish(
+        Image(raw=image, name="wordcloud.png"),
         at_sender=filter_user,
         reply=plugin_config.wordcloud_reply_message,
     )
@@ -362,7 +359,7 @@ set_mask_cmd = on_alconna(
     Alconna(
         "设置词云形状",
         Option("--default", default=False, action=store_true, help_text="默认形状"),
-        Args["img?", alc.Image],
+        Args["img?", Image],
         meta=CommandMeta(
             description="设置自定义词云形状",
             example="/设置词云形状\n/设置词云默认形状",
@@ -399,7 +396,7 @@ async def handle_save_mask(
     default: Query[bool] = AlconnaQuery("default.value", default=False),
     mask_key: str = Depends(get_mask_key),
 ):
-    mask = Image.open(BytesIO(img))
+    mask = PIL.Image.open(BytesIO(img))
     if default.result:
         if not await SUPERUSER(bot, event):
             await set_mask_cmd.finish("仅超级用户可设置词云默认形状")
@@ -501,10 +498,10 @@ schedule_cmd.shortcut(
 async def _(
     time: Optional[str] = None,
     action_type: Query[str] = AlconnaQuery("action.action_type.value", "状态"),
-    target: saa.PlatformTarget = Depends(saa.get_target),
+    session: Session = UniSession(),
 ):
     if action_type.result == "状态":
-        schedule_time = await schedule_service.get_schedule(target)
+        schedule_time = await schedule_service.get_schedule(session)
         await schedule_cmd.finish(
             f"词云每日定时发送已开启，发送时间为：{schedule_time}"
             if schedule_time
@@ -517,12 +514,12 @@ async def _(
                 schedule_time = get_time_fromisoformat_with_timezone(time)
             except ValueError:
                 await schedule_cmd.finish("请输入正确的时间，不然我没法理解呢！")
-        await schedule_service.add_schedule(target, time=schedule_time)
+        await schedule_service.add_schedule(session, time=schedule_time)
         await schedule_cmd.finish(
             f"已开启词云每日定时发送，发送时间为：{schedule_time}"
             if schedule_time
             else f"已开启词云每日定时发送，发送时间为：{plugin_config.wordcloud_default_schedule_time}"  # noqa: E501
         )
     elif action_type.result == "关闭":
-        await schedule_service.remove_schedule(target)
+        await schedule_service.remove_schedule(session)
         await schedule_cmd.finish("已关闭词云每日定时发送")
