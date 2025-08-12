@@ -36,17 +36,14 @@
 ## 4. 重要模式与约定
 
 - **命令处理与 Alconna**:
-
   - 命令使用 `Alconna` 进行结构化定义，而不是简单的字符串匹配。例如，在 `__init__.py` 中，`/历史词云` 命令可以接受复杂的日期范围参数。
   - 修改或添加命令时，请遵循 `nonebot-plugin-alconna` 的模式，在 `__init__.py` 中定义 `Alconna` 对象和对应的 `AlconnaMatcher`。
 
 - **会话与用户识别 (UniSession)**:
-
   - 为了跨平台兼容，项目使用 `nonebot-plugin-uninfo` 提供的 `UniSession` 来唯一标识一个会话（私聊或群聊）。
   - 在处理数据时，应始终通过 `UniSession.get` 来获取会话实例，并使用其 `session.id` 作为数据库查询的依据。
 
 - **配置**:
-
   - 不要硬编码任何可变值。应将它们添加到 `config.py` 的 `Config` 模型中，并提供合理的默认值。
 
 - **数据存储**:
