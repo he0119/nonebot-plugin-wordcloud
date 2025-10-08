@@ -57,7 +57,7 @@ jobs:
           - 3306:3306
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set timezone
         uses: szenius/set-timezone@1f9716b0f7120e344f0c62bb7b1ee98819aefd42
@@ -67,7 +67,7 @@ jobs:
           timezoneWindows: "China Standard Time"
 
       - name: Setup uv
-        uses: astral-sh/setup-uv@v6
+        uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
           python-version: ${{ matrix.python-version }}
