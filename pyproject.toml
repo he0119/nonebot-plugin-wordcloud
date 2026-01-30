@@ -62,6 +62,7 @@ dev-dependencies = [
   "cryptography>=42.0.8",
   "bump-my-version>=0.25.4",
   "poethepoet>=0.31.1",
+  "nonebot2[fastapi]>=2.2.0",
 ]
 
 [tool.uv.pip]
