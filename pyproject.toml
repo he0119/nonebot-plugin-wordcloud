@@ -7,7 +7,7 @@ readme = "README.md"
 license = { file = "LICENSE" }
 requires-python = ">= 3.9"
 dependencies = [
-  "nonebot2[fastapi]>=2.2.0",
+  "nonebot2>=2.2.0",
   "nonebot-plugin-apscheduler>=0.4.0",
   "nonebot-plugin-localstore>=0.6.0",
   "nonebot-plugin-orm>=0.7.0",
