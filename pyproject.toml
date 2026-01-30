@@ -7,7 +7,7 @@ readme = "README.md"
 license = { file = "LICENSE" }
 requires-python = ">= 3.9"
 dependencies = [
-  "nonebot2[fastapi]>=2.2.0",
+  "nonebot2>=2.2.0",
   "nonebot-plugin-apscheduler>=0.4.0",
   "nonebot-plugin-localstore>=0.6.0",
   "nonebot-plugin-orm>=0.7.0",
@@ -62,6 +62,7 @@ dev-dependencies = [
   "cryptography>=42.0.8",
   "bump-my-version>=0.25.4",
   "poethepoet>=0.31.1",
+  "nonebot2[fastapi]>=2.2.0",
 ]
 
 [tool.uv.pip]
