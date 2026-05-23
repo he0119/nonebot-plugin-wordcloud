@@ -1,16 +1,15 @@
 from datetime import time
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 from zoneinfo import ZoneInfo
 
 from nonebot.log import logger
-from nonebot_plugin_alconna import Image, Text, UniMessage
+from nonebot_plugin_alconna import Image, Target, Text, UniMessage
 from nonebot_plugin_apscheduler import scheduler
 from nonebot_plugin_chatrecorder import get_messages_plain_text
 from nonebot_plugin_orm import get_session
-from nonebot_plugin_uninfo import Session
-from nonebot_plugin_uninfo.orm import get_session_model, get_session_persist_id
-from nonebot_plugin_uninfo.target import to_target
-from sqlalchemy import select
+from nonebot_plugin_uninfo import SceneType
+from sqlalchemy import JSON, Select, cast, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from .config import plugin_config
 from .data_source import get_wordcloud
@@ -24,6 +23,18 @@ from .utils import (
 
 if TYPE_CHECKING:
     from apscheduler.job import Job
+
+
+def dump_target(target: Target) -> dict:
+    return target.dump(only_scope=True, save_self_id=False)
+
+
+def get_target_scene_type(target: Target) -> SceneType:
+    if target.private:
+        return SceneType.PRIVATE
+    if target.channel:
+        return SceneType.CHANNEL_TEXT
+    return SceneType.GROUP
 
 
 class Scheduler:
@@ -74,7 +85,7 @@ class Scheduler:
                         f"已添加每日词云定时发送任务，发送时间：{time_str} UTC"
                     )
 
-    async def run_task(self, time: Optional[time] = None):
+    async def run_task(self, time: time | None = None):
         """执行定时任务
 
         时间为 UTC 时间，并且没有时区信息
@@ -90,40 +101,39 @@ class Scheduler:
                 return
             logger.info(f"开始发送每日词云，时间为 {time or '默认时间'}")
             for schedule in schedules:
-                session_model = await get_session_model(schedule.session_persist_id)
-                session = await session_model.to_session()
+                target = schedule.alc_target
                 dt = get_datetime_now_with_timezone()
                 start = dt.replace(hour=0, minute=0, second=0, microsecond=0)
                 stop = dt
                 messages = await get_messages_plain_text(
-                    session=session,
+                    scopes=[target.scope] if target.scope else None,
+                    scene_types=[get_target_scene_type(target)],
+                    scene_ids=[target.id],
+                    filter_self_id=False,
+                    filter_adapter=False,
+                    filter_user=False,
                     types=["message"],
                     time_start=start,
                     time_stop=stop,
                     exclude_user_ids=plugin_config.wordcloud_exclude_user_ids,
                 )
-                mask_key = get_mask_key(session)
+                mask_key = get_mask_key(target)
 
                 if image := await get_wordcloud(messages, mask_key):
                     msg = Image(raw=image)
                 else:
                     msg = Text("今天没有足够的数据生成词云")
 
-                target = to_target(session)
                 try:
                     await target.send(UniMessage(msg))
                 except Exception:
                     logger.exception(f"{target} 发送词云失败")
 
-    async def get_schedule(self, session: Session) -> Optional[time]:
+    async def get_schedule(self, target: Target) -> time | None:
         """获取定时任务时间"""
-        session_persist_id = await get_session_persist_id(session)
         async with get_session() as db_session:
-            results = await db_session.scalars(
-                select(Schedule).where(
-                    Schedule.session_persist_id == session_persist_id
-                )
-            )
+            statement = self.select_target_statement(target, db_session)
+            results = await db_session.scalars(statement)
             if schedule := results.one_or_none():
                 if schedule.time:
                     # 将时间转换为本地时间
@@ -133,7 +143,7 @@ class Scheduler:
                 else:
                     return plugin_config.wordcloud_default_schedule_time
 
-    async def add_schedule(self, session: Session, *, time: Optional[time] = None):
+    async def add_schedule(self, target: Target, *, time: time | None = None):
         """添加定时任务
 
         时间需要带时区信息
@@ -142,33 +152,39 @@ class Scheduler:
         if time:
             time = time_astimezone(time, ZoneInfo("UTC"))
 
-        session_persist_id = await get_session_persist_id(session)
         async with get_session() as db_session:
-            results = await db_session.scalars(
-                select(Schedule).where(
-                    Schedule.session_persist_id == session_persist_id
-                )
-            )
+            statement = self.select_target_statement(target, db_session)
+            results = await db_session.scalars(statement)
             if schedule := results.one_or_none():
                 schedule.time = time
             else:
-                schedule = Schedule(time=time, session_persist_id=session_persist_id)
+                schedule = Schedule(time=time, target=dump_target(target))
                 db_session.add(schedule)
             await db_session.commit()
         await self.update()
 
-    async def remove_schedule(self, session: Session):
+    async def remove_schedule(self, target: Target):
         """删除定时任务"""
-        session_persist_id = await get_session_persist_id(session)
         async with get_session() as db_session:
-            results = await db_session.scalars(
-                select(Schedule).where(
-                    Schedule.session_persist_id == session_persist_id
-                )
-            )
+            statement = self.select_target_statement(target, db_session)
+            results = await db_session.scalars(statement)
             if schedule := results.one_or_none():
                 await db_session.delete(schedule)
                 await db_session.commit()
+
+    @staticmethod
+    def select_target_statement(
+        target: Target, session: AsyncSession
+    ) -> Select[tuple[Schedule]]:
+        """获取查询目标的语句
+
+        MySQL 需要手动将 JSON 类型的字段转换为 JSON 类型
+        """
+        target_data = dump_target(target)
+        engine = session.get_bind()
+        if engine.dialect.name == "mysql":
+            return select(Schedule).where(Schedule.target == cast(target_data, JSON))
+        return select(Schedule).where(Schedule.target == target_data)
 
 
 schedule_service = Scheduler()

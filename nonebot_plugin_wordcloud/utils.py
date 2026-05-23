@@ -1,10 +1,10 @@
 import contextlib
 from datetime import datetime, time, tzinfo
-from typing import Optional
 from zoneinfo import ZoneInfo
 
 from nonebot.matcher import Matcher
 from nonebot.permission import SUPERUSER
+from nonebot_plugin_alconna import Target
 from nonebot_plugin_apscheduler import scheduler
 from nonebot_plugin_uninfo import SceneType, Session, UniSession
 
@@ -31,7 +31,7 @@ def get_datetime_fromisoformat_with_timezone(date_string: str) -> datetime:
     )
 
 
-def time_astimezone(time: time, tz: Optional[tzinfo] = None) -> time:
+def time_astimezone(time: time, tz: tzinfo | None = None) -> time:
     """将 time 对象转换为指定时区的 time 对象
 
     如果 tz 为 None，则转换为本地时区
@@ -67,11 +67,16 @@ def admin_permission():
     return permission
 
 
-def get_mask_key(session: Session = UniSession()) -> str:
+def get_mask_key(session: Session | Target = UniSession()) -> str:
     """获取 mask key
 
     平台名称和会话场景 ID 组成，例如 `QQClient_123456789` 和用户插件保持一致。
     """
+    if isinstance(session, Target):
+        scene_path = (
+            f"{session.parent_id}_{session.id}" if session.parent_id else session.id
+        )
+        return f"{session.scope}_{scene_path}" if session.scope else scene_path
     return f"{session.scope}_{session.scene_path}"
 
 

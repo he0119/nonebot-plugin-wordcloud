@@ -3,7 +3,7 @@
 import re
 from datetime import datetime, timedelta
 from io import BytesIO
-from typing import Any, Optional, Union
+from typing import Any
 
 import PIL.Image
 from nonebot import require
@@ -29,8 +29,10 @@ from nonebot_plugin_alconna import (
     CommandMeta,
     Image,
     Match,
+    MessageTarget,
     Option,
     Query,
+    Target,
     image_fetch,
     on_alconna,
     store_true,
@@ -195,9 +197,7 @@ wordcloud_cmd = on_alconna(
 )
 
 
-def wrapper(
-    slot: Union[int, str], content: Optional[str], context: dict[str, Any]
-) -> str:
+def wrapper(slot: int | str, content: str | None, context: dict[str, Any]) -> str:
     if slot == "my" and content:
         return "--my"
     elif slot == "group" and content:
@@ -225,7 +225,7 @@ def parse_datetime(key: str):
     async def _key_parser(
         matcher: AlconnaMatcher,
         state: T_State,
-        input: Union[datetime, Message] = Arg(key),
+        input: datetime | Message = Arg(key),
     ):
         if isinstance(input, datetime):
             return
@@ -241,7 +241,7 @@ def parse_datetime(key: str):
 
 @wordcloud_cmd.handle(parameterless=[Depends(ensure_group)])
 async def handle_first_receive(
-    state: T_State, type: Optional[str] = None, time: Optional[str] = None
+    state: T_State, type: str | None = None, time: str | None = None
 ):
     dt = get_datetime_now_with_timezone()
 
@@ -484,11 +484,11 @@ schedule_cmd.shortcut(
     },
 )
 schedule_cmd.shortcut(
-    r"(?P<action>开启|关闭)词云(?P<type>每日)定时发送",
+    r"(?P<action>开启|关闭)词云(?P<type>每日)定时发送(?:\s+(?P<time>\S+))?",
     {
         "prefix": True,
         "command": "词云定时发送",
-        "args": ["--action", "{action}", "{type}"],
+        "args": ["--action", "{action}", "{type}", "{time}"],
         "humanized": "<开启|关闭>词云每日定时发送",
     },
 )
@@ -496,12 +496,13 @@ schedule_cmd.shortcut(
 
 @schedule_cmd.handle(parameterless=[Depends(ensure_group)])
 async def _(
-    time: Optional[str] = None,
+    event: Event,
+    time: str | None = None,
     action_type: Query[str] = AlconnaQuery("action.action_type.value", "状态"),
-    session: Session = UniSession(),
+    target: Target = MessageTarget(),
 ):
     if action_type.result == "状态":
-        schedule_time = await schedule_service.get_schedule(session)
+        schedule_time = await schedule_service.get_schedule(target)
         await schedule_cmd.finish(
             f"词云每日定时发送已开启，发送时间为：{schedule_time}"
             if schedule_time
@@ -509,17 +510,23 @@ async def _(
         )
     elif action_type.result == "开启":
         schedule_time = None
+        if time is None:
+            match = re.match(
+                r"^\W*开启词云每日定时发送\s+(\S+)$", event.get_plaintext()
+            )
+            if match:
+                time = match[1]
         if time:
             try:
                 schedule_time = get_time_fromisoformat_with_timezone(time)
             except ValueError:
                 await schedule_cmd.finish("请输入正确的时间，不然我没法理解呢！")
-        await schedule_service.add_schedule(session, time=schedule_time)
+        await schedule_service.add_schedule(target, time=schedule_time)
         await schedule_cmd.finish(
             f"已开启词云每日定时发送，发送时间为：{schedule_time}"
             if schedule_time
             else f"已开启词云每日定时发送，发送时间为：{plugin_config.wordcloud_default_schedule_time}"  # noqa: E501
         )
     elif action_type.result == "关闭":
-        await schedule_service.remove_schedule(session)
+        await schedule_service.remove_schedule(target)
         await schedule_cmd.finish("已关闭词云每日定时发送")

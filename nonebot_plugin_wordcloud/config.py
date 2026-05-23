@@ -1,6 +1,6 @@
 from datetime import datetime, time
 from pathlib import Path
-from typing import Any, Optional, Union
+from typing import Any
 from zoneinfo import ZoneInfo
 
 from nonebot import get_driver, get_plugin_config
@@ -16,11 +16,11 @@ class Config(BaseModel):
     wordcloud_width: int = 1920
     wordcloud_height: int = 1200
     wordcloud_background_color: str = "black"
-    wordcloud_colormap: Union[str, list[str]] = "viridis"
+    wordcloud_colormap: str | list[str] = "viridis"
     wordcloud_font_path: str
-    wordcloud_stopwords_path: Optional[Path] = None
-    wordcloud_userdict_path: Optional[Path] = None
-    wordcloud_timezone: Optional[str] = None
+    wordcloud_stopwords_path: Path | None = None
+    wordcloud_userdict_path: Path | None = None
+    wordcloud_timezone: str | None = None
     wordcloud_default_schedule_time: time
     """ 默认定时发送时间
 
@@ -61,7 +61,7 @@ class Config(BaseModel):
         values["wordcloud_default_schedule_time"] = default_schedule_time
         return values
 
-    def get_mask_path(self, key: Optional[str] = None) -> Path:
+    def get_mask_path(self, key: str | None = None) -> Path:
         """获取 mask 文件路径"""
         if key is None:
             return DATA_DIR / "mask.png"
