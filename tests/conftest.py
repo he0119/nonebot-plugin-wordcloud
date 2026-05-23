@@ -7,13 +7,11 @@ from nonebot.adapters.onebot.v12 import Adapter as OnebotV12Adapter
 from nonebug import NONEBOT_INIT_KWARGS, NONEBOT_START_LIFESPAN, App
 from pytest_asyncio import is_async_test
 from pytest_mock import MockerFixture
-from sqlalchemy import StaticPool, delete
+from sqlalchemy import delete
 
 
 def pytest_configure(config: pytest.Config) -> None:
     config.stash[NONEBOT_INIT_KWARGS] = {
-        "sqlalchemy_database_url": "sqlite+aiosqlite://",
-        "sqlalchemy_engine_options": {"poolclass": StaticPool},
         "driver": "~fastapi+~httpx",
         "alembic_startup_check": False,
         "command_start": {"/", ""},
@@ -34,10 +32,6 @@ async def after_nonebot_init(after_nonebot_init: None):
     driver = nonebot.get_driver()
     driver.register_adapter(OnebotV11Adapter)
     driver.register_adapter(OnebotV12Adapter)
-
-    # 手动启动生命周期
-    # 在加载 orm 之前运行，避免 orm 因未 mock 数据目录导致并发时出错
-    await driver._lifespan.startup()
 
     # 加载插件
     nonebot.load_plugin("nonebot_plugin_wordcloud")
@@ -87,8 +81,14 @@ async def after_nonebot_init(after_nonebot_init: None):
 async def app(app: App, tmp_path: Path, mocker: MockerFixture):
     wordcloud_dir = tmp_path / "wordcloud"
     wordcloud_dir.mkdir()
+    orm_dir = tmp_path / "orm"
+    orm_dir.mkdir()
+
+    mocker.patch("nonebot_plugin_localstore.BASE_CACHE_DIR", tmp_path / "cache")
+    mocker.patch("nonebot_plugin_localstore.BASE_CONFIG_DIR", tmp_path / "config")
+    mocker.patch("nonebot_plugin_localstore.BASE_DATA_DIR", tmp_path / "data")
     mocker.patch("nonebot_plugin_wordcloud.config.DATA_DIR", wordcloud_dir)
-    mocker.patch("nonebot_plugin_orm._data_dir", tmp_path / "orm")
+    mocker.patch("nonebot_plugin_orm._data_dir", orm_dir)
     from nonebot_plugin_orm import get_session, init_orm
 
     from nonebot_plugin_wordcloud.schedule import schedule_service
