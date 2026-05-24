@@ -496,7 +496,6 @@ schedule_cmd.shortcut(
 
 @schedule_cmd.handle(parameterless=[Depends(ensure_group)])
 async def _(
-    event: Event,
     time: str | None = None,
     action_type: Query[str] = AlconnaQuery("action.action_type.value", "状态"),
     target: Target = MessageTarget(),
@@ -510,12 +509,6 @@ async def _(
         )
     elif action_type.result == "开启":
         schedule_time = None
-        if time is None:
-            match = re.match(
-                r"^\W*开启词云每日定时发送\s+(\S+)$", event.get_plaintext()
-            )
-            if match:
-                time = match[1]
         if time:
             try:
                 schedule_time = get_time_fromisoformat_with_timezone(time)
