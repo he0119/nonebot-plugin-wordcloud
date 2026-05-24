@@ -5,6 +5,16 @@ from nonebot.compat import type_validate_python
 from nonebug import App
 
 
+async def test_default_schedule_time_config(app: App):
+    """测试默认定时发送时间"""
+    from nonebot_plugin_wordcloud.config import Config
+
+    config = type_validate_python(Config, {})
+
+    default_time = config.wordcloud_default_schedule_time
+    assert default_time.isoformat() == "00:00:00+08:00"
+
+
 @pytest.mark.parametrize(
     "default_config",
     [

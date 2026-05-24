@@ -24,7 +24,7 @@ class Config(BaseModel):
     wordcloud_default_schedule_time: time
     """ 默认定时发送时间
 
-    如果群内不单独设置则使用这个值，默认为晚上 10 点，时区为设定的时区
+    如果群内不单独设置则使用这个值，默认为 0 点，时区为设定的时区
     """
     wordcloud_options: dict[str, Any] = {}
     wordcloud_exclude_user_ids: set[str] = set()
@@ -48,7 +48,7 @@ class Config(BaseModel):
                     "wordcloud_default_schedule_time"
                 )
             )
-            else time(22, 0, 0)
+            else time(0, 0, 0)
         )
 
         default_schedule_time = (

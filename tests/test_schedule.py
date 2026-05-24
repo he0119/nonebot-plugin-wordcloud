@@ -105,7 +105,7 @@ async def test_enable_schedule(app: App):
         ctx.receive_event(bot, event)
         ctx.should_pass_permission(schedule_cmd)
         ctx.should_call_send(
-            event, "已开启词云每日定时发送，发送时间为：22:00:00+08:00", True
+            event, "已开启词云每日定时发送，发送时间为：00:00:00+08:00", True
         )
         ctx.should_finished(schedule_cmd)
 
@@ -152,7 +152,7 @@ async def test_enable_schedule(app: App):
         ctx.receive_event(bot, event)
         ctx.should_ignore_permission(schedule_cmd)
         ctx.should_call_send(
-            event, "已开启词云每日定时发送，发送时间为：22:00:00+08:00", True
+            event, "已开启词云每日定时发送，发送时间为：00:00:00+08:00", True
         )
         ctx.should_finished(schedule_cmd)
 
@@ -330,7 +330,7 @@ async def test_add_schedule_merges_equivalent_targets(app: App):
         session.add(Schedule(target=legacy_target, time=None))
         await session.commit()
 
-    assert str(await schedule_service.get_schedule(target)) == "22:00:00+08:00"
+    assert str(await schedule_service.get_schedule(target)) == "00:00:00+08:00"
 
     await schedule_service.add_schedule(target, time=time(23, 0))
 
@@ -392,7 +392,7 @@ async def test_schedule_status(app: App):
         ctx.should_pass_permission(schedule_cmd)
         ctx.should_call_send(
             event,
-            "词云每日定时发送已开启，发送时间为：22:00:00+08:00，发送模式为：完整周期",
+            "词云每日定时发送已开启，发送时间为：00:00:00+08:00，发送模式为：完整周期",
             True,
         )
         ctx.should_finished(schedule_cmd)
