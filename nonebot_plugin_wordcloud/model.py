@@ -25,8 +25,8 @@ class ScheduleMode(str, Enum):
     PERIOD_END = "周期末"
 
 
-def _schedule_type_values(schedule_types) -> list[str]:
-    return [schedule_type.value for schedule_type in schedule_types]
+def _enum_values(enum_class) -> list[str]:
+    return [enum_item.value for enum_item in enum_class]
 
 
 class Schedule(Model):
@@ -38,7 +38,7 @@ class Schedule(Model):
     schedule_type: Mapped[ScheduleType] = mapped_column(
         SQLAlchemyEnum(
             ScheduleType,
-            values_callable=_schedule_type_values,
+            values_callable=_enum_values,
             native_enum=False,
         ),
         default=ScheduleType.DAY,
@@ -48,7 +48,7 @@ class Schedule(Model):
     schedule_mode: Mapped[ScheduleMode] = mapped_column(
         SQLAlchemyEnum(
             ScheduleMode,
-            values_callable=_schedule_type_values,
+            values_callable=_enum_values,
             native_enum=False,
         ),
         default=ScheduleMode.COMPLETE,

@@ -109,7 +109,7 @@ async def test_enable_schedule(app: App):
         )
         ctx.should_finished(schedule_cmd)
 
-    assert len(schedule_service.schedules) == 1
+    assert len(schedule_service.schedules) == 2
 
     async with app.test_matcher(schedule_cmd) as ctx:
         adapter = get_adapter(Adapter)
@@ -125,7 +125,7 @@ async def test_enable_schedule(app: App):
         )
         ctx.should_finished(schedule_cmd)
 
-    assert len(schedule_service.schedules) == 2
+    assert len(schedule_service.schedules) == 3
 
     async with app.test_matcher(schedule_cmd) as ctx:
         adapter = get_adapter(Adapter)
@@ -156,7 +156,7 @@ async def test_enable_schedule(app: App):
         )
         ctx.should_finished(schedule_cmd)
 
-    assert len(schedule_service.schedules) == 2
+    assert len(schedule_service.schedules) == 3
 
     async with app.test_matcher(schedule_cmd) as ctx:
         adapter = get_adapter(AdapterV12)
@@ -174,7 +174,7 @@ async def test_enable_schedule(app: App):
         )
         ctx.should_finished(schedule_cmd)
 
-    assert len(schedule_service.schedules) == 3
+    assert len(schedule_service.schedules) == 4
 
 
 async def test_enable_periodic_schedule(app: App):
@@ -210,7 +210,7 @@ async def test_enable_periodic_schedule(app: App):
             ScheduleType.YEAR,
         }
 
-    assert len(schedule_service.schedules) == 2
+    assert len(schedule_service.schedules) == 3
 
 
 async def test_enable_period_end_schedule(app: App):
@@ -239,6 +239,35 @@ async def test_enable_period_end_schedule(app: App):
     async with get_session() as session:
         schedule = (await session.scalars(select(Schedule))).one()
         assert schedule.schedule_type == ScheduleType.WEEK
+        assert schedule.schedule_mode == ScheduleMode.PERIOD_END
+
+
+async def test_enable_period_end_schedule_default_time(app: App):
+    from nonebot_plugin_orm import get_session
+
+    from nonebot_plugin_wordcloud import schedule_cmd
+    from nonebot_plugin_wordcloud.model import Schedule, ScheduleMode
+
+    async with app.test_matcher(schedule_cmd) as ctx:
+        adapter = get_adapter(Adapter)
+        bot = ctx.create_bot(base=Bot, adapter=adapter, auto_connect=False)
+        event = fake_group_message_event_v11(
+            message=Message("/开启词云每周周期末定时发送"),
+            sender={"role": "admin"},
+        )
+
+        ctx.receive_event(bot, event)
+        ctx.should_pass_permission(schedule_cmd)
+        ctx.should_call_send(
+            event,
+            "已开启词云每周定时发送，发送时间为：23:59:59+08:00，发送模式为：周期末",
+            True,
+        )
+        ctx.should_finished(schedule_cmd)
+
+    async with get_session() as session:
+        schedule = (await session.scalars(select(Schedule))).one()
+        assert schedule.time is None
         assert schedule.schedule_mode == ScheduleMode.PERIOD_END
 
 
@@ -288,7 +317,7 @@ async def test_disable_schedule(app: App):
         await session.commit()
 
     await schedule_service.update()
-    assert len(schedule_service.schedules) == 2
+    assert len(schedule_service.schedules) == 3
 
     async with app.test_matcher(schedule_cmd) as ctx:
         adapter = get_adapter(Adapter)
@@ -306,7 +335,7 @@ async def test_disable_schedule(app: App):
         results = await session.scalars(statement)
         assert len(results.all()) == 0
 
-    assert len(schedule_service.schedules) == 2
+    assert len(schedule_service.schedules) == 3
 
 
 async def test_add_schedule_merges_equivalent_targets(app: App):
@@ -667,6 +696,10 @@ async def test_run_task_send_error(app: App, mocker: MockerFixture):
     mocked_get_wordcloud = mocker.patch(
         "nonebot_plugin_wordcloud.schedule.get_wordcloud", return_value=image
     )
+    mocked_get_datetime_now_with_timezone = mocker.patch(
+        "nonebot_plugin_wordcloud.schedule.get_datetime_now_with_timezone",
+        return_value=datetime(2024, 5, 6, 22),
+    )
 
     async with app.test_api() as ctx:
         adapter = get_adapter(Adapter)
@@ -679,6 +712,7 @@ async def test_run_task_send_error(app: App, mocker: MockerFixture):
         await schedule_service.run_task()
 
     assert mocked_get_messages_plain_text.call_count == 2
+    mocked_get_datetime_now_with_timezone.assert_called_once()
     mocked_get_wordcloud.assert_has_calls(
         [
             mocker.call(["test"], "QQClient_10000"),

@@ -82,23 +82,31 @@ def get_schedule_time_range(
 
 
 class Scheduler:
+    @staticmethod
+    def get_default_schedule_key(schedule_mode: ScheduleMode) -> str:
+        return f"default:{schedule_mode.value}"
+
     def __init__(self):
-        # 默认定时任务的 key 为 default
+        # 默认定时任务的 key 为 default:<mode>
         # 其他则为 ISO 8601 格式的时间字符串
         self.schedules: dict[str, Job] = {}
 
-        # 转换到 APScheduler 的时区
-        scheduler_time = get_time_with_scheduler_timezone(
-            plugin_config.wordcloud_default_schedule_time
-        )
-        # 添加默认定时任务
-        self.schedules["default"] = scheduler.add_job(
-            self.run_task,
-            "cron",
-            hour=scheduler_time.hour,
-            minute=scheduler_time.minute,
-            second=scheduler_time.second,
-        )
+        for schedule_mode in ScheduleMode:
+            # 转换到 APScheduler 的时区
+            scheduler_time = get_time_with_scheduler_timezone(
+                plugin_config.get_default_schedule_time(schedule_mode)
+            )
+            # 添加默认定时任务
+            self.schedules[self.get_default_schedule_key(schedule_mode)] = (
+                scheduler.add_job(
+                    self.run_task,
+                    "cron",
+                    hour=scheduler_time.hour,
+                    minute=scheduler_time.minute,
+                    second=scheduler_time.second,
+                    args=(None, schedule_mode),
+                )
+            )
 
     async def update(self):
         """更新定时任务"""
@@ -152,25 +160,31 @@ class Scheduler:
             None,
         )
 
-    async def run_task(self, time: time | None = None):
+    async def run_task(
+        self, time: time | None = None, schedule_mode: ScheduleMode | None = None
+    ):
         """执行定时任务
 
         时间为 UTC 时间，并且没有时区信息
         如果没有传入时间，则执行默认定时任务
         """
         async with get_session() as session:
-            statement = (
-                select(Schedule).where(Schedule.time == time).order_by(Schedule.id)
-            )
+            statement = select(Schedule).where(Schedule.time == time)
+            if time is None and schedule_mode is not None:
+                statement = statement.where(Schedule.schedule_mode == schedule_mode)
+            statement = statement.order_by(Schedule.id)
             results = await session.scalars(statement)
             schedules = results.all()
             # 如果该时间没有需要执行的定时任务，且不是默认任务则从任务列表中删除该任务
             if time and not schedules:
                 self.schedules.pop(time.isoformat()).remove()
                 return
-            logger.info(f"开始发送定时词云，时间为 {time or '默认时间'}")
+            time_text = time or (
+                f"默认时间（{schedule_mode.value}）" if schedule_mode else "默认时间"
+            )
+            logger.info(f"开始发送定时词云，时间为 {time_text}")
+            dt = get_datetime_now_with_timezone()
             for schedule in schedules:
-                dt = get_datetime_now_with_timezone()
                 if not (
                     time_range := get_schedule_time_range(
                         schedule.schedule_type,
@@ -233,7 +247,9 @@ class Scheduler:
                         schedule.time.replace(tzinfo=ZoneInfo("UTC"))
                     )
                 else:
-                    schedule_time = plugin_config.wordcloud_default_schedule_time
+                    schedule_time = plugin_config.get_default_schedule_time(
+                        schedule.schedule_mode
+                    )
                 return schedule_time, schedule.schedule_mode
 
     async def add_schedule(
@@ -242,12 +258,13 @@ class Scheduler:
         *,
         time: time | None = None,
         schedule_type: ScheduleType = ScheduleType.DAY,
-        schedule_mode: ScheduleMode = ScheduleMode.COMPLETE,
+        schedule_mode: ScheduleMode | None = None,
     ):
         """添加定时任务
 
         时间需要带时区信息
         """
+        schedule_mode = schedule_mode or plugin_config.wordcloud_default_schedule_mode
         # 将时间转换为 UTC 时间
         if time:
             time = time_astimezone(time, ZoneInfo("UTC"))
