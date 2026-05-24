@@ -80,6 +80,12 @@ def test_get_schedule_time_range():
         datetime(2024, 5, 1),
         datetime(2024, 5, 31, 22),
     )
+    assert (
+        get_schedule_time_range(
+            ScheduleType.MONTH, datetime(2024, 5, 30, 22), ScheduleMode.PERIOD_END
+        )
+        is None
+    )
     assert get_schedule_time_range(ScheduleType.YEAR, datetime(2024, 1, 1, 22)) == (
         datetime(2023, 1, 1),
         datetime(2024, 1, 1),
@@ -91,6 +97,14 @@ def test_get_schedule_time_range():
         datetime(2024, 1, 1),
         datetime(2024, 12, 31, 22),
     )
+    assert (
+        get_schedule_time_range(
+            ScheduleType.YEAR, datetime(2024, 12, 30, 22), ScheduleMode.PERIOD_END
+        )
+        is None
+    )
+    assert get_schedule_time_range("未知", dt, ScheduleMode.PERIOD_END) is None  # type: ignore[arg-type]
+    assert get_schedule_time_range("未知", dt) is None  # type: ignore[arg-type]
 
 
 async def test_enable_schedule(app: App):
@@ -240,6 +254,56 @@ async def test_enable_period_end_schedule(app: App):
         schedule = (await session.scalars(select(Schedule))).one()
         assert schedule.schedule_type == ScheduleType.WEEK
         assert schedule.schedule_mode == ScheduleMode.PERIOD_END
+
+
+async def test_enable_complete_schedule(app: App):
+    from nonebot_plugin_orm import get_session
+
+    from nonebot_plugin_wordcloud import schedule_cmd
+    from nonebot_plugin_wordcloud.model import Schedule, ScheduleMode, ScheduleType
+
+    async with app.test_matcher(schedule_cmd) as ctx:
+        adapter = get_adapter(Adapter)
+        bot = ctx.create_bot(base=Bot, adapter=adapter, auto_connect=False)
+        event = fake_group_message_event_v11(
+            message=Message("/开启词云每周完整周期定时发送 10:00"),
+            sender={"role": "admin"},
+        )
+
+        ctx.receive_event(bot, event)
+        ctx.should_pass_permission(schedule_cmd)
+        ctx.should_call_send(
+            event,
+            "已开启词云每周定时发送，发送时间为：10:00:00+08:00",
+            True,
+        )
+        ctx.should_finished(schedule_cmd)
+
+    async with get_session() as session:
+        schedule = (await session.scalars(select(Schedule))).one()
+        assert schedule.schedule_type == ScheduleType.WEEK
+        assert schedule.schedule_mode == ScheduleMode.COMPLETE
+
+
+async def test_enable_schedule_conflicting_modes(app: App):
+    from nonebot_plugin_wordcloud import schedule_cmd
+
+    async with app.test_matcher(schedule_cmd) as ctx:
+        adapter = get_adapter(Adapter)
+        bot = ctx.create_bot(base=Bot, adapter=adapter, auto_connect=False)
+        event = fake_group_message_event_v11(
+            message=Message("/词云定时发送 --last --complete --action 开启 每周"),
+            sender={"role": "admin"},
+        )
+
+        ctx.receive_event(bot, event)
+        ctx.should_pass_permission(schedule_cmd)
+        ctx.should_call_send(
+            event,
+            "请选择一种发送模式，不要同时指定完整周期和周期末",
+            True,
+        )
+        ctx.should_finished(schedule_cmd)
 
 
 async def test_enable_period_end_schedule_default_time(app: App):
@@ -393,6 +457,35 @@ async def test_add_schedule_merges_equivalent_targets(app: App):
             if schedule.schedule_type == ScheduleType.WEEK
         )
         assert weekly_schedule.schedule_mode == ScheduleMode.PERIOD_END
+
+
+async def test_get_schedule_info_with_custom_time(app: App):
+    from nonebot_plugin_wordcloud import schedule_service
+    from nonebot_plugin_wordcloud.model import ScheduleMode
+
+    target = make_group_target(group_id=10000)
+
+    await schedule_service.add_schedule(target, time=time(23, 0))
+
+    schedule_time, schedule_mode = await schedule_service.get_schedule_info(target)
+    assert schedule_time.isoformat() == "23:00:00+08:00"
+    assert schedule_mode == ScheduleMode.COMPLETE
+
+
+async def test_remove_schedule(app: App):
+    from nonebot_plugin_orm import get_session
+
+    from nonebot_plugin_wordcloud import schedule_service
+    from nonebot_plugin_wordcloud.model import Schedule
+
+    target = make_group_target(group_id=10000)
+
+    await schedule_service.add_schedule(target)
+    await schedule_service.remove_schedule(target)
+
+    async with get_session() as session:
+        results = await session.scalars(select(Schedule))
+        assert results.all() == []
 
 
 async def test_schedule_status(app: App):
@@ -590,7 +683,7 @@ async def test_run_task_week_period_end(app: App, mocker: MockerFixture):
         adapter = get_adapter(Adapter)
         ctx.create_bot(base=Bot, adapter=adapter)
         should_send_group_image(ctx, image, group_id=10000)
-        await schedule_service.run_task()
+        await schedule_service.run_task(schedule_mode=ScheduleMode.PERIOD_END)
 
     mocked_get_messages_plain_text.assert_called_once()
     kwargs = mocked_get_messages_plain_text.call_args.kwargs

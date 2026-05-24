@@ -51,6 +51,19 @@ async def test_default_schedule_mode(
     assert config.wordcloud_default_schedule_time.isoformat() == default_time
 
 
+async def test_default_schedule_mode_enum(app: App):
+    """测试设置默认定时发送模式为枚举值"""
+    from nonebot_plugin_wordcloud.config import Config
+    from nonebot_plugin_wordcloud.model import ScheduleMode
+
+    config = type_validate_python(
+        Config, {"wordcloud_default_schedule_mode": ScheduleMode.PERIOD_END}
+    )
+
+    assert config.wordcloud_default_schedule_mode == ScheduleMode.PERIOD_END
+    assert config.wordcloud_default_schedule_time.isoformat() == "23:59:59+08:00"
+
+
 @pytest.mark.parametrize(
     "default_config",
     [
