@@ -18,6 +18,13 @@ class ScheduleType(str, Enum):
     YEAR = "每年"
 
 
+class ScheduleMode(str, Enum):
+    """定时发送模式"""
+
+    COMPLETE = "完整周期"
+    PERIOD_END = "周期末"
+
+
 def _schedule_type_values(schedule_types) -> list[str]:
     return [schedule_type.value for schedule_type in schedule_types]
 
@@ -38,6 +45,16 @@ class Schedule(Model):
         server_default=ScheduleType.DAY.value,
     )
     """定时发送类型"""
+    schedule_mode: Mapped[ScheduleMode] = mapped_column(
+        SQLAlchemyEnum(
+            ScheduleMode,
+            values_callable=_schedule_type_values,
+            native_enum=False,
+        ),
+        default=ScheduleMode.COMPLETE,
+        server_default=ScheduleMode.COMPLETE.value,
+    )
+    """定时发送模式"""
     time: Mapped[time | None]
     """ UTC 时间 """
 

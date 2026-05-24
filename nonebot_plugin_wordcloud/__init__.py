@@ -42,7 +42,7 @@ from nonebot_plugin_uninfo import Session, UniSession
 
 from .config import Config, plugin_config
 from .data_source import get_wordcloud
-from .model import ScheduleType
+from .model import ScheduleMode, ScheduleType
 from .schedule import schedule_service
 from .utils import (
     admin_permission,
@@ -112,9 +112,11 @@ def get_usage() -> str:
 /开启词云每日定时发送
 /开启词云每月定时发送
 /开启词云每日定时发送 23:59
+/开启词云每周周期末定时发送
 /关闭词云每日定时发送
 /关闭词云每年定时发送
-支持类型：每日，每周，每月，每年"""
+支持类型：每日，每周，每月，每年
+默认发送上一完整周期，添加 --last 或“周期末”可在周期最后一天发送"""
 
 
 def get_wordcloud_cmd_usage() -> str:
@@ -458,6 +460,12 @@ schedule_cmd = on_alconna(
     Alconna(
         "词云定时发送",
         Option(
+            "--last",
+            default=False,
+            action=store_true,
+            help_text="在周期最后一天发送",
+        ),
+        Option(
             "--action",
             Args["action_type", ["状态", "开启", "关闭"]],
             default="状态",
@@ -473,6 +481,7 @@ schedule_cmd = on_alconna(
                 "/开启词云每日定时发送\n"
                 "/开启词云每月定时发送\n"
                 "/开启词云每日定时发送 23:59\n"
+                "/开启词云每周周期末定时发送\n"
                 "/关闭词云每日定时发送\n"
                 "/关闭词云每年定时发送"
             ),
@@ -482,6 +491,14 @@ schedule_cmd = on_alconna(
     use_cmd_start=True,
     block=True,
 )
+
+
+def schedule_wrapper(slot: int | str, content: str | None, context: dict[str, Any]):
+    if slot == "mode" and content:
+        return "--last"
+    return content or ""
+
+
 schedule_cmd.shortcut(
     r"词云(?P<type>每日|每周|每月|每年)定时发送状态",
     {
@@ -492,11 +509,12 @@ schedule_cmd.shortcut(
     },
 )
 schedule_cmd.shortcut(
-    r"(?P<action>开启|关闭)词云(?P<type>每日|每周|每月|每年)定时发送(?:\s+(?P<time>\S+))?",
+    r"(?P<action>开启|关闭)词云(?P<type>每日|每周|每月|每年)(?P<mode>周期末)?定时发送(?:\s+(?P<time>\S+))?",
     {
         "prefix": True,
         "command": "词云定时发送",
-        "args": ["--action", "{action}", "{type}", "{time}"],
+        "wrapper": schedule_wrapper,
+        "args": ["{mode}", "--action", "{action}", "{type}", "{time}"],
         "humanized": "<开启|关闭>词云<类型>定时发送",
     },
 )
@@ -506,18 +524,22 @@ schedule_cmd.shortcut(
 async def _(
     type: str = "每日",
     time: str | None = None,
+    last: Query[bool] = AlconnaQuery("last.value", False),
     action_type: Query[str] = AlconnaQuery("action.action_type.value", "状态"),
     target: Target = MessageTarget(),
 ):
     schedule_type = ScheduleType(type)
     if action_type.result == "状态":
-        schedule_time = await schedule_service.get_schedule(target, schedule_type)
+        schedule_info = await schedule_service.get_schedule_info(target, schedule_type)
         await schedule_cmd.finish(
-            f"词云{schedule_type.value}定时发送已开启，发送时间为：{schedule_time}"
-            if schedule_time
+            f"词云{schedule_type.value}定时发送已开启，发送时间为：{schedule_info[0]}，发送模式为：{schedule_info[1].value}"
+            if schedule_info
             else f"词云{schedule_type.value}定时发送未开启"
         )
     elif action_type.result == "开启":
+        schedule_mode = (
+            ScheduleMode.PERIOD_END if last.result else ScheduleMode.COMPLETE
+        )
         schedule_time = None
         if time:
             try:
@@ -525,12 +547,20 @@ async def _(
             except ValueError:
                 await schedule_cmd.finish("请输入正确的时间，不然我没法理解呢！")
         await schedule_service.add_schedule(
-            target, time=schedule_time, schedule_type=schedule_type
+            target,
+            time=schedule_time,
+            schedule_type=schedule_type,
+            schedule_mode=schedule_mode,
+        )
+        mode_message = (
+            f"，发送模式为：{schedule_mode.value}"
+            if schedule_mode == ScheduleMode.PERIOD_END
+            else ""
         )
         await schedule_cmd.finish(
-            f"已开启词云{schedule_type.value}定时发送，发送时间为：{schedule_time}"
+            f"已开启词云{schedule_type.value}定时发送，发送时间为：{schedule_time}{mode_message}"
             if schedule_time
-            else f"已开启词云{schedule_type.value}定时发送，发送时间为：{plugin_config.wordcloud_default_schedule_time}"  # noqa: E501
+            else f"已开启词云{schedule_type.value}定时发送，发送时间为：{plugin_config.wordcloud_default_schedule_time}{mode_message}"  # noqa: E501
         )
     elif action_type.result == "关闭":
         await schedule_service.remove_schedule(target, schedule_type)

@@ -180,8 +180,10 @@ async def test_usage_format_structure(app: App):
         "/词云每日定时发送状态",
         "/词云每周定时发送状态",
         "/开启词云每日定时发送",
+        "/开启词云每周周期末定时发送",
         "/关闭词云每日定时发送",
         "支持类型：每日，每周，每月，每年",
+        "默认发送上一完整周期",
     ]
 
     for example in examples:

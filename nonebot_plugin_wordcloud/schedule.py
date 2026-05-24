@@ -13,7 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from .config import plugin_config
 from .data_source import get_wordcloud
-from .model import Schedule, ScheduleType
+from .model import Schedule, ScheduleMode, ScheduleType
 from .utils import (
     get_datetime_now_with_timezone,
     get_mask_key,
@@ -38,12 +38,31 @@ def get_target_scene_type(target: Target) -> SceneType:
 
 
 def get_schedule_time_range(
-    schedule_type: ScheduleType, dt: datetime
+    schedule_type: ScheduleType,
+    dt: datetime,
+    schedule_mode: ScheduleMode = ScheduleMode.COMPLETE,
 ) -> tuple[datetime, datetime] | None:
     """获取定时发送对应的词云时间范围，不到发送日期时返回 None。"""
     stop = dt.replace(hour=0, minute=0, second=0, microsecond=0)
+    if schedule_mode == ScheduleMode.PERIOD_END:
+        if schedule_type == ScheduleType.DAY:
+            return stop, dt
+        if schedule_type == ScheduleType.WEEK:
+            if dt.weekday() != 6:
+                return None
+            return stop - timedelta(days=6), dt
+        if schedule_type == ScheduleType.MONTH:
+            if (stop + timedelta(days=1)).day != 1:
+                return None
+            return stop.replace(day=1), dt
+        if schedule_type == ScheduleType.YEAR:
+            if dt.month != 12 or dt.day != 31:
+                return None
+            return stop.replace(month=1, day=1), dt
+        return None
+
     if schedule_type == ScheduleType.DAY:
-        return stop, dt
+        return stop - timedelta(days=1), stop
     if schedule_type == ScheduleType.WEEK:
         if dt.weekday() != 0:
             return None
@@ -153,7 +172,11 @@ class Scheduler:
             for schedule in schedules:
                 dt = get_datetime_now_with_timezone()
                 if not (
-                    time_range := get_schedule_time_range(schedule.schedule_type, dt)
+                    time_range := get_schedule_time_range(
+                        schedule.schedule_type,
+                        dt,
+                        schedule.schedule_mode,
+                    )
                 ):
                     continue
                 start, stop = time_range
@@ -177,7 +200,8 @@ class Scheduler:
                 else:
                     msg = Text(
                         "今天没有足够的数据生成词云"
-                        if schedule.schedule_type == ScheduleType.DAY
+                        if schedule.schedule_mode == ScheduleMode.PERIOD_END
+                        and schedule.schedule_type == ScheduleType.DAY
                         else "这段时间没有足够的数据生成词云"
                     )
 
@@ -192,17 +216,25 @@ class Scheduler:
         self, target: Target, schedule_type: ScheduleType = ScheduleType.DAY
     ) -> time | None:
         """获取定时任务时间"""
+        if schedule_info := await self.get_schedule_info(target, schedule_type):
+            return schedule_info[0]
+
+    async def get_schedule_info(
+        self, target: Target, schedule_type: ScheduleType = ScheduleType.DAY
+    ) -> tuple[time, ScheduleMode] | None:
+        """获取定时任务时间与发送模式"""
         async with get_session() as db_session:
             if schedule := await self.get_target_schedule(
                 target, db_session, schedule_type
             ):
                 if schedule.time:
                     # 将时间转换为本地时间
-                    return time_astimezone(
+                    schedule_time = time_astimezone(
                         schedule.time.replace(tzinfo=ZoneInfo("UTC"))
                     )
                 else:
-                    return plugin_config.wordcloud_default_schedule_time
+                    schedule_time = plugin_config.wordcloud_default_schedule_time
+                return schedule_time, schedule.schedule_mode
 
     async def add_schedule(
         self,
@@ -210,6 +242,7 @@ class Scheduler:
         *,
         time: time | None = None,
         schedule_type: ScheduleType = ScheduleType.DAY,
+        schedule_mode: ScheduleMode = ScheduleMode.COMPLETE,
     ):
         """添加定时任务
 
@@ -225,11 +258,13 @@ class Scheduler:
             ):
                 schedule.time = time
                 schedule.target = dump_target(target)
+                schedule.schedule_mode = schedule_mode
             else:
                 schedule = Schedule(
                     time=time,
                     target=dump_target(target),
                     schedule_type=schedule_type,
+                    schedule_mode=schedule_mode,
                 )
                 db_session.add(schedule)
             await db_session.commit()
