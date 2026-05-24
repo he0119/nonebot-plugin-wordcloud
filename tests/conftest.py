@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 import nonebot
@@ -8,10 +9,32 @@ from nonebug import NONEBOT_INIT_KWARGS, NONEBOT_START_LIFESPAN, App
 from pytest_asyncio import is_async_test
 from pytest_mock import MockerFixture
 from sqlalchemy import delete
+from sqlalchemy.pool import NullPool, StaticPool
+
+POOL_CLASSES = {
+    "NullPool": NullPool,
+    "StaticPool": StaticPool,
+}
+
+
+def get_database_url() -> str:
+    url = os.getenv("SQLALCHEMY_DATABASE_URL", "sqlite+aiosqlite://")
+    if url != "sqlite+aiosqlite://":
+        return url
+
+    worker_id = os.getenv("PYTEST_XDIST_WORKER", "master")
+    database = Path(".pytest_cache") / f"{worker_id}.sqlite3"
+    database.parent.mkdir(exist_ok=True)
+    database.unlink(missing_ok=True)
+    return f"sqlite+aiosqlite:///{database.as_posix()}"
 
 
 def pytest_configure(config: pytest.Config) -> None:
+    pool_class = POOL_CLASSES[os.getenv("SQLALCHEMY_POOL_CLASS", "StaticPool")]
+
     config.stash[NONEBOT_INIT_KWARGS] = {
+        "sqlalchemy_database_url": get_database_url(),
+        "sqlalchemy_engine_options": {"poolclass": pool_class},
         "driver": "~fastapi+~httpx",
         "alembic_startup_check": False,
         "command_start": {"/", ""},
