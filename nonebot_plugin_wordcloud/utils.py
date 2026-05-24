@@ -73,11 +73,14 @@ def get_mask_key(session: Session | Target = UniSession()) -> str:
     平台名称和会话场景 ID 组成，例如 `QQClient_123456789` 和用户插件保持一致。
     """
     if isinstance(session, Target):
+        scope = getattr(session.scope, "value", session.scope)
         scene_path = (
             f"{session.parent_id}_{session.id}" if session.parent_id else session.id
         )
-        return f"{session.scope}_{scene_path}" if session.scope else scene_path
-    return f"{session.scope}_{session.scene_path}"
+        return f"{scope}_{scene_path}" if scope else scene_path
+
+    scope = getattr(session.scope, "value", session.scope)
+    return f"{scope}_{session.scene_path}"
 
 
 async def ensure_group(matcher: Matcher, session: Session = UniSession()):
