@@ -1,8 +1,8 @@
-"""add schedule mode
+"""add schedule period options
 
-迁移 ID: 2c81885ebe94
-父迁移: 9af63132d74a
-创建时间: 2026-05-24 13:30:01.043548
+迁移 ID: 40af70fe5409
+父迁移: 4f1a6b35e888
+创建时间: 2026-05-24 13:46:25.925671
 
 """
 
@@ -17,8 +17,8 @@ if TYPE_CHECKING:
     from collections.abc import Sequence
 
 
-revision: str = "2c81885ebe94"
-down_revision: str | Sequence[str] | None = "9af63132d74a"
+revision: str = "40af70fe5409"
+down_revision: str | Sequence[str] | None = "4f1a6b35e888"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
@@ -30,6 +30,21 @@ def upgrade(name: str = "") -> None:
     with op.batch_alter_table(
         "nonebot_plugin_wordcloud_schedule", schema=None
     ) as batch_op:
+        batch_op.add_column(
+            sa.Column(
+                "schedule_type",
+                sa.Enum(
+                    "每日",
+                    "每周",
+                    "每月",
+                    "每年",
+                    name="scheduletype",
+                    native_enum=False,
+                ),
+                server_default="每日",
+                nullable=False,
+            )
+        )
         batch_op.add_column(
             sa.Column(
                 "schedule_mode",
@@ -55,5 +70,6 @@ def downgrade(name: str = "") -> None:
         "nonebot_plugin_wordcloud_schedule", schema=None
     ) as batch_op:
         batch_op.drop_column("schedule_mode")
+        batch_op.drop_column("schedule_type")
 
     # ### end Alembic commands ###
