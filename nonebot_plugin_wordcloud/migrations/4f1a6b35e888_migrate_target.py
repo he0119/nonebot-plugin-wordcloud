@@ -280,9 +280,7 @@ def _deduplicate_schedules(schedules) -> None:
         try:
             target = Target.load(raw_target)
         except Exception as e:
-            logger.warning(
-                f"wordcloud: 目标 {raw_target} 无法解析，已跳过去重: {e}"
-            )
+            logger.warning(f"wordcloud: 目标 {raw_target} 无法解析，已跳过去重: {e}")
             continue
 
         for index, unique_target in enumerate(unique_targets):
