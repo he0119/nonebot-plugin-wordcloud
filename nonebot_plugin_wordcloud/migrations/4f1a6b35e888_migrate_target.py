@@ -276,7 +276,15 @@ def _deduplicate_schedules(schedules) -> None:
     unique_targets: list[Target] = []
 
     for schedule in schedules:
-        target = Target.load(_load_target(schedule.target).copy())
+        raw_target = _load_target(schedule.target).copy()
+        try:
+            target = Target.load(raw_target)
+        except Exception as e:
+            logger.warning(
+                f"wordcloud: 目标 {raw_target} 无法解析，已跳过去重: {e}"
+            )
+            continue
+
         for index, unique_target in enumerate(unique_targets):
             if target == unique_target:
                 unique_schedules[index] = schedule
