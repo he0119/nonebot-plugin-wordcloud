@@ -24,6 +24,20 @@ from .utils import (
 )
 
 
+def test_get_target_scene_type():
+    from nonebot_plugin_alconna import Target
+    from nonebot_plugin_uninfo import SceneType
+
+    from nonebot_plugin_wordcloud.schedule import get_target_scene_type
+
+    assert get_target_scene_type(Target("10000")) == SceneType.GROUP
+    assert (
+        get_target_scene_type(Target("100000", "10000", channel=True))
+        == SceneType.CHANNEL_TEXT
+    )
+    assert get_target_scene_type(Target("10", private=True)) == SceneType.PRIVATE
+
+
 async def test_enable_schedule(app: App):
     from nonebot_plugin_wordcloud import schedule_cmd, schedule_service
 
