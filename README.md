@@ -72,7 +72,6 @@ nb plugin install nonebot-plugin-wordcloud
 - 当 `wordcloud_default_personal` 配置为 `False`（默认）时，上述命令默认获取群组数据
 - 当 `wordcloud_default_personal` 配置为 `True` 时，上述命令默认获取个人数据
 - 可以使用前缀明确指定数据范围：
-
   - 添加 `我的` 前缀获取个人词云，如 `/我的今日词云`
   - 添加 `本群` 前缀获取群组词云，如 `/本群今日词云`
 
