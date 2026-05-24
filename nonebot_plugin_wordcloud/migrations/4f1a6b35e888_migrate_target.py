@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING
 
 from alembic import op
 from nonebot import logger
+from nonebot_plugin_alconna import Target
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import Session
 
@@ -66,7 +67,6 @@ def _target_id(value) -> str:
 
 def _target(
     *,
-    platform_type: str,
     id,
     scope: str,
     parent_id: str = "",
@@ -78,14 +78,13 @@ def _target(
     source: str = "",
     extra: dict | None = None,
 ) -> dict:
-    extra = {"saa.platform_type": platform_type, **(extra or {})}
     data = {
         "id": _target_id(id),
         "parent_id": parent_id,
         "channel": channel,
         "private": private,
         "source": source,
-        "extra": extra,
+        "extra": extra or {},
         "scope": scope,
     }
     if adapter:
@@ -104,46 +103,38 @@ def _migrate_legacy_target(target: dict) -> dict | None:
     platform_type = target.get("platform_type")
     if platform_type == "QQ Group":
         return _target(
-            platform_type=platform_type,
             id=target["group_id"],
             scope="QQClient",
         )
     if platform_type == "QQ Guild Channel":
         return _target(
-            platform_type=platform_type,
             id=target["channel_id"],
             channel=True,
             scope="QQGuild",
         )
     if platform_type == "QQ Private":
         return _target(
-            platform_type=platform_type,
             id=target["user_id"],
             private=True,
             scope="QQClient",
         )
     if platform_type == "QQ Group OpenID":
         return _target(
-            platform_type=platform_type,
             id=target["group_openid"],
             scope="QQAPI",
             adapter="QQ",
             self_id=target["bot_id"],
-            extra={"qq.reply_seq": 1},
         )
     if platform_type == "QQ Private OpenID":
         return _target(
-            platform_type=platform_type,
             id=target["user_openid"],
             private=True,
             scope="QQAPI",
             adapter="QQ",
             self_id=target["bot_id"],
-            extra={"qq.reply_seq": 1},
         )
     if platform_type == "QQ Guild Direct":
         return _target(
-            platform_type=platform_type,
             id=target["recipient_id"],
             parent_id=_target_id(target["source_guild_id"]),
             channel=True,
@@ -161,7 +152,6 @@ def _migrate_legacy_target(target: dict) -> dict | None:
             target_id = target["group_id"]
         platform = target["platform"]
         return _target(
-            platform_type=platform_type,
             id=target_id,
             parent_id=_target_id(target.get("guild_id") or ""),
             channel=detail_type == "channel",
@@ -169,31 +159,26 @@ def _migrate_legacy_target(target: dict) -> dict | None:
             scope=_ensure_ob12_scope(platform),
             adapter="OneBot V12",
             platforms=[platform],
-            extra={"saa.detail_type": detail_type, "saa.platform": platform},
         )
     if platform_type == "Unknown Satori Platform":
         platform = target["platform"]
         channel_id = target.get("channel_id")
         return _target(
-            platform_type=platform_type,
             id=channel_id or target["user_id"],
             parent_id=_target_id(target.get("guild_id") or ""),
             private=not channel_id,
             scope=_ensure_satori_scope(platform),
             adapter="Satori",
             platforms=[platform],
-            extra={"saa.platform": platform},
         )
     if platform_type == "Kaiheila Channel":
         return _target(
-            platform_type=platform_type,
             id=target["channel_id"],
             scope="Kaiheila",
             adapter="Kaiheila",
         )
     if platform_type == "Kaiheila Private":
         return _target(
-            platform_type=platform_type,
             id=target["user_id"],
             private=True,
             scope="Kaiheila",
@@ -201,14 +186,12 @@ def _migrate_legacy_target(target: dict) -> dict | None:
         )
     if platform_type == "Telegram Common":
         return _target(
-            platform_type=platform_type,
             id=target["chat_id"],
             scope="Telegram",
             adapter="Telegram",
         )
     if platform_type == "Telegram Forum":
         return _target(
-            platform_type=platform_type,
             id=target["chat_id"],
             scope="Telegram",
             adapter="Telegram",
@@ -216,7 +199,6 @@ def _migrate_legacy_target(target: dict) -> dict | None:
         )
     if platform_type == "Feishu Private":
         return _target(
-            platform_type=platform_type,
             id=target["open_id"],
             private=True,
             scope="Feishu",
@@ -224,26 +206,20 @@ def _migrate_legacy_target(target: dict) -> dict | None:
         )
     if platform_type == "Feishu Group":
         return _target(
-            platform_type=platform_type,
             id=target["chat_id"],
             scope="Feishu",
             adapter="Feishu",
         )
     if platform_type == "DoDo Channel":
-        extra = {}
-        if dodo_source_id := target.get("dodo_source_id"):
-            extra["dodo_source_id"] = dodo_source_id
         return _target(
-            platform_type=platform_type,
             id=target["channel_id"],
+            parent_id=_target_id(target.get("dodo_source_id") or ""),
             channel=True,
             scope="DoDo",
             adapter="DoDo",
-            extra=extra,
         )
     if platform_type == "DoDo Private":
         return _target(
-            platform_type=platform_type,
             id=target["dodo_source_id"],
             parent_id=target["island_source_id"],
             channel=True,
@@ -253,7 +229,6 @@ def _migrate_legacy_target(target: dict) -> dict | None:
         )
     if platform_type == "Discord Channel":
         return _target(
-            platform_type=platform_type,
             id=target["channel_id"],
             channel=True,
             scope="Discord",
@@ -266,82 +241,6 @@ def _downgrade_target(target: dict) -> dict | None:
         return target
 
     extra = target.get("extra") or {}
-    platform_type = extra.get("saa.platform_type")
-    if platform_type == "QQ Group OpenID":
-        return {
-            "platform_type": platform_type,
-            "group_openid": target.get("id"),
-            "bot_id": target.get("self_id"),
-        }
-    if platform_type == "QQ Private OpenID":
-        return {
-            "platform_type": platform_type,
-            "user_openid": target.get("id"),
-            "bot_id": target.get("self_id"),
-        }
-    if platform_type == "QQ Guild Direct":
-        return {
-            "platform_type": platform_type,
-            "recipient_id": target.get("id"),
-            "source_guild_id": target.get("parent_id"),
-        }
-    if platform_type == "Unknow Onebot 12 Platform":
-        detail_type = extra.get("saa.detail_type")
-        data = {
-            "platform_type": platform_type,
-            "platform": extra.get("saa.platform"),
-            "detail_type": detail_type,
-        }
-        if detail_type == "private":
-            data["user_id"] = target.get("id")
-        elif detail_type == "channel":
-            data["guild_id"] = target.get("parent_id")
-            data["channel_id"] = target.get("id")
-        else:
-            data["group_id"] = target.get("id")
-        return data
-    if platform_type == "Unknown Satori Platform":
-        data = {
-            "platform_type": platform_type,
-            "platform": extra.get("saa.platform"),
-        }
-        if target.get("private"):
-            data["user_id"] = target.get("id")
-        else:
-            data["guild_id"] = target.get("parent_id")
-            data["channel_id"] = target.get("id")
-        return data
-    if platform_type == "Kaiheila Channel":
-        return {"platform_type": platform_type, "channel_id": target.get("id")}
-    if platform_type == "Kaiheila Private":
-        return {"platform_type": platform_type, "user_id": target.get("id")}
-    if platform_type == "Telegram Common":
-        return {"platform_type": platform_type, "chat_id": target.get("id")}
-    if platform_type == "Telegram Forum":
-        return {
-            "platform_type": platform_type,
-            "chat_id": target.get("id"),
-            "message_thread_id": extra.get("message_thread_id"),
-        }
-    if platform_type == "Feishu Private":
-        return {"platform_type": platform_type, "open_id": target.get("id")}
-    if platform_type == "Feishu Group":
-        return {"platform_type": platform_type, "chat_id": target.get("id")}
-    if platform_type == "DoDo Channel":
-        return {
-            "platform_type": platform_type,
-            "channel_id": target.get("id"),
-            "dodo_source_id": extra.get("dodo_source_id"),
-        }
-    if platform_type == "DoDo Private":
-        return {
-            "platform_type": platform_type,
-            "island_source_id": target.get("parent_id"),
-            "dodo_source_id": target.get("id"),
-        }
-    if platform_type == "Discord Channel":
-        return {"platform_type": platform_type, "channel_id": target.get("id")}
-
     scope = target.get("scope")
     target_id = target.get("id")
     if scope == "QQClient" and target.get("private"):
@@ -350,6 +249,53 @@ def _downgrade_target(target: dict) -> dict | None:
         return {"platform_type": "QQ Group", "group_id": target_id}
     if scope == "QQGuild" and target.get("channel"):
         return {"platform_type": "QQ Guild Channel", "channel_id": target_id}
+    if scope == "Telegram" and "message_thread_id" in extra:
+        return {
+            "platform_type": "Telegram Forum",
+            "chat_id": target_id,
+            "message_thread_id": extra.get("message_thread_id"),
+        }
+    if scope == "Telegram":
+        return {"platform_type": "Telegram Common", "chat_id": target_id}
+    if scope == "DoDo" and target.get("private"):
+        return {
+            "platform_type": "DoDo Private",
+            "island_source_id": target.get("parent_id"),
+            "dodo_source_id": target_id,
+        }
+    if scope == "DoDo":
+        return {
+            "platform_type": "DoDo Channel",
+            "channel_id": target_id,
+            "dodo_source_id": target.get("parent_id"),
+        }
+
+
+def _deduplicate_schedules(schedules) -> None:
+    unique_schedules = []
+    unique_targets: list[Target] = []
+
+    for schedule in schedules:
+        target = Target.load(_load_target(schedule.target).copy())
+        for index, unique_target in enumerate(unique_targets):
+            if target == unique_target:
+                unique_schedules[index] = schedule
+                unique_targets[index] = target
+                break
+        else:
+            unique_schedules.append(schedule)
+            unique_targets.append(target)
+
+    duplicates = [
+        schedule for schedule in schedules if schedule not in unique_schedules
+    ]
+    for schedule in duplicates:
+        session = Session.object_session(schedule)
+        assert session is not None
+        session.delete(schedule)
+
+    if duplicates:
+        logger.info(f"wordcloud: 已合并 {len(duplicates)} 个重复定时发送计划")
 
 
 def upgrade(name: str = "") -> None:
@@ -372,6 +318,7 @@ def upgrade(name: str = "") -> None:
             logger.warning(
                 f"wordcloud: 不支持的目标平台类型 {target.get('platform_type')}，已跳过"
             )
+    _deduplicate_schedules(schedules)
     session.commit()
 
     # ### end Alembic commands ###

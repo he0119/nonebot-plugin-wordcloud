@@ -175,6 +175,39 @@ async def test_disable_schedule(app: App):
     assert len(schedule_service.schedules) == 2
 
 
+async def test_add_schedule_merges_equivalent_targets(app: App):
+    from nonebot_plugin_orm import get_session
+
+    from nonebot_plugin_wordcloud import schedule_service
+    from nonebot_plugin_wordcloud.model import Schedule
+
+    target = make_group_target(group_id=10000)
+    legacy_target = {
+        "id": "10000",
+        "parent_id": "",
+        "channel": False,
+        "private": False,
+        "source": "",
+        "extra": {"saa.platform_type": "QQ Group"},
+        "scope": "QQClient",
+    }
+
+    async with get_session() as session:
+        session.add(Schedule(target=legacy_target, time=None))
+        await session.commit()
+
+    assert str(await schedule_service.get_schedule(target)) == "22:00:00+08:00"
+
+    await schedule_service.add_schedule(target, time=time(23, 0))
+
+    async with get_session() as session:
+        results = await session.scalars(select(Schedule))
+        schedules = results.all()
+        assert len(schedules) == 1
+        assert schedules[0].alc_target == target
+        assert schedules[0].time == time(15, 0)
+
+
 async def test_schedule_status(app: App):
     from nonebot_plugin_wordcloud import schedule_cmd, schedule_service
 
