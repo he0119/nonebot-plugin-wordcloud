@@ -41,7 +41,7 @@ async def test_get_usage_both_modes(app: App, default_personal: bool):
         # 检查设置和定时功能说明
         assert "设置自定义词云形状" in usage
         assert "设置默认词云形状（仅超级用户）" in usage
-        assert "设置定时发送每日词云" in usage
+        assert "设置定时发送词云" in usage
 
         # 检查模式特定的说明
         if default_personal:
@@ -161,7 +161,7 @@ async def test_usage_format_structure(app: App):
         "提供日期与时间，以获取指定时间段内的词云",
         "设置自定义词云形状",
         "设置默认词云形状",
-        "设置定时发送每日词云",
+        "设置定时发送词云",
     ]
 
     for section in sections:
@@ -178,8 +178,10 @@ async def test_usage_format_structure(app: App):
         "/设置词云默认形状",
         "/删除词云默认形状",
         "/词云每日定时发送状态",
+        "/词云每周定时发送状态",
         "/开启词云每日定时发送",
         "/关闭词云每日定时发送",
+        "支持类型：每日，每周，每月，每年",
     ]
 
     for example in examples:

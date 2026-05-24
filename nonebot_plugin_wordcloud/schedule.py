@@ -1,4 +1,4 @@
-from datetime import time
+from datetime import datetime, time, timedelta
 from typing import TYPE_CHECKING
 from zoneinfo import ZoneInfo
 
@@ -13,7 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from .config import plugin_config
 from .data_source import get_wordcloud
-from .model import Schedule
+from .model import Schedule, ScheduleType
 from .utils import (
     get_datetime_now_with_timezone,
     get_mask_key,
@@ -35,6 +35,31 @@ def get_target_scene_type(target: Target) -> SceneType:
     if target.channel:
         return SceneType.CHANNEL_TEXT
     return SceneType.GROUP
+
+
+def get_schedule_time_range(
+    schedule_type: ScheduleType, dt: datetime
+) -> tuple[datetime, datetime] | None:
+    """获取定时发送对应的词云时间范围，不到发送日期时返回 None。"""
+    stop = dt.replace(hour=0, minute=0, second=0, microsecond=0)
+    if schedule_type == ScheduleType.DAY:
+        return stop, dt
+    if schedule_type == ScheduleType.WEEK:
+        if dt.weekday() != 0:
+            return None
+        return stop - timedelta(days=7), stop
+    if schedule_type == ScheduleType.MONTH:
+        if dt.day != 1:
+            return None
+        last_month = stop - timedelta(days=1)
+        start = last_month.replace(day=1)
+        return start, stop
+    if schedule_type == ScheduleType.YEAR:
+        if dt.month != 1 or dt.day != 1:
+            return None
+        start = stop.replace(year=stop.year - 1)
+        return start, stop
+    return None
 
 
 class Scheduler:
@@ -81,15 +106,17 @@ class Scheduler:
                         second=scheduler_time.second,
                         args=(schedule_time,),
                     )
-                    logger.debug(
-                        f"已添加每日词云定时发送任务，发送时间：{time_str} UTC"
-                    )
+                    logger.debug(f"已添加词云定时发送任务，发送时间：{time_str} UTC")
 
     async def get_target_schedule(
-        self, target: Target, session: AsyncSession
+        self,
+        target: Target,
+        session: AsyncSession,
+        schedule_type: ScheduleType = ScheduleType.DAY,
     ) -> Schedule | None:
         statement = (
             select(Schedule)
+            .where(Schedule.schedule_type == schedule_type)
             .where(Schedule.target["id"].as_string() == target.id)
             .where(Schedule.target["channel"].as_boolean() == target.channel)
             .where(Schedule.target["private"].as_boolean() == target.private)
@@ -122,12 +149,15 @@ class Scheduler:
             if time and not schedules:
                 self.schedules.pop(time.isoformat()).remove()
                 return
-            logger.info(f"开始发送每日词云，时间为 {time or '默认时间'}")
+            logger.info(f"开始发送定时词云，时间为 {time or '默认时间'}")
             for schedule in schedules:
-                target = schedule.alc_target
                 dt = get_datetime_now_with_timezone()
-                start = dt.replace(hour=0, minute=0, second=0, microsecond=0)
-                stop = dt
+                if not (
+                    time_range := get_schedule_time_range(schedule.schedule_type, dt)
+                ):
+                    continue
+                start, stop = time_range
+                target = schedule.alc_target
                 messages = await get_messages_plain_text(
                     scopes=[target.scope] if target.scope else None,
                     scene_types=[get_target_scene_type(target)],
@@ -145,17 +175,27 @@ class Scheduler:
                 if image := await get_wordcloud(messages, mask_key):
                     msg = Image(raw=image)
                 else:
-                    msg = Text("今天没有足够的数据生成词云")
+                    msg = Text(
+                        "今天没有足够的数据生成词云"
+                        if schedule.schedule_type == ScheduleType.DAY
+                        else "这段时间没有足够的数据生成词云"
+                    )
 
                 try:
                     await target.send(UniMessage(msg))
                 except Exception:
-                    logger.exception(f"{target} 发送词云失败")
+                    logger.exception(
+                        f"{target} 发送{schedule.schedule_type.value}词云失败"
+                    )
 
-    async def get_schedule(self, target: Target) -> time | None:
+    async def get_schedule(
+        self, target: Target, schedule_type: ScheduleType = ScheduleType.DAY
+    ) -> time | None:
         """获取定时任务时间"""
         async with get_session() as db_session:
-            if schedule := await self.get_target_schedule(target, db_session):
+            if schedule := await self.get_target_schedule(
+                target, db_session, schedule_type
+            ):
                 if schedule.time:
                     # 将时间转换为本地时间
                     return time_astimezone(
@@ -164,7 +204,13 @@ class Scheduler:
                 else:
                     return plugin_config.wordcloud_default_schedule_time
 
-    async def add_schedule(self, target: Target, *, time: time | None = None):
+    async def add_schedule(
+        self,
+        target: Target,
+        *,
+        time: time | None = None,
+        schedule_type: ScheduleType = ScheduleType.DAY,
+    ):
         """添加定时任务
 
         时间需要带时区信息
@@ -174,19 +220,29 @@ class Scheduler:
             time = time_astimezone(time, ZoneInfo("UTC"))
 
         async with get_session() as db_session:
-            if schedule := await self.get_target_schedule(target, db_session):
+            if schedule := await self.get_target_schedule(
+                target, db_session, schedule_type
+            ):
                 schedule.time = time
                 schedule.target = dump_target(target)
             else:
-                schedule = Schedule(time=time, target=dump_target(target))
+                schedule = Schedule(
+                    time=time,
+                    target=dump_target(target),
+                    schedule_type=schedule_type,
+                )
                 db_session.add(schedule)
             await db_session.commit()
         await self.update()
 
-    async def remove_schedule(self, target: Target):
+    async def remove_schedule(
+        self, target: Target, schedule_type: ScheduleType = ScheduleType.DAY
+    ):
         """删除定时任务"""
         async with get_session() as db_session:
-            if schedule := await self.get_target_schedule(target, db_session):
+            if schedule := await self.get_target_schedule(
+                target, db_session, schedule_type
+            ):
                 await db_session.delete(schedule)
                 await db_session.commit()
 

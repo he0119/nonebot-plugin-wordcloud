@@ -1,10 +1,25 @@
 from datetime import time
+from enum import Enum
 
 from nonebot_plugin_alconna import Target
 from nonebot_plugin_orm import Model
 from sqlalchemy import JSON
+from sqlalchemy import Enum as SQLAlchemyEnum
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
+
+
+class ScheduleType(str, Enum):
+    """定时发送类型"""
+
+    DAY = "每日"
+    WEEK = "每周"
+    MONTH = "每月"
+    YEAR = "每年"
+
+
+def _schedule_type_values(schedule_types) -> list[str]:
+    return [schedule_type.value for schedule_type in schedule_types]
 
 
 class Schedule(Model):
@@ -13,6 +28,16 @@ class Schedule(Model):
     id: Mapped[int] = mapped_column(primary_key=True)
     target: Mapped[dict] = mapped_column(JSON().with_variant(JSONB, "postgresql"))
     """发送目标"""
+    schedule_type: Mapped[ScheduleType] = mapped_column(
+        SQLAlchemyEnum(
+            ScheduleType,
+            values_callable=_schedule_type_values,
+            native_enum=False,
+        ),
+        default=ScheduleType.DAY,
+        server_default=ScheduleType.DAY.value,
+    )
+    """定时发送类型"""
     time: Mapped[time | None]
     """ UTC 时间 """
 
