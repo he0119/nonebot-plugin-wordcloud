@@ -1,14 +1,11 @@
 import contextlib
 from datetime import datetime, time, tzinfo
-from typing import Optional
 from zoneinfo import ZoneInfo
 
-from nonebot.compat import model_dump
 from nonebot.matcher import Matcher
-from nonebot.params import Depends
 from nonebot.permission import SUPERUSER
+from nonebot_plugin_alconna import Target
 from nonebot_plugin_apscheduler import scheduler
-from nonebot_plugin_saa import PlatformTarget, get_target
 from nonebot_plugin_uninfo import SceneType, Session, UniSession
 
 from .config import plugin_config
@@ -34,7 +31,7 @@ def get_datetime_fromisoformat_with_timezone(date_string: str) -> datetime:
     )
 
 
-def time_astimezone(time: time, tz: Optional[tzinfo] = None) -> time:
+def time_astimezone(time: time, tz: tzinfo | None = None) -> time:
     """将 time 对象转换为指定时区的 time 对象
 
     如果 tz 为 None，则转换为本地时区
@@ -70,22 +67,20 @@ def admin_permission():
     return permission
 
 
-def get_mask_key(target: PlatformTarget = Depends(get_target)) -> str:
+def get_mask_key(session: Session | Target = UniSession()) -> str:
     """获取 mask key
 
-    例如：
-    qq_group-group_id=10000
-    qq_guild_channel-channel_id=100000
+    平台名称和会话场景 ID 组成，例如 `QQClient_123456789` 和用户插件保持一致。
     """
-    mask_keys = [f"{target.platform_type.name}"]
-    mask_keys.extend(
-        [
-            f"{key}={value}"
-            for key, value in model_dump(target, exclude={"platform_type"}).items()
-            if value is not None
-        ]
-    )
-    return "-".join(mask_keys)
+    if isinstance(session, Target):
+        scope = getattr(session.scope, "value", session.scope)
+        scene_path = (
+            f"{session.parent_id}_{session.id}" if session.parent_id else session.id
+        )
+        return f"{scope}_{scene_path}" if scope else scene_path
+
+    scope = getattr(session.scope, "value", session.scope)
+    return f"{scope}_{session.scene_path}"
 
 
 async def ensure_group(matcher: Matcher, session: Session = UniSession()):

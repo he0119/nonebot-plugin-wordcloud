@@ -5,7 +5,6 @@ import re
 from functools import partial
 from io import BytesIO
 from random import choice
-from typing import Optional
 
 import jieba
 import jieba.analyse
@@ -65,7 +64,7 @@ def get_mask(key: str):
         return np.array(Image.open(default_mask_path))
 
 
-def _get_wordcloud(messages: list[str], mask_key: str) -> Optional[bytes]:
+def _get_wordcloud(messages: list[str], mask_key: str) -> bytes | None:
     # 过滤掉命令
     command_start = tuple(i for i in global_config.command_start if i)
     message = " ".join(m for m in messages if not m.startswith(command_start))
@@ -98,7 +97,7 @@ def _get_wordcloud(messages: list[str], mask_key: str) -> Optional[bytes]:
         return image_bytes.getvalue()
 
 
-async def get_wordcloud(messages: list[str], mask_key: str) -> Optional[bytes]:
+async def get_wordcloud(messages: list[str], mask_key: str) -> bytes | None:
     loop = asyncio.get_running_loop()
     pfunc = partial(_get_wordcloud, messages, mask_key)
     # 虽然不知道具体是哪里泄漏了，但是通过每次关闭线程池可以避免这个问题

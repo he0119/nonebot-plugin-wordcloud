@@ -11,8 +11,8 @@ from nonebot.adapters.onebot.v12 import Adapter as AdapterV12
 from nonebot.adapters.onebot.v12 import Bot as BotV12
 from nonebot.adapters.onebot.v12 import Message as MessageV12
 from nonebug import App
-from nonebug_saa import should_send_saa
-from PIL import Image, ImageChops
+from PIL import Image as PILImage
+from PIL import ImageChops
 from pytest_mock import MockerFixture
 
 from .utils import (
@@ -20,6 +20,7 @@ from .utils import (
     fake_group_message_event_v11,
     fake_group_message_event_v12,
     fake_private_message_event_v11,
+    should_send_image,
 )
 
 FAKE_IMAGE = BytesIO(
@@ -206,8 +207,8 @@ async def test_get_wordcloud(app: App, mocker: MockerFixture):
 
     # 比较生成的图片是否相同
     test_image_path = Path(__file__).parent / "test_wordcloud.png"
-    test_image = Image.open(test_image_path)
-    image = Image.open(BytesIO(image_byte))
+    test_image = PILImage.open(test_image_path)
+    image = PILImage.open(BytesIO(image_byte))
     diff = ImageChops.difference(image, test_image)
     assert diff.getbbox() is None
 
@@ -273,7 +274,6 @@ async def test_wordcloud_cmd(app: App):
 async def test_today_wordcloud(app: App, mocker: MockerFixture):
     """测试今日词云"""
     from nonebot_plugin_chatrecorder import get_messages_plain_text
-    from nonebot_plugin_saa import Image, MessageFactory
 
     from nonebot_plugin_wordcloud import wordcloud_cmd
 
@@ -297,8 +297,12 @@ async def test_today_wordcloud(app: App, mocker: MockerFixture):
         event = fake_group_message_event_v11(message=Message("/今日词云"))
 
         ctx.receive_event(bot, event)
-        should_send_saa(
-            ctx, MessageFactory(Image(FAKE_IMAGE, "wordcloud.png")), bot, event=event
+        should_send_image(
+            ctx,
+            bot,
+            event,
+            FAKE_IMAGE,
+            name="wordcloud.png",
         )
         ctx.should_finished()
 
@@ -306,14 +310,13 @@ async def test_today_wordcloud(app: App, mocker: MockerFixture):
     assert_wordcloud_called_with_unordered(
         mocked_get_wordcloud,
         {"10:1-2", "11:1-2"},
-        "qq_group-group_id=10000",
+        "QQClient_10000",
     )
 
 
 @pytest.mark.usefixtures("_message_record")
 async def test_my_today_wordcloud(app: App, mocker: MockerFixture):
     """测试我的今日词云"""
-    from nonebot_plugin_saa import Image, MessageFactory
 
     from nonebot_plugin_wordcloud import wordcloud_cmd
 
@@ -333,11 +336,12 @@ async def test_my_today_wordcloud(app: App, mocker: MockerFixture):
         event = fake_group_message_event_v11(message=Message("/我的今日词云"))
 
         ctx.receive_event(bot, event)
-        should_send_saa(
+        should_send_image(
             ctx,
-            MessageFactory(Image(FAKE_IMAGE, "wordcloud.png")),
             bot,
-            event=event,
+            event,
+            FAKE_IMAGE,
+            name="wordcloud.png",
             at_sender=True,
         )
         ctx.should_finished()
@@ -346,14 +350,13 @@ async def test_my_today_wordcloud(app: App, mocker: MockerFixture):
     assert_wordcloud_called_with_unordered(
         mocked_get_wordcloud,
         {"10:1-2"},
-        "qq_group-group_id=10000",
+        "QQClient_10000",
     )
 
 
 @pytest.mark.usefixtures("_message_record")
 async def test_yesterday_wordcloud(app: App, mocker: MockerFixture):
     """测试昨日词云"""
-    from nonebot_plugin_saa import Image, MessageFactory
 
     from nonebot_plugin_wordcloud import wordcloud_cmd
 
@@ -373,11 +376,12 @@ async def test_yesterday_wordcloud(app: App, mocker: MockerFixture):
         event = fake_group_message_event_v11(message=Message("/昨日词云"))
 
         ctx.receive_event(bot, event)
-        should_send_saa(
+        should_send_image(
             ctx,
-            MessageFactory(Image(FAKE_IMAGE, "wordcloud.png")),
             bot,
-            event=event,
+            event,
+            FAKE_IMAGE,
+            name="wordcloud.png",
         )
         ctx.should_finished()
 
@@ -385,14 +389,13 @@ async def test_yesterday_wordcloud(app: App, mocker: MockerFixture):
     assert_wordcloud_called_with_unordered(
         mocked_get_wordcloud,
         {"10:1-2", "11:1-2"},
-        "qq_group-group_id=10000",
+        "QQClient_10000",
     )
 
 
 @pytest.mark.usefixtures("_message_record")
 async def test_my_yesterday_wordcloud(app: App, mocker: MockerFixture):
     """测试我的昨日词云"""
-    from nonebot_plugin_saa import Image, MessageFactory
 
     from nonebot_plugin_wordcloud import wordcloud_cmd
 
@@ -412,11 +415,12 @@ async def test_my_yesterday_wordcloud(app: App, mocker: MockerFixture):
         event = fake_group_message_event_v11(message=Message("/我的昨日词云"))
 
         ctx.receive_event(bot, event)
-        should_send_saa(
+        should_send_image(
             ctx,
-            MessageFactory(Image(FAKE_IMAGE, "wordcloud.png")),
             bot,
-            event=event,
+            event,
+            FAKE_IMAGE,
+            name="wordcloud.png",
             at_sender=True,
         )
         ctx.should_finished()
@@ -425,14 +429,13 @@ async def test_my_yesterday_wordcloud(app: App, mocker: MockerFixture):
     assert_wordcloud_called_with_unordered(
         mocked_get_wordcloud,
         {"10:1-2"},
-        "qq_group-group_id=10000",
+        "QQClient_10000",
     )
 
 
 @pytest.mark.usefixtures("_message_record")
 async def test_week_wordcloud(app: App, mocker: MockerFixture):
     """测试本周词云"""
-    from nonebot_plugin_saa import Image, MessageFactory
 
     from nonebot_plugin_wordcloud import wordcloud_cmd
 
@@ -452,11 +455,12 @@ async def test_week_wordcloud(app: App, mocker: MockerFixture):
         event = fake_group_message_event_v11(message=Message("/本周词云"))
 
         ctx.receive_event(bot, event)
-        should_send_saa(
+        should_send_image(
             ctx,
-            MessageFactory(Image(FAKE_IMAGE, "wordcloud.png")),
             bot,
-            event=event,
+            event,
+            FAKE_IMAGE,
+            name="wordcloud.png",
         )
         ctx.should_finished()
 
@@ -464,14 +468,13 @@ async def test_week_wordcloud(app: App, mocker: MockerFixture):
     assert_wordcloud_called_with_unordered(
         mocked_get_wordcloud,
         {"10:1-3", "11:1-3"},
-        "qq_group-group_id=10000",
+        "QQClient_10000",
     )
 
 
 @pytest.mark.usefixtures("_message_record")
 async def test_last_week_wordcloud(app: App, mocker: MockerFixture):
     """测试上周词云"""
-    from nonebot_plugin_saa import Image, MessageFactory
 
     from nonebot_plugin_wordcloud import wordcloud_cmd
 
@@ -491,11 +494,12 @@ async def test_last_week_wordcloud(app: App, mocker: MockerFixture):
         event = fake_group_message_event_v11(message=Message("/上周词云"))
 
         ctx.receive_event(bot, event)
-        should_send_saa(
+        should_send_image(
             ctx,
-            MessageFactory(Image(FAKE_IMAGE, "wordcloud.png")),
             bot,
-            event=event,
+            event,
+            FAKE_IMAGE,
+            name="wordcloud.png",
         )
         ctx.should_finished()
 
@@ -503,14 +507,13 @@ async def test_last_week_wordcloud(app: App, mocker: MockerFixture):
     assert_wordcloud_called_with_unordered(
         mocked_get_wordcloud,
         {"10:1-2", "11:1-2"},
-        "qq_group-group_id=10000",
+        "QQClient_10000",
     )
 
 
 @pytest.mark.usefixtures("_message_record")
 async def test_month_wordcloud(app: App, mocker: MockerFixture):
     """测试本月词云"""
-    from nonebot_plugin_saa import Image, MessageFactory
 
     from nonebot_plugin_wordcloud import wordcloud_cmd
 
@@ -530,11 +533,12 @@ async def test_month_wordcloud(app: App, mocker: MockerFixture):
         event = fake_group_message_event_v11(message=Message("/本月词云"))
 
         ctx.receive_event(bot, event)
-        should_send_saa(
+        should_send_image(
             ctx,
-            MessageFactory(Image(FAKE_IMAGE, "wordcloud.png")),
             bot,
-            event=event,
+            event,
+            FAKE_IMAGE,
+            name="wordcloud.png",
         )
         ctx.should_finished()
 
@@ -542,14 +546,13 @@ async def test_month_wordcloud(app: App, mocker: MockerFixture):
     assert_wordcloud_called_with_unordered(
         mocked_get_wordcloud,
         {"10:2-1", "11:2-1"},
-        "qq_group-group_id=10000",
+        "QQClient_10000",
     )
 
 
 @pytest.mark.usefixtures("_message_record")
 async def test_last_month_wordcloud(app: App, mocker: MockerFixture):
     """测试上月词云"""
-    from nonebot_plugin_saa import Image, MessageFactory
 
     from nonebot_plugin_wordcloud import wordcloud_cmd
 
@@ -569,11 +572,12 @@ async def test_last_month_wordcloud(app: App, mocker: MockerFixture):
         event = fake_group_message_event_v11(message=Message("/上月词云"))
 
         ctx.receive_event(bot, event)
-        should_send_saa(
+        should_send_image(
             ctx,
-            MessageFactory(Image(FAKE_IMAGE, "wordcloud.png")),
             bot,
-            event=event,
+            event,
+            FAKE_IMAGE,
+            name="wordcloud.png",
         )
         ctx.should_finished()
 
@@ -582,14 +586,13 @@ async def test_last_month_wordcloud(app: App, mocker: MockerFixture):
     assert_wordcloud_called_with_unordered(
         mocked_get_wordcloud,
         {"10:1-2", "11:1-2", "10:1-3", "11:1-3"},
-        "qq_group-group_id=10000",
+        "QQClient_10000",
     )
 
 
 @pytest.mark.usefixtures("_message_record")
 async def test_year_wordcloud(app: App, mocker: MockerFixture):
     """测试年度词云"""
-    from nonebot_plugin_saa import Image, MessageFactory
 
     from nonebot_plugin_wordcloud import wordcloud_cmd
 
@@ -609,11 +612,12 @@ async def test_year_wordcloud(app: App, mocker: MockerFixture):
         event = fake_group_message_event_v11(message=Message("/年度词云"))
 
         ctx.receive_event(bot, event)
-        should_send_saa(
+        should_send_image(
             ctx,
-            MessageFactory(Image(FAKE_IMAGE, "wordcloud.png")),
             bot,
-            event=event,
+            event,
+            FAKE_IMAGE,
+            name="wordcloud.png",
         )
         ctx.should_finished()
 
@@ -622,14 +626,13 @@ async def test_year_wordcloud(app: App, mocker: MockerFixture):
     assert_wordcloud_called_with_unordered(
         mocked_get_wordcloud,
         {"10:1-2", "11:1-2", "10:1-3", "11:1-3", "10:2-1", "11:2-1"},
-        "qq_group-group_id=10000",
+        "QQClient_10000",
     )
 
 
 @pytest.mark.usefixtures("_message_record")
 async def test_my_year_wordcloud(app: App, mocker: MockerFixture):
     """测试我的年度词云"""
-    from nonebot_plugin_saa import Image, MessageFactory
 
     from nonebot_plugin_wordcloud import wordcloud_cmd
 
@@ -649,11 +652,12 @@ async def test_my_year_wordcloud(app: App, mocker: MockerFixture):
         event = fake_group_message_event_v11(message=Message("/我的年度词云"))
 
         ctx.receive_event(bot, event)
-        should_send_saa(
+        should_send_image(
             ctx,
-            MessageFactory(Image(FAKE_IMAGE, "wordcloud.png")),
             bot,
-            event=event,
+            event,
+            FAKE_IMAGE,
+            name="wordcloud.png",
             at_sender=True,
         )
         ctx.should_finished()
@@ -662,14 +666,13 @@ async def test_my_year_wordcloud(app: App, mocker: MockerFixture):
     assert_wordcloud_called_with_unordered(
         mocked_get_wordcloud,
         {"10:1-2", "10:1-3", "10:2-1"},
-        "qq_group-group_id=10000",
+        "QQClient_10000",
     )
 
 
 @pytest.mark.usefixtures("_message_record")
 async def test_history_wordcloud(app: App, mocker: MockerFixture):
     """测试历史词云"""
-    from nonebot_plugin_saa import Image, MessageFactory
 
     from nonebot_plugin_wordcloud import wordcloud_cmd
 
@@ -684,25 +687,25 @@ async def test_history_wordcloud(app: App, mocker: MockerFixture):
         event = fake_group_message_event_v11(message=Message("/历史词云 2022-01-02"))
 
         ctx.receive_event(bot, event)
-        should_send_saa(
+        should_send_image(
             ctx,
-            MessageFactory(Image(FAKE_IMAGE, "wordcloud.png")),
             bot,
-            event=event,
+            event,
+            FAKE_IMAGE,
+            name="wordcloud.png",
         )
         ctx.should_finished()
 
     assert_wordcloud_called_with_unordered(
         mocked_get_wordcloud,
         {"10:1-2", "11:1-2"},
-        "qq_group-group_id=10000",
+        "QQClient_10000",
     )
 
 
 @pytest.mark.usefixtures("_message_record")
 async def test_history_wordcloud_start_stop(app: App, mocker: MockerFixture):
     """测试历史词云，有起始时间的情况"""
-    from nonebot_plugin_saa import Image, MessageFactory
 
     from nonebot_plugin_wordcloud import wordcloud_cmd
 
@@ -719,11 +722,12 @@ async def test_history_wordcloud_start_stop(app: App, mocker: MockerFixture):
         )
 
         ctx.receive_event(bot, event)
-        should_send_saa(
+        should_send_image(
             ctx,
-            MessageFactory(Image(FAKE_IMAGE, "wordcloud.png")),
             bot,
-            event=event,
+            event,
+            FAKE_IMAGE,
+            name="wordcloud.png",
         )
         ctx.should_finished()
 
@@ -731,14 +735,13 @@ async def test_history_wordcloud_start_stop(app: App, mocker: MockerFixture):
     assert_wordcloud_called_with_unordered(
         mocked_get_wordcloud,
         {"10:1-3", "11:1-3", "10:2-1", "11:2-1"},
-        "qq_group-group_id=10000",
+        "QQClient_10000",
     )
 
 
 @pytest.mark.usefixtures("_message_record")
 async def test_history_wordcloud_start_stop_get_args(app: App, mocker: MockerFixture):
     """测试历史词云，获取起始时间参数的情况"""
-    from nonebot_plugin_saa import Image, MessageFactory
 
     from nonebot_plugin_wordcloud import wordcloud_cmd
 
@@ -772,11 +775,12 @@ async def test_history_wordcloud_start_stop_get_args(app: App, mocker: MockerFix
 
         stop_event = fake_group_message_event_v11(message=Message("2022-02-22"))
         ctx.receive_event(bot, stop_event)
-        should_send_saa(
+        should_send_image(
             ctx,
-            MessageFactory(Image(FAKE_IMAGE, "wordcloud.png")),
             bot,
-            event=stop_event,
+            stop_event,
+            FAKE_IMAGE,
+            name="wordcloud.png",
         )
         ctx.should_finished()
 
@@ -784,7 +788,7 @@ async def test_history_wordcloud_start_stop_get_args(app: App, mocker: MockerFix
     assert_wordcloud_called_with_unordered(
         mocked_get_wordcloud,
         {"10:1-2", "11:1-2", "10:1-3", "11:1-3", "10:2-1", "11:2-1"},
-        "qq_group-group_id=10000",
+        "QQClient_10000",
     )
 
 
@@ -826,8 +830,6 @@ async def test_history_wordcloud_invalid_input(app: App):
 
 @pytest.mark.usefixtures("_message_record")
 async def test_today_wordcloud_v12(app: App, mocker: MockerFixture):
-    from nonebot_plugin_saa import Image, MessageFactory
-
     from nonebot_plugin_wordcloud import wordcloud_cmd
 
     mocked_datetime_now = mocker.patch(
@@ -851,11 +853,12 @@ async def test_today_wordcloud_v12(app: App, mocker: MockerFixture):
         event = fake_channel_message_event_v12(message=MessageV12("/今日词云"))
 
         ctx.receive_event(bot, event)
-        should_send_saa(
+        should_send_image(
             ctx,
-            MessageFactory(Image(FAKE_IMAGE, "wordcloud.png")),
             bot,
-            event=event,
+            event,
+            FAKE_IMAGE,
+            name="wordcloud.png",
         )
         ctx.should_finished()
 
@@ -863,14 +866,12 @@ async def test_today_wordcloud_v12(app: App, mocker: MockerFixture):
     assert_wordcloud_called_with_unordered(
         mocked_get_wordcloud,
         {"v12-10:1-2", "v12-11:1-2"},
-        "unknown_ob12-platform=qq-detail_type=channel-guild_id=10000-channel_id=100000",
+        "QQGuild_10000_100000",
     )
 
 
 @pytest.mark.usefixtures("_message_record")
 async def test_my_today_wordcloud_v12(app: App, mocker: MockerFixture):
-    from nonebot_plugin_saa import Image, MessageFactory
-
     from nonebot_plugin_wordcloud import wordcloud_cmd
 
     mocked_datetime_now = mocker.patch(
@@ -895,11 +896,12 @@ async def test_my_today_wordcloud_v12(app: App, mocker: MockerFixture):
         event = fake_channel_message_event_v12(message=MessageV12("/我的今日词云"))
 
         ctx.receive_event(bot, event)
-        should_send_saa(
+        should_send_image(
             ctx,
-            MessageFactory(Image(FAKE_IMAGE, "wordcloud.png")),
             bot,
-            event=event,
+            event,
+            FAKE_IMAGE,
+            name="wordcloud.png",
             at_sender=True,
         )
         ctx.should_finished()
@@ -908,14 +910,13 @@ async def test_my_today_wordcloud_v12(app: App, mocker: MockerFixture):
     assert_wordcloud_called_with_unordered(
         mocked_get_wordcloud,
         {"v12-10:1-2"},
-        "unknown_ob12-platform=qq-detail_type=channel-guild_id=10000-channel_id=100000",
+        "QQGuild_10000_100000",
     )
 
 
 @pytest.mark.usefixtures("_message_record")
 async def test_today_wordcloud_qq_group_v12(app: App, mocker: MockerFixture):
     """测试 ob12 的 QQ群 今日词云"""
-    from nonebot_plugin_saa import Image, MessageFactory
 
     from nonebot_plugin_wordcloud import wordcloud_cmd
 
@@ -940,11 +941,12 @@ async def test_today_wordcloud_qq_group_v12(app: App, mocker: MockerFixture):
         event = fake_group_message_event_v12(message=MessageV12("/今日词云"))
 
         ctx.receive_event(bot, event)
-        should_send_saa(
+        should_send_image(
             ctx,
-            MessageFactory(Image(FAKE_IMAGE, "wordcloud.png")),
             bot,
-            event=event,
+            event,
+            FAKE_IMAGE,
+            name="wordcloud.png",
         )
         ctx.should_finished()
 
@@ -952,14 +954,13 @@ async def test_today_wordcloud_qq_group_v12(app: App, mocker: MockerFixture):
     assert_wordcloud_called_with_unordered(
         mocked_get_wordcloud,
         {"10:1-2", "11:1-2"},
-        "qq_group-group_id=10000",
+        "QQClient_10000",
     )
 
 
 @pytest.mark.usefixtures("_message_record")
 async def test_today_wordcloud_exclude_user_ids(app: App, mocker: MockerFixture):
     """测试今日词云，排除特定用户"""
-    from nonebot_plugin_saa import Image, MessageFactory
 
     from nonebot_plugin_wordcloud import plugin_config, wordcloud_cmd
 
@@ -981,11 +982,12 @@ async def test_today_wordcloud_exclude_user_ids(app: App, mocker: MockerFixture)
         event = fake_group_message_event_v11(message=Message("/今日词云"))
 
         ctx.receive_event(bot, event)
-        should_send_saa(
+        should_send_image(
             ctx,
-            MessageFactory(Image(FAKE_IMAGE, "wordcloud.png")),
             bot,
-            event=event,
+            event,
+            FAKE_IMAGE,
+            name="wordcloud.png",
         )
         ctx.should_finished()
 
@@ -993,7 +995,7 @@ async def test_today_wordcloud_exclude_user_ids(app: App, mocker: MockerFixture)
     assert_wordcloud_called_with_unordered(
         mocked_get_wordcloud,
         {"11:1-2"},
-        "qq_group-group_id=10000",
+        "QQClient_10000",
     )
 
 
@@ -1001,7 +1003,6 @@ async def test_today_wordcloud_exclude_user_ids(app: App, mocker: MockerFixture)
 async def test_today_wordcloud_reply_message(app: App, mocker: MockerFixture):
     """测试今日词云回复消息"""
     from nonebot_plugin_chatrecorder import get_messages_plain_text
-    from nonebot_plugin_saa import Image, MessageFactory
 
     from nonebot_plugin_wordcloud import plugin_config, wordcloud_cmd
 
@@ -1027,11 +1028,12 @@ async def test_today_wordcloud_reply_message(app: App, mocker: MockerFixture):
         event = fake_group_message_event_v11(message=Message("/今日词云"))
 
         ctx.receive_event(bot, event)
-        should_send_saa(
+        should_send_image(
             ctx,
-            MessageFactory(Image(FAKE_IMAGE, "wordcloud.png")),
             bot,
-            event=event,
+            event,
+            FAKE_IMAGE,
+            name="wordcloud.png",
             reply=True,
         )
         ctx.should_finished()
@@ -1040,14 +1042,13 @@ async def test_today_wordcloud_reply_message(app: App, mocker: MockerFixture):
     assert_wordcloud_called_with_unordered(
         mocked_get_wordcloud,
         {"10:1-2", "11:1-2"},
-        "qq_group-group_id=10000",
+        "QQClient_10000",
     )
 
 
 @pytest.mark.usefixtures("_message_record")
 async def test_group_today_wordcloud(app: App, mocker: MockerFixture):
     """测试本群今日词云"""
-    from nonebot_plugin_saa import Image, MessageFactory
 
     from nonebot_plugin_wordcloud import wordcloud_cmd
 
@@ -1067,8 +1068,12 @@ async def test_group_today_wordcloud(app: App, mocker: MockerFixture):
         event = fake_group_message_event_v11(message=Message("/本群今日词云"))
 
         ctx.receive_event(bot, event)
-        should_send_saa(
-            ctx, MessageFactory(Image(FAKE_IMAGE, "wordcloud.png")), bot, event=event
+        should_send_image(
+            ctx,
+            bot,
+            event,
+            FAKE_IMAGE,
+            name="wordcloud.png",
         )
         ctx.should_finished()
 
@@ -1076,14 +1081,13 @@ async def test_group_today_wordcloud(app: App, mocker: MockerFixture):
     assert_wordcloud_called_with_unordered(
         mocked_get_wordcloud,
         {"10:1-2", "11:1-2"},
-        "qq_group-group_id=10000",
+        "QQClient_10000",
     )
 
 
 @pytest.mark.usefixtures("_message_record")
 async def test_group_year_wordcloud(app: App, mocker: MockerFixture):
     """测试本群年度词云"""
-    from nonebot_plugin_saa import Image, MessageFactory
 
     from nonebot_plugin_wordcloud import wordcloud_cmd
 
@@ -1103,11 +1107,12 @@ async def test_group_year_wordcloud(app: App, mocker: MockerFixture):
         event = fake_group_message_event_v11(message=Message("/本群年度词云"))
 
         ctx.receive_event(bot, event)
-        should_send_saa(
+        should_send_image(
             ctx,
-            MessageFactory(Image(FAKE_IMAGE, "wordcloud.png")),
             bot,
-            event=event,
+            event,
+            FAKE_IMAGE,
+            name="wordcloud.png",
         )
         ctx.should_finished()
 
@@ -1116,14 +1121,13 @@ async def test_group_year_wordcloud(app: App, mocker: MockerFixture):
     assert_wordcloud_called_with_unordered(
         mocked_get_wordcloud,
         {"10:1-2", "11:1-2", "10:1-3", "11:1-3", "10:2-1", "11:2-1"},
-        "qq_group-group_id=10000",
+        "QQClient_10000",
     )
 
 
 @pytest.mark.usefixtures("_message_record")
 async def test_config_default_personal_behavior(app: App, mocker: MockerFixture):
     """测试配置为默认个人行为时的今日词云"""
-    from nonebot_plugin_saa import Image, MessageFactory
 
     from nonebot_plugin_wordcloud import plugin_config, wordcloud_cmd
 
@@ -1146,11 +1150,12 @@ async def test_config_default_personal_behavior(app: App, mocker: MockerFixture)
         event = fake_group_message_event_v11(message=Message("/今日词云"))
 
         ctx.receive_event(bot, event)
-        should_send_saa(
+        should_send_image(
             ctx,
-            MessageFactory(Image(FAKE_IMAGE, "wordcloud.png")),
             bot,
-            event=event,
+            event,
+            FAKE_IMAGE,
+            name="wordcloud.png",
             at_sender=True,
         )
         ctx.should_finished()
@@ -1159,5 +1164,5 @@ async def test_config_default_personal_behavior(app: App, mocker: MockerFixture)
     assert_wordcloud_called_with_unordered(
         mocked_get_wordcloud,
         {"10:1-2"},
-        "qq_group-group_id=10000",
+        "QQClient_10000",
     )

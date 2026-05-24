@@ -17,7 +17,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        python-version: ["3.9", "3.10", "3.11", "3.12"]
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
         db: ["sqlite+aiosqlite://"]
         db-pool: ["StaticPool"]
         include:
@@ -75,8 +75,6 @@ jobs:
       - name: Run tests
         shell: bash
         run: |
-          sed -ie "s#sqlite+aiosqlite://#${SQLALCHEMY_DATABASE_URL}#g" tests/conftest.py
-          sed -ie "s#StaticPool#${SQLALCHEMY_POOL_CLASS}#g" tests/conftest.py
           if [[ "${PYTHON_VERSION}" == "3.12" ]]; then
             uv run poe test:sysmon
           elif [[ "${SQLALCHEMY_DATABASE_URL}" != sqlite* ]]; then

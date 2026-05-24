@@ -1,8 +1,7 @@
 from datetime import time
-from typing import Optional
 
+from nonebot_plugin_alconna import Target
 from nonebot_plugin_orm import Model
-from nonebot_plugin_saa import PlatformTarget
 from sqlalchemy import JSON
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
@@ -13,9 +12,10 @@ class Schedule(Model):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     target: Mapped[dict] = mapped_column(JSON().with_variant(JSONB, "postgresql"))
-    time: Mapped[Optional[time]]
+    """发送目标"""
+    time: Mapped[time | None]
     """ UTC 时间 """
 
     @property
-    def saa_target(self) -> PlatformTarget:
-        return PlatformTarget.deserialize(self.target)
+    def alc_target(self) -> Target:
+        return Target.load(self.target.copy())

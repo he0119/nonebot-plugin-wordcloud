@@ -1,19 +1,17 @@
 """词云"""
 
+import re
+from datetime import datetime, timedelta
+from io import BytesIO
+from typing import Any
+
+import PIL.Image
 from nonebot import require
 
 require("nonebot_plugin_apscheduler")
 require("nonebot_plugin_alconna")
 require("nonebot_plugin_uninfo")
-require("nonebot_plugin_cesaa")
-
-import re
-from datetime import datetime, timedelta
-from io import BytesIO
-from typing import Any, Optional, Union
-
-import nonebot_plugin_alconna as alc
-import nonebot_plugin_saa as saa
+require("nonebot_plugin_chatrecorder")
 from arclet.alconna import ArparmaBehavior
 from arclet.alconna.arparma import Arparma
 from nonebot import get_driver
@@ -29,18 +27,19 @@ from nonebot_plugin_alconna import (
     AlconnaQuery,
     Args,
     CommandMeta,
+    Image,
     Match,
+    MessageTarget,
     Option,
     Query,
+    Target,
     image_fetch,
     on_alconna,
     store_true,
 )
-from nonebot_plugin_cesaa import get_messages_plain_text
+from nonebot_plugin_chatrecorder import get_messages_plain_text
 from nonebot_plugin_uninfo import Session, UniSession
-from PIL import Image
 
-from . import migrations
 from .config import Config, plugin_config
 from .data_source import get_wordcloud
 from .schedule import schedule_service
@@ -146,10 +145,9 @@ __plugin_meta__ = PluginMetadata(
     homepage="https://github.com/he0119/nonebot-plugin-wordcloud",
     type="application",
     supported_adapters=inherit_supported_adapters(
-        "nonebot_plugin_chatrecorder", "nonebot_plugin_saa", "nonebot_plugin_alconna"
+        "nonebot_plugin_chatrecorder", "nonebot_plugin_uninfo", "nonebot_plugin_alconna"
     ),
     config=Config,
-    extra={"orm_version_location": migrations},
 )
 
 
@@ -199,9 +197,7 @@ wordcloud_cmd = on_alconna(
 )
 
 
-def wrapper(
-    slot: Union[int, str], content: Optional[str], context: dict[str, Any]
-) -> str:
+def wrapper(slot: int | str, content: str | None, context: dict[str, Any]) -> str:
     if slot == "my" and content:
         return "--my"
     elif slot == "group" and content:
@@ -229,7 +225,7 @@ def parse_datetime(key: str):
     async def _key_parser(
         matcher: AlconnaMatcher,
         state: T_State,
-        input: Union[datetime, Message] = Arg(key),
+        input: datetime | Message = Arg(key),
     ):
         if isinstance(input, datetime):
             return
@@ -245,7 +241,7 @@ def parse_datetime(key: str):
 
 @wordcloud_cmd.handle(parameterless=[Depends(ensure_group)])
 async def handle_first_receive(
-    state: T_State, type: Optional[str] = None, time: Optional[str] = None
+    state: T_State, type: str | None = None, time: str | None = None
 ):
     dt = get_datetime_now_with_timezone()
 
@@ -352,7 +348,8 @@ async def handle_wordcloud(
             reply=plugin_config.wordcloud_reply_message,
         )
 
-    await saa.Image(image, "wordcloud.png").finish(
+    await wordcloud_cmd.finish(
+        Image(raw=image, name="wordcloud.png"),
         at_sender=filter_user,
         reply=plugin_config.wordcloud_reply_message,
     )
@@ -362,7 +359,7 @@ set_mask_cmd = on_alconna(
     Alconna(
         "设置词云形状",
         Option("--default", default=False, action=store_true, help_text="默认形状"),
-        Args["img?", alc.Image],
+        Args["img?", Image],
         meta=CommandMeta(
             description="设置自定义词云形状",
             example="/设置词云形状\n/设置词云默认形状",
@@ -399,7 +396,7 @@ async def handle_save_mask(
     default: Query[bool] = AlconnaQuery("default.value", default=False),
     mask_key: str = Depends(get_mask_key),
 ):
-    mask = Image.open(BytesIO(img))
+    mask = PIL.Image.open(BytesIO(img))
     if default.result:
         if not await SUPERUSER(bot, event):
             await set_mask_cmd.finish("仅超级用户可设置词云默认形状")
@@ -487,11 +484,11 @@ schedule_cmd.shortcut(
     },
 )
 schedule_cmd.shortcut(
-    r"(?P<action>开启|关闭)词云(?P<type>每日)定时发送",
+    r"(?P<action>开启|关闭)词云(?P<type>每日)定时发送(?:\s+(?P<time>\S+))?",
     {
         "prefix": True,
         "command": "词云定时发送",
-        "args": ["--action", "{action}", "{type}"],
+        "args": ["--action", "{action}", "{type}", "{time}"],
         "humanized": "<开启|关闭>词云每日定时发送",
     },
 )
@@ -499,9 +496,9 @@ schedule_cmd.shortcut(
 
 @schedule_cmd.handle(parameterless=[Depends(ensure_group)])
 async def _(
-    time: Optional[str] = None,
+    time: str | None = None,
     action_type: Query[str] = AlconnaQuery("action.action_type.value", "状态"),
-    target: saa.PlatformTarget = Depends(saa.get_target),
+    target: Target = MessageTarget(),
 ):
     if action_type.result == "状态":
         schedule_time = await schedule_service.get_schedule(target)
