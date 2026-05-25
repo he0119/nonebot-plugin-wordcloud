@@ -47,9 +47,11 @@ from .schedule import schedule_service
 from .utils import (
     admin_permission,
     ensure_group,
+    get_current_period_range,
     get_datetime_fromisoformat_with_timezone,
     get_datetime_now_with_timezone,
     get_mask_key,
+    get_previous_period_range,
     get_time_fromisoformat_with_timezone,
 )
 
@@ -302,36 +304,21 @@ async def handle_first_receive(
         await wordcloud_cmd.finish(__plugin_meta__.usage)
 
     if type == "今日":
-        state["start"] = dt.replace(hour=0, minute=0, second=0, microsecond=0)
-        state["stop"] = dt
+        state["start"], state["stop"] = get_current_period_range(dt, ScheduleType.DAY)
     elif type == "昨日":
-        state["stop"] = dt.replace(hour=0, minute=0, second=0, microsecond=0)
-        state["start"] = state["stop"] - timedelta(days=1)
+        state["start"], state["stop"] = get_previous_period_range(dt, ScheduleType.DAY)
     elif type == "本周":
-        state["start"] = dt.replace(
-            hour=0, minute=0, second=0, microsecond=0
-        ) - timedelta(days=dt.weekday())
-        state["stop"] = dt
+        state["start"], state["stop"] = get_current_period_range(dt, ScheduleType.WEEK)
     elif type == "上周":
-        state["stop"] = dt.replace(
-            hour=0, minute=0, second=0, microsecond=0
-        ) - timedelta(days=dt.weekday())
-        state["start"] = state["stop"] - timedelta(days=7)
+        state["start"], state["stop"] = get_previous_period_range(dt, ScheduleType.WEEK)
     elif type == "本月":
-        state["start"] = dt.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-        state["stop"] = dt
+        state["start"], state["stop"] = get_current_period_range(dt, ScheduleType.MONTH)
     elif type == "上月":
-        state["stop"] = dt.replace(
-            day=1, hour=0, minute=0, second=0, microsecond=0
-        ) - timedelta(microseconds=1)
-        state["start"] = state["stop"].replace(
-            day=1, hour=0, minute=0, second=0, microsecond=0
+        state["start"], state["stop"] = get_previous_period_range(
+            dt, ScheduleType.MONTH
         )
     elif type == "年度":
-        state["start"] = dt.replace(
-            month=1, day=1, hour=0, minute=0, second=0, microsecond=0
-        )
-        state["stop"] = dt
+        state["start"], state["stop"] = get_current_period_range(dt, ScheduleType.YEAR)
     elif type == "历史":
         if time:
             plaintext = time

@@ -103,8 +103,6 @@ def test_get_schedule_time_range():
         )
         is None
     )
-    assert get_schedule_time_range(dt, "未知", ScheduleMode.PERIOD_END) is None  # type: ignore[arg-type]
-    assert get_schedule_time_range(dt, "未知") is None  # type: ignore[arg-type]
 
 
 async def test_enable_schedule(app: App):

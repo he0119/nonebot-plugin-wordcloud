@@ -1,4 +1,4 @@
-from datetime import datetime, time, timedelta
+from datetime import datetime, time
 from typing import TYPE_CHECKING
 from zoneinfo import ZoneInfo
 
@@ -15,9 +15,13 @@ from .config import plugin_config
 from .data_source import get_wordcloud
 from .model import Schedule, ScheduleMode, ScheduleType
 from .utils import (
+    get_current_period_range,
     get_datetime_now_with_timezone,
     get_mask_key,
+    get_previous_period_range,
     get_time_with_scheduler_timezone,
+    is_period_end,
+    is_period_start,
     time_astimezone,
 )
 
@@ -68,55 +72,16 @@ def get_schedule_time_range(
     Returns:
         词云消息查询的起止时间；当前日期无需发送时返回 None。
     """
-    stop = dt.replace(hour=0, minute=0, second=0, microsecond=0)
     if schedule_mode == ScheduleMode.PERIOD_END:
-        if schedule_type == ScheduleType.DAY:
-            return stop, dt
-        if schedule_type == ScheduleType.WEEK:
-            if dt.weekday() != 6:
-                return None
-            return stop - timedelta(days=6), dt
-        if schedule_type == ScheduleType.MONTH:
-            if (stop + timedelta(days=1)).day != 1:
-                return None
-            return stop.replace(day=1), dt
-        if schedule_type == ScheduleType.YEAR:
-            if dt.month != 12 or dt.day != 31:
-                return None
-            return stop.replace(month=1, day=1), dt
+        if is_period_end(dt, schedule_type):
+            return get_current_period_range(dt, schedule_type)
+        return None
 
-    if schedule_type == ScheduleType.DAY:
-        return stop - timedelta(days=1), stop
-    if schedule_type == ScheduleType.WEEK:
-        if dt.weekday() != 0:
-            return None
-        return stop - timedelta(days=7), stop
-    if schedule_type == ScheduleType.MONTH:
-        if dt.day != 1:
-            return None
-        last_month = stop - timedelta(days=1)
-        start = last_month.replace(day=1)
-        return start, stop
-    if schedule_type == ScheduleType.YEAR:
-        if dt.month != 1 or dt.day != 1:
-            return None
-        start = stop.replace(year=stop.year - 1)
-        return start, stop
+    if is_period_start(dt, schedule_type):
+        return get_previous_period_range(dt, schedule_type)
 
 
 class Scheduler:
-    @staticmethod
-    def get_default_schedule_key(schedule_mode: ScheduleMode) -> str:
-        """获取默认定时任务在内存任务表中的 key。
-
-        Args:
-            schedule_mode: 默认定时任务对应的发送模式。
-
-        Returns:
-            内存任务表中的默认任务 key。
-        """
-        return f"default:{schedule_mode.value}"
-
     def __init__(self):
         """初始化默认定时发送任务。"""
         # 默认定时任务的 key 为 default:<mode>
@@ -139,6 +104,18 @@ class Scheduler:
                     args=(None, schedule_mode),
                 )
             )
+
+    @staticmethod
+    def get_default_schedule_key(schedule_mode: ScheduleMode) -> str:
+        """获取默认定时任务在内存任务表中的 key。
+
+        Args:
+            schedule_mode: 默认定时任务对应的发送模式。
+
+        Returns:
+            内存任务表中的默认任务 key。
+        """
+        return f"default:{schedule_mode.value}"
 
     async def update(self):
         """根据数据库中的自定义时间更新 APScheduler 任务。"""
