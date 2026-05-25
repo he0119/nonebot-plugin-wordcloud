@@ -94,3 +94,61 @@ async def test_time(app: App, mocker: MockerFixture):
         get_time_fromisoformat_with_timezone("10:00:00+08:00").isoformat()
         == "02:00:00+00:00"
     )
+
+
+def test_period_range_helpers():
+    """测试周期范围辅助函数"""
+    from nonebot_plugin_wordcloud.model import ScheduleType
+    from nonebot_plugin_wordcloud.utils import (
+        get_current_period_range,
+        get_previous_period_range,
+        is_period_end,
+        is_period_start,
+    )
+
+    dt = datetime(2024, 5, 15, 22)
+
+    assert get_current_period_range(dt, ScheduleType.DAY) == (
+        datetime(2024, 5, 15),
+        dt,
+    )
+    assert get_previous_period_range(dt, ScheduleType.DAY) == (
+        datetime(2024, 5, 14),
+        datetime(2024, 5, 15),
+    )
+    assert get_current_period_range(dt, ScheduleType.WEEK) == (
+        datetime(2024, 5, 13),
+        dt,
+    )
+    assert get_previous_period_range(dt, ScheduleType.WEEK) == (
+        datetime(2024, 5, 6),
+        datetime(2024, 5, 13),
+    )
+    assert get_current_period_range(dt, ScheduleType.MONTH) == (
+        datetime(2024, 5, 1),
+        dt,
+    )
+    assert get_previous_period_range(dt, ScheduleType.MONTH) == (
+        datetime(2024, 4, 1),
+        datetime(2024, 5, 1),
+    )
+    assert get_current_period_range(dt, ScheduleType.YEAR) == (
+        datetime(2024, 1, 1),
+        dt,
+    )
+    assert get_previous_period_range(dt, ScheduleType.YEAR) == (
+        datetime(2023, 1, 1),
+        datetime(2024, 1, 1),
+    )
+
+    assert is_period_start(datetime(2024, 5, 13, 22), ScheduleType.WEEK)
+    assert not is_period_start(datetime(2024, 5, 14, 22), ScheduleType.WEEK)
+    assert is_period_start(datetime(2024, 5, 14, 22), ScheduleType.DAY)
+    assert is_period_start(datetime(2024, 1, 1, 22), ScheduleType.YEAR)
+    assert not is_period_start(datetime(2024, 1, 2, 22), ScheduleType.YEAR)
+    assert is_period_end(datetime(2024, 5, 12, 22), ScheduleType.WEEK)
+    assert not is_period_end(datetime(2024, 5, 11, 22), ScheduleType.WEEK)
+    assert is_period_end(datetime(2024, 5, 14, 22), ScheduleType.DAY)
+    assert is_period_end(datetime(2024, 5, 31, 22), ScheduleType.MONTH)
+    assert is_period_end(datetime(2024, 12, 31, 22), ScheduleType.YEAR)
+    assert not is_period_end(datetime(2024, 12, 30, 22), ScheduleType.YEAR)

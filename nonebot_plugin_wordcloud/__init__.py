@@ -42,13 +42,16 @@ from nonebot_plugin_uninfo import Session, UniSession
 
 from .config import Config, plugin_config
 from .data_source import get_wordcloud
+from .model import ScheduleMode, ScheduleType
 from .schedule import schedule_service
 from .utils import (
     admin_permission,
     ensure_group,
+    get_current_period_range,
     get_datetime_fromisoformat_with_timezone,
     get_datetime_now_with_timezone,
     get_mask_key,
+    get_previous_period_range,
     get_time_fromisoformat_with_timezone,
 )
 
@@ -56,7 +59,11 @@ get_driver().on_startup(schedule_service.update)
 
 
 def get_usage() -> str:
-    """根据配置生成使用说明"""
+    """根据当前配置生成插件完整使用说明。
+
+    Returns:
+        面向用户展示的插件使用说明。
+    """
     if plugin_config.wordcloud_default_personal:
         # 默认个人数据
         default_behavior = '- 默认获取个人数据，如需获取群组数据请添加前缀"本群"'
@@ -105,15 +112,27 @@ def get_usage() -> str:
 格式：/设置词云默认形状
 /删除词云默认形状
 
-- 设置定时发送每日词云
+- 设置定时发送词云
 格式：/词云每日定时发送状态
+/词云每周定时发送状态
 /开启词云每日定时发送
+/开启词云每月定时发送
 /开启词云每日定时发送 23:59
-/关闭词云每日定时发送"""
+/开启词云每周周期末定时发送
+/开启词云每周完整周期定时发送
+/关闭词云每日定时发送
+/关闭词云每年定时发送
+支持类型：每日，每周，每月，每年
+没有指定模式时使用默认发送模式，添加 --last 或“周期末”可在周期最后一天发送，
+添加 --complete 或“完整周期”可发送上一完整周期"""
 
 
 def get_wordcloud_cmd_usage() -> str:
-    """根据配置生成词云命令简短使用说明"""
+    """根据当前配置生成词云命令的简短使用说明。
+
+    Returns:
+        面向命令帮助展示的简短使用说明。
+    """
 
     usage = (
         "- 通过快捷命令，以获取常见时间段内的词云\n"
@@ -153,6 +172,11 @@ __plugin_meta__ = PluginMetadata(
 
 class SameTime(ArparmaBehavior):
     def operate(self, interface: Arparma):
+        """阻止只传入时间但未传入词云类型的命令。
+
+        Args:
+            interface: Alconna 解析结果操作接口。
+        """
         type = interface.query("type")
         time = interface.query("time")
         if type is None and time:
@@ -198,6 +222,16 @@ wordcloud_cmd = on_alconna(
 
 
 def wrapper(slot: int | str, content: str | None, context: dict[str, Any]) -> str:
+    """将快捷命令捕获的分组转换为真实命令参数。
+
+    Args:
+        slot: 当前处理的快捷命令槽位。
+        content: 槽位捕获到的文本内容。
+        context: 快捷命令解析上下文。
+
+    Returns:
+        传递给 Alconna 的命令参数片段。
+    """
     if slot == "my" and content:
         return "--my"
     elif slot == "group" and content:
@@ -220,13 +254,27 @@ wordcloud_cmd.shortcut(
 
 
 def parse_datetime(key: str):
-    """解析数字，并将结果存入 state 中"""
+    """构造日期参数解析器，并将结果存入 matcher state。
+
+    Args:
+        key: 需要解析并写入 state 的参数名。
+
+    Returns:
+        用于 ``got`` 参数校验的异步解析函数。
+    """
 
     async def _key_parser(
         matcher: AlconnaMatcher,
         state: T_State,
         input: datetime | Message = Arg(key),
     ):
+        """解析用户输入的 ISO-8601 日期时间文本。
+
+        Args:
+            matcher: 当前 Alconna matcher。
+            state: NoneBot matcher state。
+            input: 已解析的 datetime 或用户输入消息。
+        """
         if isinstance(input, datetime):
             return
 
@@ -243,60 +291,69 @@ def parse_datetime(key: str):
 async def handle_first_receive(
     state: T_State, type: str | None = None, time: str | None = None
 ):
+    """处理词云命令首次接收并推导查询时间范围。
+
+    Args:
+        state: NoneBot matcher state，用于保存查询起止时间。
+        type: 用户请求的时间段类型。
+        time: 历史词云命令携带的日期或日期范围文本。
+    """
     dt = get_datetime_now_with_timezone()
 
     if not type:
         await wordcloud_cmd.finish(__plugin_meta__.usage)
 
-    if type == "今日":
-        state["start"] = dt.replace(hour=0, minute=0, second=0, microsecond=0)
-        state["stop"] = dt
-    elif type == "昨日":
-        state["stop"] = dt.replace(hour=0, minute=0, second=0, microsecond=0)
-        state["start"] = state["stop"] - timedelta(days=1)
-    elif type == "本周":
-        state["start"] = dt.replace(
-            hour=0, minute=0, second=0, microsecond=0
-        ) - timedelta(days=dt.weekday())
-        state["stop"] = dt
-    elif type == "上周":
-        state["stop"] = dt.replace(
-            hour=0, minute=0, second=0, microsecond=0
-        ) - timedelta(days=dt.weekday())
-        state["start"] = state["stop"] - timedelta(days=7)
-    elif type == "本月":
-        state["start"] = dt.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-        state["stop"] = dt
-    elif type == "上月":
-        state["stop"] = dt.replace(
-            day=1, hour=0, minute=0, second=0, microsecond=0
-        ) - timedelta(microseconds=1)
-        state["start"] = state["stop"].replace(
-            day=1, hour=0, minute=0, second=0, microsecond=0
-        )
-    elif type == "年度":
-        state["start"] = dt.replace(
-            month=1, day=1, hour=0, minute=0, second=0, microsecond=0
-        )
-        state["stop"] = dt
-    elif type == "历史":
-        if time:
-            plaintext = time
-            if match := re.match(r"^(.+?)(?:~(.+))?$", plaintext):
-                start = match[1]
-                stop = match[2]
-                try:
-                    state["start"] = get_datetime_fromisoformat_with_timezone(start)
-                    if stop:
-                        state["stop"] = get_datetime_fromisoformat_with_timezone(stop)
-                    else:
-                        # 如果没有指定结束日期，则认为是所给日期的当天的词云
-                        state["start"] = state["start"].replace(
-                            hour=0, minute=0, second=0, microsecond=0
+    match type:
+        case "今日":
+            state["start"], state["stop"] = get_current_period_range(
+                dt, ScheduleType.DAY
+            )
+        case "昨日":
+            state["start"], state["stop"] = get_previous_period_range(
+                dt, ScheduleType.DAY
+            )
+        case "本周":
+            state["start"], state["stop"] = get_current_period_range(
+                dt, ScheduleType.WEEK
+            )
+        case "上周":
+            state["start"], state["stop"] = get_previous_period_range(
+                dt, ScheduleType.WEEK
+            )
+        case "本月":
+            state["start"], state["stop"] = get_current_period_range(
+                dt, ScheduleType.MONTH
+            )
+        case "上月":
+            state["start"], state["stop"] = get_previous_period_range(
+                dt, ScheduleType.MONTH
+            )
+        case "年度":
+            state["start"], state["stop"] = get_current_period_range(
+                dt, ScheduleType.YEAR
+            )
+        case "历史":
+            if time:
+                plaintext = time
+                if match := re.match(r"^(.+?)(?:~(.+))?$", plaintext):
+                    start = match[1]
+                    stop = match[2]
+                    try:
+                        state["start"] = get_datetime_fromisoformat_with_timezone(start)
+                        if stop:
+                            state["stop"] = get_datetime_fromisoformat_with_timezone(
+                                stop
+                            )
+                        else:
+                            # 如果没有指定结束日期，则认为是所给日期的当天的词云
+                            state["start"] = state["start"].replace(
+                                hour=0, minute=0, second=0, microsecond=0
+                            )
+                            state["stop"] = state["start"] + timedelta(days=1)
+                    except ValueError:
+                        await wordcloud_cmd.finish(
+                            "请输入正确的日期，不然我没法理解呢！"
                         )
-                        state["stop"] = state["start"] + timedelta(days=1)
-                except ValueError:
-                    await wordcloud_cmd.finish("请输入正确的日期，不然我没法理解呢！")
 
 
 @wordcloud_cmd.got(
@@ -317,7 +374,16 @@ async def handle_wordcloud(
     stop: datetime = Arg(),
     mask_key: str = Depends(get_mask_key),
 ):
-    """生成词云"""
+    """查询聊天记录并发送生成的词云图片。
+
+    Args:
+        my: 是否显式查询个人词云。
+        group: 是否显式查询群组词云。
+        session: 当前统一会话信息。
+        start: 查询开始时间。
+        stop: 查询结束时间。
+        mask_key: 当前会话对应的 mask key。
+    """
     # 决定是否过滤用户数据
     # 如果显式指定了 --my，则获取个人数据
     # 如果显式指定了 --group，则获取群组数据
@@ -384,6 +450,12 @@ async def _(
     matcher: AlconnaMatcher,
     img: Match[bytes] = AlconnaMatch("img", image_fetch),
 ):
+    """接收可选图片参数并转交给后续路径参数。
+
+    Args:
+        matcher: 当前 Alconna matcher。
+        img: 命令中直接携带的图片匹配结果。
+    """
     if img.available:
         matcher.set_path_arg("img", img.result)
 
@@ -396,6 +468,15 @@ async def handle_save_mask(
     default: Query[bool] = AlconnaQuery("default.value", default=False),
     mask_key: str = Depends(get_mask_key),
 ):
+    """保存用户上传的词云 mask 图片。
+
+    Args:
+        bot: 当前机器人实例。
+        event: 当前消息事件。
+        img: 用户发送的图片原始字节。
+        default: 是否设置为全局默认 mask。
+        mask_key: 当前会话对应的 mask key。
+    """
     mask = PIL.Image.open(BytesIO(img))
     if default.result:
         if not await SUPERUSER(bot, event):
@@ -437,6 +518,14 @@ async def _(
     default: Query[bool] = AlconnaQuery("default.value", default=False),
     mask_key: str = Depends(get_mask_key),
 ):
+    """删除当前会话或全局默认的词云 mask 图片。
+
+    Args:
+        bot: 当前机器人实例。
+        event: 当前消息事件。
+        default: 是否删除全局默认 mask。
+        mask_key: 当前会话对应的 mask key。
+    """
     if default.result:
         if not await SUPERUSER(bot, event):
             await remove_mask_cmd.finish("仅超级用户可删除词云默认形状")
@@ -453,20 +542,36 @@ schedule_cmd = on_alconna(
     Alconna(
         "词云定时发送",
         Option(
+            "--last",
+            default=False,
+            action=store_true,
+            help_text="在周期最后一天发送",
+        ),
+        Option(
+            "--complete",
+            default=False,
+            action=store_true,
+            help_text="发送上一完整周期",
+        ),
+        Option(
             "--action",
             Args["action_type", ["状态", "开启", "关闭"]],
             default="状态",
             help_text="操作类型",
         ),
-        Args["type", ["每日"]]["time?", str],
+        Args["type", ["每日", "每周", "每月", "每年"]]["time?", str],
         meta=CommandMeta(
             description="设置定时发送词云",
-            usage="当前仅支持每日定时发送",
+            usage="支持每日、每周、每月、每年定时发送",
             example=(
                 "/词云每日定时发送状态\n"
+                "/词云每周定时发送状态\n"
                 "/开启词云每日定时发送\n"
+                "/开启词云每月定时发送\n"
                 "/开启词云每日定时发送 23:59\n"
-                "/关闭词云每日定时发送"
+                "/开启词云每周周期末定时发送\n"
+                "/关闭词云每日定时发送\n"
+                "/关闭词云每年定时发送"
             ),
         ),
     ),
@@ -474,52 +579,111 @@ schedule_cmd = on_alconna(
     use_cmd_start=True,
     block=True,
 )
+
+
+def schedule_wrapper(slot: int | str, content: str | None, context: dict[str, Any]):
+    """将定时发送快捷命令中的模式文本转换为选项参数。
+
+    Args:
+        slot: 当前处理的快捷命令槽位。
+        content: 槽位捕获到的文本内容。
+        context: 快捷命令解析上下文。
+
+    Returns:
+        传递给 Alconna 的命令参数片段。
+    """
+    if slot == "mode" and content:
+        return "--last" if content == "周期末" else "--complete"
+    return content or ""
+
+
 schedule_cmd.shortcut(
-    r"词云(?P<type>每日)定时发送状态",
+    r"词云(?P<type>每日|每周|每月|每年)定时发送状态",
     {
         "prefix": True,
         "command": "词云定时发送",
         "args": ["--action", "状态", "{type}"],
-        "humanized": "词云每日定时发送状态",
+        "humanized": "词云<类型>定时发送状态",
     },
 )
 schedule_cmd.shortcut(
-    r"(?P<action>开启|关闭)词云(?P<type>每日)定时发送(?:\s+(?P<time>\S+))?",
+    r"(?P<action>开启|关闭)词云(?P<type>每日|每周|每月|每年)(?P<mode>周期末|完整周期)?定时发送(?:\s+(?P<time>\S+))?",
     {
         "prefix": True,
         "command": "词云定时发送",
-        "args": ["--action", "{action}", "{type}", "{time}"],
-        "humanized": "<开启|关闭>词云每日定时发送",
+        "wrapper": schedule_wrapper,
+        "args": ["{mode}", "--action", "{action}", "{type}", "{time}"],
+        "humanized": "<开启|关闭>词云<类型>定时发送",
     },
 )
 
 
 @schedule_cmd.handle(parameterless=[Depends(ensure_group)])
 async def _(
+    type: str = "每日",
     time: str | None = None,
+    last: Query[bool] = AlconnaQuery("last.value", False),
+    complete: Query[bool] = AlconnaQuery("complete.value", False),
     action_type: Query[str] = AlconnaQuery("action.action_type.value", "状态"),
     target: Target = MessageTarget(),
 ):
-    if action_type.result == "状态":
-        schedule_time = await schedule_service.get_schedule(target)
-        await schedule_cmd.finish(
-            f"词云每日定时发送已开启，发送时间为：{schedule_time}"
-            if schedule_time
-            else "词云每日定时发送未开启"
-        )
-    elif action_type.result == "开启":
-        schedule_time = None
-        if time:
-            try:
-                schedule_time = get_time_fromisoformat_with_timezone(time)
-            except ValueError:
-                await schedule_cmd.finish("请输入正确的时间，不然我没法理解呢！")
-        await schedule_service.add_schedule(target, time=schedule_time)
-        await schedule_cmd.finish(
-            f"已开启词云每日定时发送，发送时间为：{schedule_time}"
-            if schedule_time
-            else f"已开启词云每日定时发送，发送时间为：{plugin_config.wordcloud_default_schedule_time}"  # noqa: E501
-        )
-    elif action_type.result == "关闭":
-        await schedule_service.remove_schedule(target)
-        await schedule_cmd.finish("已关闭词云每日定时发送")
+    """处理定时发送状态查询、开启和关闭命令。
+
+    Args:
+        type: 定时发送类型文本。
+        time: 可选的定时发送时间文本。
+        last: 是否使用周期末发送模式。
+        complete: 是否使用完整周期发送模式。
+        action_type: 定时发送操作类型。
+        target: 当前消息发送目标。
+    """
+    schedule_type = ScheduleType(type)
+    match action_type.result:
+        case "状态":
+            schedule_info = await schedule_service.get_schedule_info(
+                target, schedule_type
+            )
+            await schedule_cmd.finish(
+                f"词云{schedule_type.value}定时发送已开启，发送时间为：{schedule_info[0]}，发送模式为：{schedule_info[1].value}"
+                if schedule_info
+                else f"词云{schedule_type.value}定时发送未开启"
+            )
+        case "开启":
+            if last.result and complete.result:
+                await schedule_cmd.finish(
+                    "请选择一种发送模式，不要同时指定完整周期和周期末"
+                )
+            if last.result:
+                schedule_mode = ScheduleMode.PERIOD_END
+            elif complete.result:
+                schedule_mode = ScheduleMode.COMPLETE
+            else:
+                schedule_mode = plugin_config.wordcloud_default_schedule_mode
+            schedule_time = None
+            if time:
+                try:
+                    schedule_time = get_time_fromisoformat_with_timezone(time)
+                except ValueError:
+                    await schedule_cmd.finish("请输入正确的时间，不然我没法理解呢！")
+            await schedule_service.add_schedule(
+                target,
+                time=schedule_time,
+                schedule_type=schedule_type,
+                schedule_mode=schedule_mode,
+            )
+            mode_message = (
+                f"，发送模式为：{schedule_mode.value}"
+                if schedule_mode == ScheduleMode.PERIOD_END
+                else ""
+            )
+            default_schedule_time = plugin_config.get_default_schedule_time(
+                schedule_mode
+            )
+            await schedule_cmd.finish(
+                f"已开启词云{schedule_type.value}定时发送，发送时间为：{schedule_time}{mode_message}"
+                if schedule_time
+                else f"已开启词云{schedule_type.value}定时发送，发送时间为：{default_schedule_time}{mode_message}"  # noqa: E501
+            )
+        case "关闭":
+            await schedule_service.remove_schedule(target, schedule_type)
+            await schedule_cmd.finish(f"已关闭词云{schedule_type.value}定时发送")

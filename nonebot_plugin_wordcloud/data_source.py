@@ -17,7 +17,14 @@ from .config import global_config, plugin_config
 
 
 def pre_precess(msg: str) -> str:
-    """对消息进行预处理"""
+    """对消息文本进行预处理。
+
+    Args:
+        msg: 原始消息文本。
+
+    Returns:
+        去除 URL、零宽字符和 emoji 后的消息文本。
+    """
     # 去除网址
     # https://stackoverflow.com/a/17773849/9212748
     url_regex = re.compile(
@@ -37,9 +44,13 @@ def pre_precess(msg: str) -> str:
 
 
 def analyse_message(msg: str) -> dict[str, float]:
-    """分析消息
+    """分析消息文本并统计关键词权重。
 
-    分词，并统计词频
+    Args:
+        msg: 需要分析的消息文本。
+
+    Returns:
+        关键词到 TF-IDF 权重的映射。
     """
     # 设置停用词表
     if plugin_config.wordcloud_stopwords_path:
@@ -54,7 +65,14 @@ def analyse_message(msg: str) -> dict[str, float]:
 
 
 def get_mask(key: str):
-    """获取 mask"""
+    """读取指定会话或默认的词云 mask。
+
+    Args:
+        key: 会话 mask key。
+
+    Returns:
+        mask 图片对应的 numpy 数组；没有可用 mask 时返回 None。
+    """
     mask_path = plugin_config.get_mask_path(key)
     if mask_path.exists():
         return np.array(Image.open(mask_path))
@@ -65,6 +83,15 @@ def get_mask(key: str):
 
 
 def _get_wordcloud(messages: list[str], mask_key: str) -> bytes | None:
+    """在线程池中同步生成词云图片。
+
+    Args:
+        messages: 用于生成词云的消息文本列表。
+        mask_key: 当前会话对应的 mask key。
+
+    Returns:
+        PNG 图片字节；数据不足或生成失败时返回 None。
+    """
     # 过滤掉命令
     command_start = tuple(i for i in global_config.command_start if i)
     message = " ".join(m for m in messages if not m.startswith(command_start))
@@ -98,6 +125,15 @@ def _get_wordcloud(messages: list[str], mask_key: str) -> bytes | None:
 
 
 async def get_wordcloud(messages: list[str], mask_key: str) -> bytes | None:
+    """异步生成词云图片。
+
+    Args:
+        messages: 用于生成词云的消息文本列表。
+        mask_key: 当前会话对应的 mask key。
+
+    Returns:
+        PNG 图片字节；数据不足或生成失败时返回 None。
+    """
     loop = asyncio.get_running_loop()
     pfunc = partial(_get_wordcloud, messages, mask_key)
     # 虽然不知道具体是哪里泄漏了，但是通过每次关闭线程池可以避免这个问题

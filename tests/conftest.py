@@ -130,6 +130,10 @@ async def app(app: App, tmp_path: Path, mocker: MockerFixture):
         await session.execute(delete(Schedule))
         await session.execute(delete(SessionModel))
 
-    keys = [key for key in schedule_service.schedules.keys() if key != "default"]
+    keys = [
+        key
+        for key in schedule_service.schedules.keys()
+        if not key.startswith("default:")
+    ]
     for key in keys:
         schedule_service.schedules.pop(key)
