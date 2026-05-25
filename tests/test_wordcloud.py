@@ -6,7 +6,7 @@ from zoneinfo import ZoneInfo
 
 import pytest
 from nonebot import get_adapter, get_driver
-from nonebot.adapters.onebot.v11 import Adapter, Bot, Message
+from nonebot.adapters.onebot.v11 import Adapter, Bot, Message, MessageSegment
 from nonebot.adapters.onebot.v12 import Adapter as AdapterV12
 from nonebot.adapters.onebot.v12 import Bot as BotV12
 from nonebot.adapters.onebot.v12 import Message as MessageV12
@@ -343,6 +343,113 @@ async def test_my_today_wordcloud(app: App, mocker: MockerFixture):
             FAKE_IMAGE,
             name="wordcloud.png",
             at_sender=True,
+        )
+        ctx.should_finished()
+
+    mocked_datetime_now.assert_called_once_with()
+    assert_wordcloud_called_with_unordered(
+        mocked_get_wordcloud,
+        {"10:1-2"},
+        "QQClient_10000",
+    )
+
+
+@pytest.mark.usefixtures("_message_record")
+async def test_today_wordcloud_at_user(app: App, mocker: MockerFixture):
+    """测试超级用户查看被 @ 群友的今日词云"""
+    from nonebot import get_driver
+
+    from nonebot_plugin_wordcloud import wordcloud_cmd
+
+    mocker.patch.object(get_driver().config, "superusers", {"10"})
+    mocked_datetime_now = mocker.patch(
+        "nonebot_plugin_wordcloud.get_datetime_now_with_timezone",
+        return_value=datetime(2022, 1, 2, 23, tzinfo=ZoneInfo("Asia/Shanghai")),
+    )
+    mocked_get_wordcloud = mocker.patch(
+        "nonebot_plugin_wordcloud.get_wordcloud",
+        return_value=FAKE_IMAGE,
+    )
+
+    async with app.test_matcher(wordcloud_cmd) as ctx:
+        adapter = get_adapter(Adapter)
+        bot = ctx.create_bot(base=Bot, adapter=adapter, auto_connect=False)
+        event = fake_group_message_event_v11(
+            message=Message("/今日词云 ") + MessageSegment.at(11)
+        )
+
+        ctx.receive_event(bot, event)
+        should_send_image(
+            ctx,
+            bot,
+            event,
+            FAKE_IMAGE,
+            name="wordcloud.png",
+        )
+        ctx.should_finished()
+
+    mocked_datetime_now.assert_called_once_with()
+    assert_wordcloud_called_with_unordered(
+        mocked_get_wordcloud,
+        {"11:1-2"},
+        "QQClient_10000",
+    )
+
+
+@pytest.mark.usefixtures("_message_record")
+async def test_today_wordcloud_at_user_without_permission(app: App, mocker):
+    """测试普通用户不能查看其他群友的今日词云"""
+    from nonebot_plugin_wordcloud import wordcloud_cmd
+
+    mocked_datetime_now = mocker.patch(
+        "nonebot_plugin_wordcloud.get_datetime_now_with_timezone",
+        return_value=datetime(2022, 1, 2, 23, tzinfo=ZoneInfo("Asia/Shanghai")),
+    )
+    mocked_get_wordcloud = mocker.patch("nonebot_plugin_wordcloud.get_wordcloud")
+
+    async with app.test_matcher(wordcloud_cmd) as ctx:
+        adapter = get_adapter(Adapter)
+        bot = ctx.create_bot(base=Bot, adapter=adapter, auto_connect=False)
+        event = fake_group_message_event_v11(
+            message=Message("/今日词云 ") + MessageSegment.at(11)
+        )
+
+        ctx.receive_event(bot, event)
+        ctx.should_call_send(event, "仅超级用户可查看其他群友的词云", True)
+        ctx.should_finished()
+
+    mocked_datetime_now.assert_called_once_with()
+    mocked_get_wordcloud.assert_not_called()
+
+
+@pytest.mark.usefixtures("_message_record")
+async def test_today_wordcloud_at_self(app: App, mocker: MockerFixture):
+    """测试普通用户 @ 自己时查询自己的今日词云"""
+    from nonebot_plugin_wordcloud import wordcloud_cmd
+
+    mocked_datetime_now = mocker.patch(
+        "nonebot_plugin_wordcloud.get_datetime_now_with_timezone",
+        return_value=datetime(2022, 1, 2, 23, tzinfo=ZoneInfo("Asia/Shanghai")),
+    )
+    mocked_get_wordcloud = mocker.patch(
+        "nonebot_plugin_wordcloud.get_wordcloud",
+        return_value=FAKE_IMAGE,
+    )
+
+    async with app.test_matcher(wordcloud_cmd) as ctx:
+        adapter = get_adapter(Adapter)
+        bot = ctx.create_bot(base=Bot, adapter=adapter, auto_connect=False)
+        event = fake_group_message_event_v11(
+            message=Message("/今日词云 ") + MessageSegment.at(10)
+        )
+
+        ctx.receive_event(bot, event)
+        should_send_image(
+            ctx,
+            bot,
+            event,
+            FAKE_IMAGE,
+            name="wordcloud.png",
         )
         ctx.should_finished()
 

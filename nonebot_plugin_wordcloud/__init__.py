@@ -26,6 +26,7 @@ from nonebot_plugin_alconna import (
     AlconnaMatcher,
     AlconnaQuery,
     Args,
+    AtID,
     CommandMeta,
     Image,
     Match,
@@ -92,6 +93,8 @@ def get_usage() -> str:
 格式：/<时间段>词云
 时间段关键词有：今日，昨日，本周，上周，本月，上月，年度
 示例：/今日词云，/昨日词云
+超级用户可以通过 @群友 获取该群友的词云
+示例：/今日词云 @群友
 
 - 提供日期与时间，以获取指定时间段内的词云
 （支持 ISO8601 格式的日期与时间，如 2022-02-22T22:22:22）
@@ -200,7 +203,7 @@ wordcloud_cmd = on_alconna(
         ),
         Args["type?", ["今日", "昨日", "本周", "上周", "本月", "上月", "年度", "历史"]][
             "time?", str
-        ],
+        ]["user?", AtID],
         behaviors=[SameTime()],
         meta=CommandMeta(
             description="利用群消息生成词云",
@@ -212,7 +215,8 @@ wordcloud_cmd = on_alconna(
                 "/历史词云\n"
                 "/历史词云 2022-01-01\n"
                 "/历史词云 2022-01-01~2022-02-22\n"
-                "/历史词云 2022-02-22T11:11:11~2022-02-22T22:22:22"
+                "/历史词云 2022-02-22T11:11:11~2022-02-22T22:22:22\n"
+                "/今日词云 @群友"
             ),
         ),
     ),
@@ -367,8 +371,11 @@ async def handle_first_receive(
     parameterless=[Depends(parse_datetime("stop"))],
 )
 async def handle_wordcloud(
+    bot: Bot,
+    event: Event,
     my: Query[bool] = AlconnaQuery("my.value", False),
     group: Query[bool] = AlconnaQuery("group.value", False),
+    user: Match[str] = AlconnaMatch("user"),
     session: Session = UniSession(),
     start: datetime = Arg(),
     stop: datetime = Arg(),
@@ -379,6 +386,7 @@ async def handle_wordcloud(
     Args:
         my: 是否显式查询个人词云。
         group: 是否显式查询群组词云。
+        user: 可选的被 @ 用户 ID。
         session: 当前统一会话信息。
         start: 查询开始时间。
         stop: 查询结束时间。
@@ -396,6 +404,15 @@ async def handle_wordcloud(
         # 使用配置中的默认行为
         filter_user = plugin_config.wordcloud_default_personal
 
+    user_ids = None
+    at_sender = filter_user
+    if user.available:
+        user_ids = [user.result]
+        filter_user = False
+        at_sender = False
+        if user.result != session.user.id and not await SUPERUSER(bot, event):
+            await wordcloud_cmd.finish("仅超级用户可查看其他群友的词云")
+
     messages = await get_messages_plain_text(
         session=session,
         filter_user=filter_user,
@@ -404,19 +421,20 @@ async def handle_wordcloud(
         types=["message"],  # 排除机器人自己发的消息
         time_start=start,
         time_stop=stop,
+        user_ids=user_ids,
         exclude_user_ids=plugin_config.wordcloud_exclude_user_ids,
     )
 
     if not (image := await get_wordcloud(messages, mask_key)):
         await wordcloud_cmd.finish(
             "没有足够的数据生成词云",
-            at_sender=filter_user,
+            at_sender=at_sender,
             reply=plugin_config.wordcloud_reply_message,
         )
 
     await wordcloud_cmd.finish(
         Image(raw=image, name="wordcloud.png"),
-        at_sender=filter_user,
+        at_sender=at_sender,
         reply=plugin_config.wordcloud_reply_message,
     )
 
