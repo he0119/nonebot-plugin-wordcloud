@@ -72,6 +72,7 @@ nb plugin install nonebot-plugin-wordcloud
 - 当 `wordcloud_default_personal` 配置为 `False`（默认）时，上述命令默认获取群组数据
 - 当 `wordcloud_default_personal` 配置为 `True` 时，上述命令默认获取个人数据
 - 可以使用前缀明确指定数据范围：
+
   - 添加 `我的` 前缀获取个人词云，如 `/我的今日词云`
   - 添加 `本群` 前缀获取群组词云，如 `/本群今日词云`
 
@@ -107,6 +108,13 @@ nb plugin install nonebot-plugin-wordcloud
 | wordcloud_exclude_user_ids      | `Set[str]`            | `set()`                | 排除的用户 ID 列表（全局，不区分平台），<br />例如：`["123456","456789"]`                                                                                                                                                                                                                                                                                                         |
 | wordcloud_reply_message         | bool                  | `False`                | 发送词云图片时是否回复触发它的消息                                                                                                                                                                                                                                                                                                                                                |
 | wordcloud_default_personal      | bool                  | `False`                | 是否默认获取个人数据，设为 `True` 时默认生成个人词云，<br />设为 `False` 时默认生成群组词云                                                                                                                                                                                                                                                                                       |
+
+## 许可证
+
+项目代码使用 MIT License 发布。包内自带的默认字体 `SourceHanSans.otf`
+来自 [Source Han Sans](https://github.com/adobe-fonts/source-han-sans)，
+按 SIL Open Font License 1.1 许可随包分发；完整字体许可证见
+`nonebot_plugin_wordcloud/SourceHanSans.LICENSE.txt`。
 
 ## 鸣谢
 
