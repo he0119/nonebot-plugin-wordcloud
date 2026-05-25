@@ -12,7 +12,11 @@ from .config import plugin_config
 
 
 def get_datetime_now_with_timezone() -> datetime:
-    """获取当前时间，并包含时区信息"""
+    """获取包含时区信息的当前时间。
+
+    Returns:
+        根据插件配置时区或系统本地时区生成的当前时间。
+    """
     if plugin_config.wordcloud_timezone:
         return datetime.now(ZoneInfo(plugin_config.wordcloud_timezone))
     else:
@@ -20,7 +24,14 @@ def get_datetime_now_with_timezone() -> datetime:
 
 
 def get_datetime_fromisoformat_with_timezone(date_string: str) -> datetime:
-    """从 ISO-8601 格式字符串中获取时间，并包含时区信息"""
+    """从 ISO-8601 字符串中解析包含时区信息的时间。
+
+    Args:
+        date_string: ISO-8601 日期时间字符串。
+
+    Returns:
+        根据插件配置时区或输入时区规范化后的 datetime。
+    """
     if not plugin_config.wordcloud_timezone:
         return datetime.fromisoformat(date_string).astimezone()
     raw = datetime.fromisoformat(date_string)
@@ -32,16 +43,28 @@ def get_datetime_fromisoformat_with_timezone(date_string: str) -> datetime:
 
 
 def time_astimezone(time: time, tz: tzinfo | None = None) -> time:
-    """将 time 对象转换为指定时区的 time 对象
+    """将 time 对象转换为指定时区。
 
-    如果 tz 为 None，则转换为本地时区
+    Args:
+        time: 需要转换的时间。
+        tz: 目标时区；为空时转换为系统本地时区。
+
+    Returns:
+        转换到目标时区后的 time 对象。
     """
     local_time = datetime.combine(datetime.today(), time)
     return local_time.astimezone(tz).timetz()
 
 
 def get_time_fromisoformat_with_timezone(time_string: str) -> time:
-    """从 iso8601 格式字符串中获取时间，并包含时区信息"""
+    """从 ISO-8601 字符串中解析包含时区信息的时间。
+
+    Args:
+        time_string: ISO-8601 时间字符串。
+
+    Returns:
+        根据插件配置时区或输入时区规范化后的 time 对象。
+    """
     if not plugin_config.wordcloud_timezone:
         return time_astimezone(time.fromisoformat(time_string))
     raw = time.fromisoformat(time_string)
@@ -53,11 +76,23 @@ def get_time_fromisoformat_with_timezone(time_string: str) -> time:
 
 
 def get_time_with_scheduler_timezone(time: time) -> time:
-    """获取转换到 APScheduler 时区的时间"""
+    """将时间转换到 APScheduler 使用的时区。
+
+    Args:
+        time: 需要转换的时间。
+
+    Returns:
+        转换到 APScheduler 时区后的 time 对象。
+    """
     return time_astimezone(time, scheduler.timezone)
 
 
 def admin_permission():
+    """构造管理词云命令所需的权限。
+
+    Returns:
+        超级用户权限，以及可用时的 OneBot V11 群主和管理员权限。
+    """
     permission = SUPERUSER
     with contextlib.suppress(ImportError):
         from nonebot.adapters.onebot.v11.permission import GROUP_ADMIN, GROUP_OWNER
@@ -68,9 +103,15 @@ def admin_permission():
 
 
 def get_mask_key(session: Session | Target = UniSession()) -> str:
-    """获取 mask key
+    """获取会话对应的 mask key。
 
-    平台名称和会话场景 ID 组成，例如 `QQClient_123456789` 和用户插件保持一致。
+    平台名称和会话场景 ID 组成，例如 `QQClient_123456789`。
+
+    Args:
+        session: 统一会话或 Alconna 发送目标。
+
+    Returns:
+        用于存储和读取 mask 文件的 key。
     """
     if isinstance(session, Target):
         scope = getattr(session.scope, "value", session.scope)
@@ -84,7 +125,12 @@ def get_mask_key(session: Session | Target = UniSession()) -> str:
 
 
 async def ensure_group(matcher: Matcher, session: Session = UniSession()):
-    """确保在群组中使用"""
+    """确保命令在群组、频道或频道文字场景中使用。
+
+    Args:
+        matcher: 当前 matcher。
+        session: 当前统一会话信息。
+    """
     if session.scene.type not in [
         SceneType.GROUP,
         SceneType.GUILD,

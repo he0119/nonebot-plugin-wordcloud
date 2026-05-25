@@ -26,10 +26,26 @@ if TYPE_CHECKING:
 
 
 def dump_target(target: Target) -> dict:
+    """序列化 Alconna 发送目标。
+
+    Args:
+        target: 需要保存到数据库的发送目标。
+
+    Returns:
+        去除 self_id 并仅保留 scope 信息的 target 字典。
+    """
     return target.dump(only_scope=True, save_self_id=False)
 
 
 def get_target_scene_type(target: Target) -> SceneType:
+    """根据发送目标判断聊天记录场景类型。
+
+    Args:
+        target: Alconna 发送目标。
+
+    Returns:
+        用于查询聊天记录的场景类型。
+    """
     if target.private:
         return SceneType.PRIVATE
     if target.channel:
@@ -38,11 +54,20 @@ def get_target_scene_type(target: Target) -> SceneType:
 
 
 def get_schedule_time_range(
-    schedule_type: ScheduleType,
     dt: datetime,
+    schedule_type: ScheduleType,
     schedule_mode: ScheduleMode = ScheduleMode.COMPLETE,
 ) -> tuple[datetime, datetime] | None:
-    """获取定时发送对应的词云时间范围，不到发送日期时返回 None。"""
+    """获取定时发送对应的词云时间范围。
+
+    Args:
+        dt: 当前触发时间。
+        schedule_type: 定时发送类型。
+        schedule_mode: 定时发送模式。
+
+    Returns:
+        词云消息查询的起止时间；当前日期无需发送时返回 None。
+    """
     stop = dt.replace(hour=0, minute=0, second=0, microsecond=0)
     if schedule_mode == ScheduleMode.PERIOD_END:
         if schedule_type == ScheduleType.DAY:
@@ -59,7 +84,6 @@ def get_schedule_time_range(
             if dt.month != 12 or dt.day != 31:
                 return None
             return stop.replace(month=1, day=1), dt
-        return None
 
     if schedule_type == ScheduleType.DAY:
         return stop - timedelta(days=1), stop
@@ -78,15 +102,23 @@ def get_schedule_time_range(
             return None
         start = stop.replace(year=stop.year - 1)
         return start, stop
-    return None
 
 
 class Scheduler:
     @staticmethod
     def get_default_schedule_key(schedule_mode: ScheduleMode) -> str:
+        """获取默认定时任务在内存任务表中的 key。
+
+        Args:
+            schedule_mode: 默认定时任务对应的发送模式。
+
+        Returns:
+            内存任务表中的默认任务 key。
+        """
         return f"default:{schedule_mode.value}"
 
     def __init__(self):
+        """初始化默认定时发送任务。"""
         # 默认定时任务的 key 为 default:<mode>
         # 其他则为 ISO 8601 格式的时间字符串
         self.schedules: dict[str, Job] = {}
@@ -109,7 +141,7 @@ class Scheduler:
             )
 
     async def update(self):
-        """更新定时任务"""
+        """根据数据库中的自定义时间更新 APScheduler 任务。"""
         async with get_session() as session:
             statement = (
                 select(Schedule.time)
@@ -141,6 +173,16 @@ class Scheduler:
         session: AsyncSession,
         schedule_type: ScheduleType = ScheduleType.DAY,
     ) -> Schedule | None:
+        """获取指定目标和类型对应的定时发送配置。
+
+        Args:
+            target: Alconna 发送目标。
+            session: 数据库会话。
+            schedule_type: 定时发送类型。
+
+        Returns:
+            匹配的定时发送配置；不存在时返回 None。
+        """
         statement = (
             select(Schedule)
             .where(Schedule.schedule_type == schedule_type)
@@ -163,10 +205,11 @@ class Scheduler:
     async def run_task(
         self, time: time | None = None, schedule_mode: ScheduleMode | None = None
     ):
-        """执行定时任务
+        """执行定时发送任务。
 
-        时间为 UTC 时间，并且没有时区信息
-        如果没有传入时间，则执行默认定时任务
+        Args:
+            time: 数据库中保存的 UTC 定时时间；为空时执行默认任务。
+            schedule_mode: 默认任务需要筛选的发送模式。
         """
         async with get_session() as session:
             statement = select(Schedule).where(Schedule.time == time)
@@ -187,8 +230,8 @@ class Scheduler:
             for schedule in schedules:
                 if not (
                     time_range := get_schedule_time_range(
-                        schedule.schedule_type,
                         dt,
+                        schedule.schedule_type,
                         schedule.schedule_mode,
                     )
                 ):
@@ -229,14 +272,30 @@ class Scheduler:
     async def get_schedule(
         self, target: Target, schedule_type: ScheduleType = ScheduleType.DAY
     ) -> time | None:
-        """获取定时任务时间"""
+        """获取指定目标和类型的定时发送时间。
+
+        Args:
+            target: Alconna 发送目标。
+            schedule_type: 定时发送类型。
+
+        Returns:
+            本地时区下的定时发送时间；未开启时返回 None。
+        """
         if schedule_info := await self.get_schedule_info(target, schedule_type):
             return schedule_info[0]
 
     async def get_schedule_info(
         self, target: Target, schedule_type: ScheduleType = ScheduleType.DAY
     ) -> tuple[time, ScheduleMode] | None:
-        """获取定时任务时间与发送模式"""
+        """获取指定目标和类型的定时发送时间与发送模式。
+
+        Args:
+            target: Alconna 发送目标。
+            schedule_type: 定时发送类型。
+
+        Returns:
+            定时发送时间和发送模式；未开启时返回 None。
+        """
         async with get_session() as db_session:
             if schedule := await self.get_target_schedule(
                 target, db_session, schedule_type
@@ -260,9 +319,13 @@ class Scheduler:
         schedule_type: ScheduleType = ScheduleType.DAY,
         schedule_mode: ScheduleMode | None = None,
     ):
-        """添加定时任务
+        """添加或更新定时发送配置。
 
-        时间需要带时区信息
+        Args:
+            target: Alconna 发送目标。
+            time: 带时区信息的定时发送时间；为空时使用默认时间。
+            schedule_type: 定时发送类型。
+            schedule_mode: 定时发送模式；为空时使用配置默认模式。
         """
         schedule_mode = schedule_mode or plugin_config.wordcloud_default_schedule_mode
         # 将时间转换为 UTC 时间
@@ -290,7 +353,12 @@ class Scheduler:
     async def remove_schedule(
         self, target: Target, schedule_type: ScheduleType = ScheduleType.DAY
     ):
-        """删除定时任务"""
+        """删除指定目标和类型的定时发送配置。
+
+        Args:
+            target: Alconna 发送目标。
+            schedule_type: 定时发送类型。
+        """
         async with get_session() as db_session:
             if schedule := await self.get_target_schedule(
                 target, db_session, schedule_type

@@ -44,67 +44,67 @@ def test_get_schedule_time_range():
 
     dt = datetime(2024, 5, 6, 22)
 
-    assert get_schedule_time_range(ScheduleType.DAY, dt) == (
+    assert get_schedule_time_range(dt, ScheduleType.DAY) == (
         datetime(2024, 5, 5),
         datetime(2024, 5, 6),
     )
-    assert get_schedule_time_range(ScheduleType.DAY, dt, ScheduleMode.PERIOD_END) == (
+    assert get_schedule_time_range(dt, ScheduleType.DAY, ScheduleMode.PERIOD_END) == (
         datetime(2024, 5, 6),
         datetime(2024, 5, 6, 22),
     )
-    assert get_schedule_time_range(ScheduleType.WEEK, dt) == (
+    assert get_schedule_time_range(dt, ScheduleType.WEEK) == (
         datetime(2024, 4, 29),
         datetime(2024, 5, 6),
     )
-    assert get_schedule_time_range(ScheduleType.WEEK, datetime(2024, 5, 7, 22)) is None
+    assert get_schedule_time_range(datetime(2024, 5, 7, 22), ScheduleType.WEEK) is None
     assert get_schedule_time_range(
-        ScheduleType.WEEK, datetime(2024, 5, 12, 22), ScheduleMode.PERIOD_END
+        datetime(2024, 5, 12, 22), ScheduleType.WEEK, ScheduleMode.PERIOD_END
     ) == (
         datetime(2024, 5, 6),
         datetime(2024, 5, 12, 22),
     )
     assert (
         get_schedule_time_range(
-            ScheduleType.WEEK, datetime(2024, 5, 11, 22), ScheduleMode.PERIOD_END
+            datetime(2024, 5, 11, 22), ScheduleType.WEEK, ScheduleMode.PERIOD_END
         )
         is None
     )
-    assert get_schedule_time_range(ScheduleType.MONTH, datetime(2024, 5, 1, 22)) == (
+    assert get_schedule_time_range(datetime(2024, 5, 1, 22), ScheduleType.MONTH) == (
         datetime(2024, 4, 1),
         datetime(2024, 5, 1),
     )
-    assert get_schedule_time_range(ScheduleType.MONTH, datetime(2024, 5, 2, 22)) is None
+    assert get_schedule_time_range(datetime(2024, 5, 2, 22), ScheduleType.MONTH) is None
     assert get_schedule_time_range(
-        ScheduleType.MONTH, datetime(2024, 5, 31, 22), ScheduleMode.PERIOD_END
+        datetime(2024, 5, 31, 22), ScheduleType.MONTH, ScheduleMode.PERIOD_END
     ) == (
         datetime(2024, 5, 1),
         datetime(2024, 5, 31, 22),
     )
     assert (
         get_schedule_time_range(
-            ScheduleType.MONTH, datetime(2024, 5, 30, 22), ScheduleMode.PERIOD_END
+            datetime(2024, 5, 30, 22), ScheduleType.MONTH, ScheduleMode.PERIOD_END
         )
         is None
     )
-    assert get_schedule_time_range(ScheduleType.YEAR, datetime(2024, 1, 1, 22)) == (
+    assert get_schedule_time_range(datetime(2024, 1, 1, 22), ScheduleType.YEAR) == (
         datetime(2023, 1, 1),
         datetime(2024, 1, 1),
     )
-    assert get_schedule_time_range(ScheduleType.YEAR, datetime(2024, 1, 2, 22)) is None
+    assert get_schedule_time_range(datetime(2024, 1, 2, 22), ScheduleType.YEAR) is None
     assert get_schedule_time_range(
-        ScheduleType.YEAR, datetime(2024, 12, 31, 22), ScheduleMode.PERIOD_END
+        datetime(2024, 12, 31, 22), ScheduleType.YEAR, ScheduleMode.PERIOD_END
     ) == (
         datetime(2024, 1, 1),
         datetime(2024, 12, 31, 22),
     )
     assert (
         get_schedule_time_range(
-            ScheduleType.YEAR, datetime(2024, 12, 30, 22), ScheduleMode.PERIOD_END
+            datetime(2024, 12, 30, 22), ScheduleType.YEAR, ScheduleMode.PERIOD_END
         )
         is None
     )
-    assert get_schedule_time_range("未知", dt, ScheduleMode.PERIOD_END) is None  # type: ignore[arg-type]
-    assert get_schedule_time_range("未知", dt) is None  # type: ignore[arg-type]
+    assert get_schedule_time_range(dt, "未知", ScheduleMode.PERIOD_END) is None  # type: ignore[arg-type]
+    assert get_schedule_time_range(dt, "未知") is None  # type: ignore[arg-type]
 
 
 async def test_enable_schedule(app: App):
@@ -467,7 +467,9 @@ async def test_get_schedule_info_with_custom_time(app: App):
 
     await schedule_service.add_schedule(target, time=time(23, 0))
 
-    schedule_time, schedule_mode = await schedule_service.get_schedule_info(target)
+    schedule_info = await schedule_service.get_schedule_info(target)
+    assert schedule_info is not None
+    schedule_time, schedule_mode = schedule_info
     assert schedule_time.isoformat() == "23:00:00+08:00"
     assert schedule_mode == ScheduleMode.COMPLETE
 

@@ -4,10 +4,10 @@ from typing import Any
 from zoneinfo import ZoneInfo
 
 from nonebot import get_driver, get_plugin_config
+from nonebot.compat import model_validator
 from nonebot_plugin_localstore import get_data_dir
 from pydantic import BaseModel, Field
 
-from .compat import model_validator
 from .model import ScheduleMode
 
 DATA_DIR = get_data_dir("nonebot_plugin_wordcloud")
@@ -18,6 +18,14 @@ DEFAULT_SCHEDULE_TIME_BY_MODE = {
 
 
 def _parse_schedule_mode(value: str | ScheduleMode | None) -> ScheduleMode:
+    """解析默认定时发送模式配置。
+
+    Args:
+        value: 配置中读取到的模式值。
+
+    Returns:
+        规范化后的定时发送模式。
+    """
     if value is None:
         return ScheduleMode.COMPLETE
     if isinstance(value, ScheduleMode):
@@ -26,10 +34,27 @@ def _parse_schedule_mode(value: str | ScheduleMode | None) -> ScheduleMode:
 
 
 def _parse_schedule_time(value: str | time) -> time:
+    """解析默认定时发送时间配置。
+
+    Args:
+        value: 配置中读取到的时间字符串或 time 对象。
+
+    Returns:
+        规范化后的 time 对象。
+    """
     return time.fromisoformat(value) if isinstance(value, str) else value
 
 
 def _set_timezone(schedule_time: time, timezone: str | None) -> time:
+    """为定时发送时间设置时区。
+
+    Args:
+        schedule_time: 需要设置时区的时间。
+        timezone: 配置指定的时区名称；为空时使用系统本地时区。
+
+    Returns:
+        带时区信息的定时发送时间。
+    """
     return (
         schedule_time.replace(tzinfo=ZoneInfo(timezone))
         if timezone
@@ -64,6 +89,14 @@ class Config(BaseModel):
 
     @model_validator(mode="before")
     def set_default_values(cls, values):
+        """填充配置默认值并规范化定时发送配置。
+
+        Args:
+            values: Pydantic 校验前的原始配置字典。
+
+        Returns:
+            填充默认值后的配置字典。
+        """
         if not values.get("wordcloud_font_path"):
             values["wordcloud_font_path"] = str(
                 Path(__file__).parent / "SourceHanSans.otf"
@@ -100,6 +133,14 @@ class Config(BaseModel):
     def get_default_schedule_time(
         self, schedule_mode: ScheduleMode | None = None
     ) -> time:
+        """获取指定发送模式对应的默认定时发送时间。
+
+        Args:
+            schedule_mode: 需要查询的发送模式；为空时使用配置中的默认模式。
+
+        Returns:
+            对应发送模式的默认定时发送时间。
+        """
         if self.wordcloud_default_schedule_time_override:
             return self.wordcloud_default_schedule_time
         return _set_timezone(
@@ -110,7 +151,14 @@ class Config(BaseModel):
         )
 
     def get_mask_path(self, key: str | None = None) -> Path:
-        """获取 mask 文件路径"""
+        """获取 mask 文件路径。
+
+        Args:
+            key: 会话 mask key；为空时返回全局默认 mask 路径。
+
+        Returns:
+            mask 图片的存储路径。
+        """
         if key is None:
             return DATA_DIR / "mask.png"
         return DATA_DIR / f"mask-{key}.png"

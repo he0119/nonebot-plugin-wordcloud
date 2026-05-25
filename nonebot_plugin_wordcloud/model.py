@@ -26,6 +26,14 @@ class ScheduleMode(str, Enum):
 
 
 def _enum_values(enum_class) -> list[str]:
+    """提取枚举值列表供 SQLAlchemy Enum 使用。
+
+    Args:
+        enum_class: 需要提取值的枚举类。
+
+    Returns:
+        枚举成员值组成的字符串列表。
+    """
     return [enum_item.value for enum_item in enum_class]
 
 
@@ -60,4 +68,9 @@ class Schedule(Model):
 
     @property
     def alc_target(self) -> Target:
+        """还原 Alconna 发送目标。
+
+        Returns:
+            根据数据库中保存的 target 数据还原出的 Alconna Target。
+        """
         return Target.load(self.target.copy())

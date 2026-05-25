@@ -57,7 +57,11 @@ get_driver().on_startup(schedule_service.update)
 
 
 def get_usage() -> str:
-    """根据配置生成使用说明"""
+    """根据当前配置生成插件完整使用说明。
+
+    Returns:
+        面向用户展示的插件使用说明。
+    """
     if plugin_config.wordcloud_default_personal:
         # 默认个人数据
         default_behavior = '- 默认获取个人数据，如需获取群组数据请添加前缀"本群"'
@@ -122,7 +126,11 @@ def get_usage() -> str:
 
 
 def get_wordcloud_cmd_usage() -> str:
-    """根据配置生成词云命令简短使用说明"""
+    """根据当前配置生成词云命令的简短使用说明。
+
+    Returns:
+        面向命令帮助展示的简短使用说明。
+    """
 
     usage = (
         "- 通过快捷命令，以获取常见时间段内的词云\n"
@@ -162,6 +170,11 @@ __plugin_meta__ = PluginMetadata(
 
 class SameTime(ArparmaBehavior):
     def operate(self, interface: Arparma):
+        """阻止只传入时间但未传入词云类型的命令。
+
+        Args:
+            interface: Alconna 解析结果操作接口。
+        """
         type = interface.query("type")
         time = interface.query("time")
         if type is None and time:
@@ -207,6 +220,16 @@ wordcloud_cmd = on_alconna(
 
 
 def wrapper(slot: int | str, content: str | None, context: dict[str, Any]) -> str:
+    """将快捷命令捕获的分组转换为真实命令参数。
+
+    Args:
+        slot: 当前处理的快捷命令槽位。
+        content: 槽位捕获到的文本内容。
+        context: 快捷命令解析上下文。
+
+    Returns:
+        传递给 Alconna 的命令参数片段。
+    """
     if slot == "my" and content:
         return "--my"
     elif slot == "group" and content:
@@ -229,13 +252,27 @@ wordcloud_cmd.shortcut(
 
 
 def parse_datetime(key: str):
-    """解析数字，并将结果存入 state 中"""
+    """构造日期参数解析器，并将结果存入 matcher state。
+
+    Args:
+        key: 需要解析并写入 state 的参数名。
+
+    Returns:
+        用于 ``got`` 参数校验的异步解析函数。
+    """
 
     async def _key_parser(
         matcher: AlconnaMatcher,
         state: T_State,
         input: datetime | Message = Arg(key),
     ):
+        """解析用户输入的 ISO-8601 日期时间文本。
+
+        Args:
+            matcher: 当前 Alconna matcher。
+            state: NoneBot matcher state。
+            input: 已解析的 datetime 或用户输入消息。
+        """
         if isinstance(input, datetime):
             return
 
@@ -252,6 +289,13 @@ def parse_datetime(key: str):
 async def handle_first_receive(
     state: T_State, type: str | None = None, time: str | None = None
 ):
+    """处理词云命令首次接收并推导查询时间范围。
+
+    Args:
+        state: NoneBot matcher state，用于保存查询起止时间。
+        type: 用户请求的时间段类型。
+        time: 历史词云命令携带的日期或日期范围文本。
+    """
     dt = get_datetime_now_with_timezone()
 
     if not type:
@@ -326,7 +370,16 @@ async def handle_wordcloud(
     stop: datetime = Arg(),
     mask_key: str = Depends(get_mask_key),
 ):
-    """生成词云"""
+    """查询聊天记录并发送生成的词云图片。
+
+    Args:
+        my: 是否显式查询个人词云。
+        group: 是否显式查询群组词云。
+        session: 当前统一会话信息。
+        start: 查询开始时间。
+        stop: 查询结束时间。
+        mask_key: 当前会话对应的 mask key。
+    """
     # 决定是否过滤用户数据
     # 如果显式指定了 --my，则获取个人数据
     # 如果显式指定了 --group，则获取群组数据
@@ -393,6 +446,12 @@ async def _(
     matcher: AlconnaMatcher,
     img: Match[bytes] = AlconnaMatch("img", image_fetch),
 ):
+    """接收可选图片参数并转交给后续路径参数。
+
+    Args:
+        matcher: 当前 Alconna matcher。
+        img: 命令中直接携带的图片匹配结果。
+    """
     if img.available:
         matcher.set_path_arg("img", img.result)
 
@@ -405,6 +464,15 @@ async def handle_save_mask(
     default: Query[bool] = AlconnaQuery("default.value", default=False),
     mask_key: str = Depends(get_mask_key),
 ):
+    """保存用户上传的词云 mask 图片。
+
+    Args:
+        bot: 当前机器人实例。
+        event: 当前消息事件。
+        img: 用户发送的图片原始字节。
+        default: 是否设置为全局默认 mask。
+        mask_key: 当前会话对应的 mask key。
+    """
     mask = PIL.Image.open(BytesIO(img))
     if default.result:
         if not await SUPERUSER(bot, event):
@@ -446,6 +514,14 @@ async def _(
     default: Query[bool] = AlconnaQuery("default.value", default=False),
     mask_key: str = Depends(get_mask_key),
 ):
+    """删除当前会话或全局默认的词云 mask 图片。
+
+    Args:
+        bot: 当前机器人实例。
+        event: 当前消息事件。
+        default: 是否删除全局默认 mask。
+        mask_key: 当前会话对应的 mask key。
+    """
     if default.result:
         if not await SUPERUSER(bot, event):
             await remove_mask_cmd.finish("仅超级用户可删除词云默认形状")
@@ -502,6 +578,16 @@ schedule_cmd = on_alconna(
 
 
 def schedule_wrapper(slot: int | str, content: str | None, context: dict[str, Any]):
+    """将定时发送快捷命令中的模式文本转换为选项参数。
+
+    Args:
+        slot: 当前处理的快捷命令槽位。
+        content: 槽位捕获到的文本内容。
+        context: 快捷命令解析上下文。
+
+    Returns:
+        传递给 Alconna 的命令参数片段。
+    """
     if slot == "mode" and content:
         return "--last" if content == "周期末" else "--complete"
     return content or ""
@@ -537,6 +623,16 @@ async def _(
     action_type: Query[str] = AlconnaQuery("action.action_type.value", "状态"),
     target: Target = MessageTarget(),
 ):
+    """处理定时发送状态查询、开启和关闭命令。
+
+    Args:
+        type: 定时发送类型文本。
+        time: 可选的定时发送时间文本。
+        last: 是否使用周期末发送模式。
+        complete: 是否使用完整周期发送模式。
+        action_type: 定时发送操作类型。
+        target: 当前消息发送目标。
+    """
     schedule_type = ScheduleType(type)
     if action_type.result == "状态":
         schedule_info = await schedule_service.get_schedule_info(target, schedule_type)
