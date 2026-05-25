@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 - 添加是否默认获取个人数据的配置项
 - 使用 uninfo 与 Alconna Target 管理词云会话
 - 支持周期性词云定时发送并统一完整周期语义
+- 支持超级用户通过 @ 群友查看指定成员词云
 
 ## [0.9.0] - 2025-01-14
 
