@@ -143,6 +143,12 @@ def test_period_range_helpers():
 
     assert is_period_start(datetime(2024, 5, 13, 22), ScheduleType.WEEK)
     assert not is_period_start(datetime(2024, 5, 14, 22), ScheduleType.WEEK)
+    assert is_period_start(datetime(2024, 5, 14, 22), ScheduleType.DAY)
+    assert is_period_start(datetime(2024, 1, 1, 22), ScheduleType.YEAR)
+    assert not is_period_start(datetime(2024, 1, 2, 22), ScheduleType.YEAR)
     assert is_period_end(datetime(2024, 5, 12, 22), ScheduleType.WEEK)
     assert not is_period_end(datetime(2024, 5, 11, 22), ScheduleType.WEEK)
+    assert is_period_end(datetime(2024, 5, 14, 22), ScheduleType.DAY)
     assert is_period_end(datetime(2024, 5, 31, 22), ScheduleType.MONTH)
+    assert is_period_end(datetime(2024, 12, 31, 22), ScheduleType.YEAR)
+    assert not is_period_end(datetime(2024, 12, 30, 22), ScheduleType.YEAR)

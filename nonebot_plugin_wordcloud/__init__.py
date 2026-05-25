@@ -303,40 +303,57 @@ async def handle_first_receive(
     if not type:
         await wordcloud_cmd.finish(__plugin_meta__.usage)
 
-    if type == "今日":
-        state["start"], state["stop"] = get_current_period_range(dt, ScheduleType.DAY)
-    elif type == "昨日":
-        state["start"], state["stop"] = get_previous_period_range(dt, ScheduleType.DAY)
-    elif type == "本周":
-        state["start"], state["stop"] = get_current_period_range(dt, ScheduleType.WEEK)
-    elif type == "上周":
-        state["start"], state["stop"] = get_previous_period_range(dt, ScheduleType.WEEK)
-    elif type == "本月":
-        state["start"], state["stop"] = get_current_period_range(dt, ScheduleType.MONTH)
-    elif type == "上月":
-        state["start"], state["stop"] = get_previous_period_range(
-            dt, ScheduleType.MONTH
-        )
-    elif type == "年度":
-        state["start"], state["stop"] = get_current_period_range(dt, ScheduleType.YEAR)
-    elif type == "历史":
-        if time:
-            plaintext = time
-            if match := re.match(r"^(.+?)(?:~(.+))?$", plaintext):
-                start = match[1]
-                stop = match[2]
-                try:
-                    state["start"] = get_datetime_fromisoformat_with_timezone(start)
-                    if stop:
-                        state["stop"] = get_datetime_fromisoformat_with_timezone(stop)
-                    else:
-                        # 如果没有指定结束日期，则认为是所给日期的当天的词云
-                        state["start"] = state["start"].replace(
-                            hour=0, minute=0, second=0, microsecond=0
+    match type:
+        case "今日":
+            state["start"], state["stop"] = get_current_period_range(
+                dt, ScheduleType.DAY
+            )
+        case "昨日":
+            state["start"], state["stop"] = get_previous_period_range(
+                dt, ScheduleType.DAY
+            )
+        case "本周":
+            state["start"], state["stop"] = get_current_period_range(
+                dt, ScheduleType.WEEK
+            )
+        case "上周":
+            state["start"], state["stop"] = get_previous_period_range(
+                dt, ScheduleType.WEEK
+            )
+        case "本月":
+            state["start"], state["stop"] = get_current_period_range(
+                dt, ScheduleType.MONTH
+            )
+        case "上月":
+            state["start"], state["stop"] = get_previous_period_range(
+                dt, ScheduleType.MONTH
+            )
+        case "年度":
+            state["start"], state["stop"] = get_current_period_range(
+                dt, ScheduleType.YEAR
+            )
+        case "历史":
+            if time:
+                plaintext = time
+                if match := re.match(r"^(.+?)(?:~(.+))?$", plaintext):
+                    start = match[1]
+                    stop = match[2]
+                    try:
+                        state["start"] = get_datetime_fromisoformat_with_timezone(start)
+                        if stop:
+                            state["stop"] = get_datetime_fromisoformat_with_timezone(
+                                stop
+                            )
+                        else:
+                            # 如果没有指定结束日期，则认为是所给日期的当天的词云
+                            state["start"] = state["start"].replace(
+                                hour=0, minute=0, second=0, microsecond=0
+                            )
+                            state["stop"] = state["start"] + timedelta(days=1)
+                    except ValueError:
+                        await wordcloud_cmd.finish(
+                            "请输入正确的日期，不然我没法理解呢！"
                         )
-                        state["stop"] = state["start"] + timedelta(days=1)
-                except ValueError:
-                    await wordcloud_cmd.finish("请输入正确的日期，不然我没法理解呢！")
 
 
 @wordcloud_cmd.got(
@@ -621,47 +638,52 @@ async def _(
         target: 当前消息发送目标。
     """
     schedule_type = ScheduleType(type)
-    if action_type.result == "状态":
-        schedule_info = await schedule_service.get_schedule_info(target, schedule_type)
-        await schedule_cmd.finish(
-            f"词云{schedule_type.value}定时发送已开启，发送时间为：{schedule_info[0]}，发送模式为：{schedule_info[1].value}"
-            if schedule_info
-            else f"词云{schedule_type.value}定时发送未开启"
-        )
-    elif action_type.result == "开启":
-        if last.result and complete.result:
-            await schedule_cmd.finish(
-                "请选择一种发送模式，不要同时指定完整周期和周期末"
+    match action_type.result:
+        case "状态":
+            schedule_info = await schedule_service.get_schedule_info(
+                target, schedule_type
             )
-        if last.result:
-            schedule_mode = ScheduleMode.PERIOD_END
-        elif complete.result:
-            schedule_mode = ScheduleMode.COMPLETE
-        else:
-            schedule_mode = plugin_config.wordcloud_default_schedule_mode
-        schedule_time = None
-        if time:
-            try:
-                schedule_time = get_time_fromisoformat_with_timezone(time)
-            except ValueError:
-                await schedule_cmd.finish("请输入正确的时间，不然我没法理解呢！")
-        await schedule_service.add_schedule(
-            target,
-            time=schedule_time,
-            schedule_type=schedule_type,
-            schedule_mode=schedule_mode,
-        )
-        mode_message = (
-            f"，发送模式为：{schedule_mode.value}"
-            if schedule_mode == ScheduleMode.PERIOD_END
-            else ""
-        )
-        default_schedule_time = plugin_config.get_default_schedule_time(schedule_mode)
-        await schedule_cmd.finish(
-            f"已开启词云{schedule_type.value}定时发送，发送时间为：{schedule_time}{mode_message}"
-            if schedule_time
-            else f"已开启词云{schedule_type.value}定时发送，发送时间为：{default_schedule_time}{mode_message}"  # noqa: E501
-        )
-    elif action_type.result == "关闭":
-        await schedule_service.remove_schedule(target, schedule_type)
-        await schedule_cmd.finish(f"已关闭词云{schedule_type.value}定时发送")
+            await schedule_cmd.finish(
+                f"词云{schedule_type.value}定时发送已开启，发送时间为：{schedule_info[0]}，发送模式为：{schedule_info[1].value}"
+                if schedule_info
+                else f"词云{schedule_type.value}定时发送未开启"
+            )
+        case "开启":
+            if last.result and complete.result:
+                await schedule_cmd.finish(
+                    "请选择一种发送模式，不要同时指定完整周期和周期末"
+                )
+            if last.result:
+                schedule_mode = ScheduleMode.PERIOD_END
+            elif complete.result:
+                schedule_mode = ScheduleMode.COMPLETE
+            else:
+                schedule_mode = plugin_config.wordcloud_default_schedule_mode
+            schedule_time = None
+            if time:
+                try:
+                    schedule_time = get_time_fromisoformat_with_timezone(time)
+                except ValueError:
+                    await schedule_cmd.finish("请输入正确的时间，不然我没法理解呢！")
+            await schedule_service.add_schedule(
+                target,
+                time=schedule_time,
+                schedule_type=schedule_type,
+                schedule_mode=schedule_mode,
+            )
+            mode_message = (
+                f"，发送模式为：{schedule_mode.value}"
+                if schedule_mode == ScheduleMode.PERIOD_END
+                else ""
+            )
+            default_schedule_time = plugin_config.get_default_schedule_time(
+                schedule_mode
+            )
+            await schedule_cmd.finish(
+                f"已开启词云{schedule_type.value}定时发送，发送时间为：{schedule_time}{mode_message}"
+                if schedule_time
+                else f"已开启词云{schedule_type.value}定时发送，发送时间为：{default_schedule_time}{mode_message}"  # noqa: E501
+            )
+        case "关闭":
+            await schedule_service.remove_schedule(target, schedule_type)
+            await schedule_cmd.finish(f"已关闭词云{schedule_type.value}定时发送")

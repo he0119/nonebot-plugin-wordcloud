@@ -99,15 +99,15 @@ def get_period_start(dt: datetime, schedule_type: ScheduleType) -> datetime:
         当前周期的起始时间。
     """
     current_day_start = dt.replace(hour=0, minute=0, second=0, microsecond=0)
-    if schedule_type == ScheduleType.DAY:
-        return current_day_start
-    if schedule_type == ScheduleType.WEEK:
-        return current_day_start - timedelta(days=dt.weekday())
-    if schedule_type == ScheduleType.MONTH:
-        return current_day_start.replace(day=1)
-    if schedule_type == ScheduleType.YEAR:
-        return current_day_start.replace(month=1, day=1)
-    raise ValueError(f"未知的周期类型：{schedule_type}")
+    match schedule_type:
+        case ScheduleType.DAY:
+            return current_day_start
+        case ScheduleType.WEEK:
+            return current_day_start - timedelta(days=dt.weekday())
+        case ScheduleType.MONTH:
+            return current_day_start.replace(day=1)
+        case ScheduleType.YEAR:
+            return current_day_start.replace(month=1, day=1)
 
 
 def get_current_period_range(
@@ -138,16 +138,16 @@ def get_previous_period_range(
         上一完整周期的起止时间。
     """
     stop = get_period_start(dt, schedule_type)
-    if schedule_type == ScheduleType.DAY:
-        return stop - timedelta(days=1), stop
-    if schedule_type == ScheduleType.WEEK:
-        return stop - timedelta(days=7), stop
-    if schedule_type == ScheduleType.MONTH:
-        last_month = stop - timedelta(days=1)
-        return last_month.replace(day=1), stop
-    if schedule_type == ScheduleType.YEAR:
-        return stop.replace(year=stop.year - 1), stop
-    raise ValueError(f"未知的周期类型：{schedule_type}")
+    match schedule_type:
+        case ScheduleType.DAY:
+            return stop - timedelta(days=1), stop
+        case ScheduleType.WEEK:
+            return stop - timedelta(days=7), stop
+        case ScheduleType.MONTH:
+            last_month = stop - timedelta(days=1)
+            return last_month.replace(day=1), stop
+        case ScheduleType.YEAR:
+            return stop.replace(year=stop.year - 1), stop
 
 
 def is_period_start(dt: datetime, schedule_type: ScheduleType) -> bool:
@@ -160,15 +160,15 @@ def is_period_start(dt: datetime, schedule_type: ScheduleType) -> bool:
     Returns:
         当前日期是否为对应周期的开始日。
     """
-    if schedule_type == ScheduleType.DAY:
-        return True
-    if schedule_type == ScheduleType.WEEK:
-        return dt.weekday() == 0
-    if schedule_type == ScheduleType.MONTH:
-        return dt.day == 1
-    if schedule_type == ScheduleType.YEAR:
-        return dt.month == 1 and dt.day == 1
-    return False
+    match schedule_type:
+        case ScheduleType.DAY:
+            return True
+        case ScheduleType.WEEK:
+            return dt.weekday() == 0
+        case ScheduleType.MONTH:
+            return dt.day == 1
+        case ScheduleType.YEAR:
+            return dt.month == 1 and dt.day == 1
 
 
 def is_period_end(dt: datetime, schedule_type: ScheduleType) -> bool:
@@ -181,16 +181,16 @@ def is_period_end(dt: datetime, schedule_type: ScheduleType) -> bool:
     Returns:
         当前日期是否为对应周期的结束日。
     """
-    if schedule_type == ScheduleType.DAY:
-        return True
-    if schedule_type == ScheduleType.WEEK:
-        return dt.weekday() == 6
-    if schedule_type == ScheduleType.MONTH:
-        current_day_start = dt.replace(hour=0, minute=0, second=0, microsecond=0)
-        return (current_day_start + timedelta(days=1)).day == 1
-    if schedule_type == ScheduleType.YEAR:
-        return dt.month == 12 and dt.day == 31
-    return False
+    match schedule_type:
+        case ScheduleType.DAY:
+            return True
+        case ScheduleType.WEEK:
+            return dt.weekday() == 6
+        case ScheduleType.MONTH:
+            current_day_start = dt.replace(hour=0, minute=0, second=0, microsecond=0)
+            return (current_day_start + timedelta(days=1)).day == 1
+        case ScheduleType.YEAR:
+            return dt.month == 12 and dt.day == 31
 
 
 def admin_permission():
