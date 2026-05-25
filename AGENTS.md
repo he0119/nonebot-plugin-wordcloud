@@ -43,30 +43,25 @@
 ## 4. 重要模式与约定
 
 - **命令处理与 Alconna**:
-
   - 命令使用 `Alconna` 进行结构化定义，而不是简单的字符串匹配。例如，在 `__init__.py` 中，`/历史词云` 命令可以接受复杂的日期范围参数。
   - 修改或添加命令时，请遵循 `nonebot-plugin-alconna` 的模式，在 `__init__.py` 中定义 `Alconna` 对象和对应的 `AlconnaMatcher`。
 
 - **会话与用户识别 (UniSession)**:
-
   - 为了跨平台兼容，项目使用 `nonebot-plugin-uninfo` 提供的 `UniSession` 来唯一标识一个会话（私聊或群聊）。
   - 命令处理中的会话信息优先通过依赖注入 `session: Session = UniSession()` 获取。
   - 查询聊天记录时优先调用 `nonebot-plugin-chatrecorder.get_messages_plain_text`，并传入 `session`、`filter_user`、时间范围、排除用户等过滤条件；不要直接查询旧的本插件消息表。
 
 - **发送目标与定时任务 (Target)**:
-
   - 定时发送命令通过 `MessageTarget()` 获取当前 Alconna `Target`。
   - `Schedule.target` 保存 `Target.dump(only_scope=True, save_self_id=False)` 的结果，读取时使用 `Target.load(...)` 还原。
   - 定时任务发送消息时使用 `target.send(UniMessage(Image(...)))` 或 `target.send(UniMessage(Text(...)))`。
   - 根据 `Target` 查询聊天记录时，需要转换出 `scope`、`scene_type`、`scene_id` 等条件，并保持 `filter_self_id=False`、`filter_adapter=False`。
 
 - **遮罩文件 key**:
-
   - `get_mask_key` 同时支持 `nonebot-plugin-uninfo` 的 `Session` 和 Alconna `Target`。
   - key 由平台 scope 和场景路径组成，例如 `QQClient_123456789`；涉及定时任务和普通命令时要保持同一规则。
 
 - **配置**:
-
   - 不要硬编码任何可变值。应将它们添加到 `config.py` 的 `Config` 模型中，并提供合理的默认值。
 
 - **数据存储**:
