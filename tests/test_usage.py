@@ -15,6 +15,7 @@ async def test_get_usage_both_modes(app: App, default_personal: bool):
     """测试不同默认模式下的使用说明"""
     from nonebot_plugin_wordcloud import get_usage
     from nonebot_plugin_wordcloud.config import plugin_config
+    from nonebot_plugin_wordcloud.permissions import WORDCLOUD_DEFAULT_MASK_PERMISSION
 
     # 备份原始配置
     original_config = plugin_config.wordcloud_default_personal
@@ -40,7 +41,10 @@ async def test_get_usage_both_modes(app: App, default_personal: bool):
 
         # 检查设置和定时功能说明
         assert "设置自定义词云形状" in usage
-        assert "设置默认词云形状（需要 command.wordcloud.default_mask 权限）" in usage
+        assert (
+            f"设置默认词云形状（需要 {WORDCLOUD_DEFAULT_MASK_PERMISSION} 权限）"
+            in usage
+        )
         assert "设置定时发送词云" in usage
 
         # 检查模式特定的说明
@@ -229,6 +233,10 @@ async def test_usage_time_keywords(app: App):
 async def test_usage_completeness(app: App):
     """测试使用说明的完整性"""
     from nonebot_plugin_wordcloud import get_usage
+    from nonebot_plugin_wordcloud.permissions import (
+        WORDCLOUD_DEFAULT_MASK_PERMISSION,
+        WORDCLOUD_QUERY_OTHER_PERMISSION,
+    )
 
     usage = get_usage()
 
@@ -252,5 +260,5 @@ async def test_usage_completeness(app: App):
     assert "2022-02-22T22:22:22" in usage
 
     # 检查是否包含权限说明
-    assert "command.wordcloud.query_other" in usage
-    assert "command.wordcloud.default_mask" in usage
+    assert WORDCLOUD_QUERY_OTHER_PERMISSION in usage
+    assert WORDCLOUD_DEFAULT_MASK_PERMISSION in usage

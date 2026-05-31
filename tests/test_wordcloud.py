@@ -406,6 +406,7 @@ async def test_today_wordcloud_at_user(app: App, mocker: MockerFixture):
 async def test_today_wordcloud_at_user_without_permission(app: App, mocker):
     """测试普通用户不能查看其他群友的今日词云"""
     from nonebot_plugin_wordcloud import wordcloud_cmd
+    from nonebot_plugin_wordcloud.permissions import WORDCLOUD_QUERY_OTHER_PERMISSION
 
     mocked_datetime_now = mocker.patch(
         "nonebot_plugin_wordcloud.get_datetime_now_with_timezone",
@@ -423,7 +424,7 @@ async def test_today_wordcloud_at_user_without_permission(app: App, mocker):
         ctx.receive_event(bot, event)
         ctx.should_call_send(
             event,
-            "仅拥有 command.wordcloud.query_other 权限的用户可查看其他群友的词云",
+            f"仅拥有 {WORDCLOUD_QUERY_OTHER_PERMISSION} 权限的用户可查看其他群友的词云",
             True,
         )
         ctx.should_finished()

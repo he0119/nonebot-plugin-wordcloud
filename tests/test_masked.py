@@ -149,7 +149,7 @@ async def test_set_mask_default(app: App, respx_mock: respx.MockRouter):
         ctx.receive_event(bot, event)
         ctx.should_call_send(
             event,
-            "仅拥有 command.wordcloud.default_mask 权限的用户可设置词云默认形状",
+            f"仅拥有 {WORDCLOUD_DEFAULT_MASK_PERMISSION} 权限的用户可设置词云默认形状",
             True,
         )
         ctx.should_finished()
@@ -298,7 +298,7 @@ async def test_remove_default_mask(app: App):
         ctx.receive_event(bot, event)
         ctx.should_call_send(
             event,
-            "仅拥有 command.wordcloud.default_mask 权限的用户可删除词云默认形状",
+            f"仅拥有 {WORDCLOUD_DEFAULT_MASK_PERMISSION} 权限的用户可删除词云默认形状",
             True,
         )
         ctx.should_finished()

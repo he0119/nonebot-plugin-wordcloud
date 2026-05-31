@@ -59,12 +59,19 @@ from .utils import (
 get_driver().on_startup(schedule_service.update)
 
 
+def _get_permission_required_message(permission: str, action: str) -> str:
+    return f"仅拥有 {permission} 权限的用户可{action}"
+
+
 def get_usage() -> str:
     """根据当前配置生成插件完整使用说明。
 
     Returns:
         面向用户展示的插件使用说明。
     """
+    query_other_permission = permissions.WORDCLOUD_QUERY_OTHER_PERMISSION
+    default_mask_permission = permissions.WORDCLOUD_DEFAULT_MASK_PERMISSION
+
     if plugin_config.wordcloud_default_personal:
         # 默认个人数据
         default_behavior = '- 默认获取个人数据，如需获取群组数据请添加前缀"本群"'
@@ -93,7 +100,7 @@ def get_usage() -> str:
 格式：/<时间段>词云
 时间段关键词有：今日，昨日，本周，上周，本月，上月，年度
 示例：/今日词云，/昨日词云
-拥有 command.wordcloud.query_other 权限的用户可以通过 @群友 获取该群友的词云
+拥有 {query_other_permission} 权限的用户可以通过 @群友 获取该群友的词云
 示例：/今日词云 @群友
 
 - 提供日期与时间，以获取指定时间段内的词云
@@ -111,7 +118,7 @@ def get_usage() -> str:
 格式：/设置词云形状
 /设置词云形状
 
-- 设置默认词云形状（需要 command.wordcloud.default_mask 权限）
+- 设置默认词云形状（需要 {default_mask_permission} 权限）
 格式：/设置词云默认形状
 /删除词云默认形状
 
@@ -419,7 +426,10 @@ async def handle_wordcloud(
             and not await permissions.check_query_other_permission(event, bot, session)
         ):
             await wordcloud_cmd.finish(
-                "仅拥有 command.wordcloud.query_other 权限的用户可查看其他群友的词云"
+                _get_permission_required_message(
+                    permissions.WORDCLOUD_QUERY_OTHER_PERMISSION,
+                    "查看其他群友的词云",
+                )
             )
 
     messages = await get_messages_plain_text(
@@ -509,14 +519,20 @@ async def handle_save_mask(
     if default.result:
         if not await permissions.check_default_mask_permission(event, bot, session):
             await set_mask_cmd.finish(
-                "仅拥有 command.wordcloud.default_mask 权限的用户可设置词云默认形状"
+                _get_permission_required_message(
+                    permissions.WORDCLOUD_DEFAULT_MASK_PERMISSION,
+                    "设置词云默认形状",
+                )
             )
         mask.save(plugin_config.get_mask_path(), format="PNG")
         await set_mask_cmd.finish("词云默认形状设置成功")
     else:
         if not await permissions.check_mask_permission(event, bot, session):
             await set_mask_cmd.finish(
-                "仅拥有 command.wordcloud.mask 权限的用户可设置词云形状"
+                _get_permission_required_message(
+                    permissions.WORDCLOUD_MASK_PERMISSION,
+                    "设置词云形状",
+                )
             )
         mask.save(plugin_config.get_mask_path(mask_key), format="PNG")
         await set_mask_cmd.finish("词云形状设置成功")
@@ -564,7 +580,10 @@ async def _(
     if default.result:
         if not await permissions.check_default_mask_permission(event, bot, session):
             await remove_mask_cmd.finish(
-                "仅拥有 command.wordcloud.default_mask 权限的用户可删除词云默认形状"
+                _get_permission_required_message(
+                    permissions.WORDCLOUD_DEFAULT_MASK_PERMISSION,
+                    "删除词云默认形状",
+                )
             )
         mask_path = plugin_config.get_mask_path()
         mask_path.unlink(missing_ok=True)
@@ -572,7 +591,10 @@ async def _(
     else:
         if not await permissions.check_mask_permission(event, bot, session):
             await remove_mask_cmd.finish(
-                "仅拥有 command.wordcloud.mask 权限的用户可删除词云形状"
+                _get_permission_required_message(
+                    permissions.WORDCLOUD_MASK_PERMISSION,
+                    "删除词云形状",
+                )
             )
         mask_path = plugin_config.get_mask_path(mask_key)
         mask_path.unlink(missing_ok=True)
