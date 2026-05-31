@@ -38,6 +38,7 @@ def pytest_configure(config: pytest.Config) -> None:
         "driver": "~fastapi+~httpx",
         "alembic_startup_check": False,
         "command_start": {"/", ""},
+        "permission_superusers": [],
     }
     config.stash[NONEBOT_START_LIFESPAN] = False
 
@@ -117,6 +118,12 @@ async def app(app: App, tmp_path: Path, mocker: MockerFixture):
     from nonebot_plugin_wordcloud.schedule import schedule_service
 
     await init_orm()
+
+    from nonebot_plugin_permission import system as permission_system
+
+    if not permission_system.loaded.is_set():
+        await permission_system.load()
+
     yield app
 
     from nonebot_plugin_chatrecorder.model import MessageRecord

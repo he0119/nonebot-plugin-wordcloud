@@ -173,6 +173,26 @@ def make_group_session(
     )
 
 
+def cache_onebot11_session(user_id: int | str):
+    from nonebot_plugin_uninfo.adapters.onebot11.main import fetcher
+
+    session = make_group_session(user_id=user_id)
+    fetcher.session_cache[f"group_10000_{user_id}"] = session
+    return session
+
+
+async def grant_wordcloud_permission(scope, user_id: int | str, permission: str):
+    from nonebot_plugin_permission import Permission, system
+    from nonebot_plugin_user import get_user
+
+    if not system.loaded.is_set():
+        await system.load()
+
+    user_model = await get_user(scope, str(user_id))
+    owner = await system.get_or_create_user(f"user:{user_model.id}", user_model.name)
+    await system.suset(owner, permission, Permission("v-a"))
+
+
 def make_channel_session(
     channel_id: int | str = 100000,
     guild_id: int | str = 10000,

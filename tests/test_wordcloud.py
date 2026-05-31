@@ -16,10 +16,12 @@ from PIL import ImageChops
 from pytest_mock import MockerFixture
 
 from .utils import (
+    cache_onebot11_session,
     fake_channel_message_event_v12,
     fake_group_message_event_v11,
     fake_group_message_event_v12,
     fake_private_message_event_v11,
+    grant_wordcloud_permission,
     should_send_image,
 )
 
@@ -356,12 +358,16 @@ async def test_my_today_wordcloud(app: App, mocker: MockerFixture):
 
 @pytest.mark.usefixtures("_message_record")
 async def test_today_wordcloud_at_user(app: App, mocker: MockerFixture):
-    """测试超级用户查看被 @ 群友的今日词云"""
-    from nonebot import get_driver
-
+    """测试拥有权限的用户查看被 @ 群友的今日词云"""
     from nonebot_plugin_wordcloud import wordcloud_cmd
+    from nonebot_plugin_wordcloud.permissions import WORDCLOUD_QUERY_OTHER_PERMISSION
 
-    mocker.patch.object(get_driver().config, "superusers", {"10"})
+    session = cache_onebot11_session(99)
+    await grant_wordcloud_permission(
+        session.scope,
+        99,
+        WORDCLOUD_QUERY_OTHER_PERMISSION,
+    )
     mocked_datetime_now = mocker.patch(
         "nonebot_plugin_wordcloud.get_datetime_now_with_timezone",
         return_value=datetime(2022, 1, 2, 23, tzinfo=ZoneInfo("Asia/Shanghai")),
@@ -375,7 +381,7 @@ async def test_today_wordcloud_at_user(app: App, mocker: MockerFixture):
         adapter = get_adapter(Adapter)
         bot = ctx.create_bot(base=Bot, adapter=adapter, auto_connect=False)
         event = fake_group_message_event_v11(
-            message=Message("/今日词云 ") + MessageSegment.at(11)
+            user_id=99, message=Message("/今日词云 ") + MessageSegment.at(11)
         )
 
         ctx.receive_event(bot, event)
@@ -415,7 +421,11 @@ async def test_today_wordcloud_at_user_without_permission(app: App, mocker):
         )
 
         ctx.receive_event(bot, event)
-        ctx.should_call_send(event, "仅超级用户可查看其他群友的词云", True)
+        ctx.should_call_send(
+            event,
+            "仅拥有 command.wordcloud.query_other 权限的用户可查看其他群友的词云",
+            True,
+        )
         ctx.should_finished()
 
     mocked_datetime_now.assert_called_once_with()
