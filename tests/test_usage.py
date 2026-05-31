@@ -40,7 +40,10 @@ async def test_get_usage_both_modes(app: App, default_personal: bool):
 
         # 检查设置和定时功能说明
         assert "设置自定义词云形状" in usage
-        assert "设置默认词云形状（仅超级用户）" in usage
+        assert (
+            "设置默认词云形状（仅超级用户或拥有 command.wordcloud.default_mask 权限）"
+            in usage
+        )
         assert "设置定时发送词云" in usage
 
         # 检查模式特定的说明
@@ -253,3 +256,5 @@ async def test_usage_completeness(app: App):
 
     # 检查是否包含权限说明
     assert "仅超级用户" in usage
+    assert "command.wordcloud.query_other" in usage
+    assert "command.wordcloud.default_mask" in usage

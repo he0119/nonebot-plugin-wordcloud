@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 ## [Unreleased]
 
+### Added
+
+- 集成 `nonebot-plugin-permission`，支持用 `command.wordcloud.*` 权限资源管理词云命令。
+
 ## [0.10.0] - 2026-05-25
 
 ### Added

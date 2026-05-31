@@ -12,6 +12,7 @@ require("nonebot_plugin_apscheduler")
 require("nonebot_plugin_alconna")
 require("nonebot_plugin_uninfo")
 require("nonebot_plugin_chatrecorder")
+require("nonebot_plugin_permission")
 from arclet.alconna import ArparmaBehavior
 from arclet.alconna.arparma import Arparma
 from nonebot import get_driver
@@ -46,7 +47,13 @@ from .data_source import get_wordcloud
 from .model import ScheduleMode, ScheduleType
 from .schedule import schedule_service
 from .utils import (
+    WORDCLOUD_DEFAULT_MASK_PERMISSION,
+    WORDCLOUD_MASK_PERMISSION,
+    WORDCLOUD_QUERY_OTHER_PERMISSION,
+    WORDCLOUD_QUERY_PERMISSION,
+    WORDCLOUD_SCHEDULE_PERMISSION,
     admin_permission,
+    check_wordcloud_permission,
     ensure_group,
     get_current_period_range,
     get_datetime_fromisoformat_with_timezone,
@@ -54,6 +61,8 @@ from .utils import (
     get_mask_key,
     get_previous_period_range,
     get_time_fromisoformat_with_timezone,
+    legacy_admin_permission,
+    wordcloud_permission,
 )
 
 get_driver().on_startup(schedule_service.update)
@@ -93,7 +102,7 @@ def get_usage() -> str:
 格式：/<时间段>词云
 时间段关键词有：今日，昨日，本周，上周，本月，上月，年度
 示例：/今日词云，/昨日词云
-超级用户可以通过 @群友 获取该群友的词云
+超级用户或拥有 command.wordcloud.query_other 权限的用户可以通过 @群友 获取该群友的词云
 示例：/今日词云 @群友
 
 - 提供日期与时间，以获取指定时间段内的词云
@@ -111,7 +120,7 @@ def get_usage() -> str:
 格式：/设置词云形状
 /设置词云形状
 
-- 设置默认词云形状（仅超级用户）
+- 设置默认词云形状（仅超级用户或拥有 command.wordcloud.default_mask 权限）
 格式：/设置词云默认形状
 /删除词云默认形状
 
@@ -167,7 +176,10 @@ __plugin_meta__ = PluginMetadata(
     homepage="https://github.com/he0119/nonebot-plugin-wordcloud",
     type="application",
     supported_adapters=inherit_supported_adapters(
-        "nonebot_plugin_chatrecorder", "nonebot_plugin_uninfo", "nonebot_plugin_alconna"
+        "nonebot_plugin_chatrecorder",
+        "nonebot_plugin_uninfo",
+        "nonebot_plugin_alconna",
+        "nonebot_plugin_permission",
     ),
     config=Config,
 )
@@ -220,6 +232,7 @@ wordcloud_cmd = on_alconna(
             ),
         ),
     ),
+    permission=wordcloud_permission(WORDCLOUD_QUERY_PERMISSION),
     use_cmd_start=True,
     block=True,
 )
@@ -410,7 +423,13 @@ async def handle_wordcloud(
         user_ids = [user.result]
         filter_user = False
         at_sender = False
-        if user.result != session.user.id and not await SUPERUSER(bot, event):
+        if user.result != session.user.id and not await check_wordcloud_permission(
+            WORDCLOUD_QUERY_OTHER_PERMISSION,
+            bot,
+            event,
+            session,
+            legacy_permission=SUPERUSER,
+        ):
             await wordcloud_cmd.finish("仅超级用户可查看其他群友的词云")
 
     messages = await get_messages_plain_text(
@@ -449,7 +468,11 @@ set_mask_cmd = on_alconna(
             example="/设置词云形状\n/设置词云默认形状",
         ),
     ),
-    permission=admin_permission(),
+    permission=admin_permission(WORDCLOUD_MASK_PERMISSION)
+    | wordcloud_permission(
+        WORDCLOUD_DEFAULT_MASK_PERMISSION,
+        legacy_permission=SUPERUSER,
+    ),
     use_cmd_start=True,
     block=True,
 )
@@ -484,6 +507,7 @@ async def handle_save_mask(
     event: Event,
     img: bytes,
     default: Query[bool] = AlconnaQuery("default.value", default=False),
+    session: Session = UniSession(),
     mask_key: str = Depends(get_mask_key),
 ):
     """保存用户上传的词云 mask 图片。
@@ -497,11 +521,25 @@ async def handle_save_mask(
     """
     mask = PIL.Image.open(BytesIO(img))
     if default.result:
-        if not await SUPERUSER(bot, event):
+        if not await check_wordcloud_permission(
+            WORDCLOUD_DEFAULT_MASK_PERMISSION,
+            bot,
+            event,
+            session,
+            legacy_permission=SUPERUSER,
+        ):
             await set_mask_cmd.finish("仅超级用户可设置词云默认形状")
         mask.save(plugin_config.get_mask_path(), format="PNG")
         await set_mask_cmd.finish("词云默认形状设置成功")
     else:
+        if not await check_wordcloud_permission(
+            WORDCLOUD_MASK_PERMISSION,
+            bot,
+            event,
+            session,
+            legacy_permission=legacy_admin_permission(),
+        ):
+            await set_mask_cmd.finish("仅超级用户、群主或管理员可设置词云形状")
         mask.save(plugin_config.get_mask_path(mask_key), format="PNG")
         await set_mask_cmd.finish("词云形状设置成功")
 
@@ -515,7 +553,11 @@ remove_mask_cmd = on_alconna(
             example="/删除词云形状\n/删除词云默认形状",
         ),
     ),
-    permission=admin_permission(),
+    permission=admin_permission(WORDCLOUD_MASK_PERMISSION)
+    | wordcloud_permission(
+        WORDCLOUD_DEFAULT_MASK_PERMISSION,
+        legacy_permission=SUPERUSER,
+    ),
     use_cmd_start=True,
     block=True,
 )
@@ -534,6 +576,7 @@ async def _(
     bot: Bot,
     event: Event,
     default: Query[bool] = AlconnaQuery("default.value", default=False),
+    session: Session = UniSession(),
     mask_key: str = Depends(get_mask_key),
 ):
     """删除当前会话或全局默认的词云 mask 图片。
@@ -545,12 +588,26 @@ async def _(
         mask_key: 当前会话对应的 mask key。
     """
     if default.result:
-        if not await SUPERUSER(bot, event):
+        if not await check_wordcloud_permission(
+            WORDCLOUD_DEFAULT_MASK_PERMISSION,
+            bot,
+            event,
+            session,
+            legacy_permission=SUPERUSER,
+        ):
             await remove_mask_cmd.finish("仅超级用户可删除词云默认形状")
         mask_path = plugin_config.get_mask_path()
         mask_path.unlink(missing_ok=True)
         await remove_mask_cmd.finish("词云默认形状已删除")
     else:
+        if not await check_wordcloud_permission(
+            WORDCLOUD_MASK_PERMISSION,
+            bot,
+            event,
+            session,
+            legacy_permission=legacy_admin_permission(),
+        ):
+            await remove_mask_cmd.finish("仅超级用户、群主或管理员可删除词云形状")
         mask_path = plugin_config.get_mask_path(mask_key)
         mask_path.unlink(missing_ok=True)
         await remove_mask_cmd.finish("词云形状已删除")
@@ -593,7 +650,7 @@ schedule_cmd = on_alconna(
             ),
         ),
     ),
-    permission=admin_permission(),
+    permission=admin_permission(WORDCLOUD_SCHEDULE_PERMISSION),
     use_cmd_start=True,
     block=True,
 )

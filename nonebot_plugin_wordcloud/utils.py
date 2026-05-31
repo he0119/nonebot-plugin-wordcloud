@@ -1,15 +1,48 @@
 import contextlib
+from collections.abc import Awaitable, Callable
 from datetime import datetime, time, timedelta, tzinfo
 from zoneinfo import ZoneInfo
 
+from nonebot.adapters import Bot, Event
 from nonebot.matcher import Matcher
 from nonebot.permission import SUPERUSER
+from nonebot.permission import Permission as NBPermission
 from nonebot_plugin_alconna import Target
 from nonebot_plugin_apscheduler import scheduler
-from nonebot_plugin_uninfo import SceneType, Session, UniSession
+from nonebot_plugin_permission import SUPER_USER as PERMISSION_SUPER_USER
+from nonebot_plugin_permission import Permission as CithunPermission
+from nonebot_plugin_permission import require_permission
+from nonebot_plugin_permission import system as permission_system
+from nonebot_plugin_uninfo import SceneType, Session, Uninfo, UniSession
 
 from .config import plugin_config
 from .model import ScheduleType
+
+WORDCLOUD_PERMISSION_PREFIX = "command.wordcloud"
+WORDCLOUD_QUERY_PERMISSION = f"{WORDCLOUD_PERMISSION_PREFIX}.query"
+WORDCLOUD_QUERY_OTHER_PERMISSION = f"{WORDCLOUD_PERMISSION_PREFIX}.query_other"
+WORDCLOUD_MASK_PERMISSION = f"{WORDCLOUD_PERMISSION_PREFIX}.mask"
+WORDCLOUD_DEFAULT_MASK_PERMISSION = f"{WORDCLOUD_PERMISSION_PREFIX}.default_mask"
+WORDCLOUD_SCHEDULE_PERMISSION = f"{WORDCLOUD_PERMISSION_PREFIX}.schedule"
+
+_WORDCLOUD_PERMISSION_DEFAULTS = {
+    WORDCLOUD_QUERY_PERMISSION: True,
+    WORDCLOUD_QUERY_OTHER_PERMISSION: False,
+    WORDCLOUD_MASK_PERMISSION: False,
+    WORDCLOUD_DEFAULT_MASK_PERMISSION: False,
+    WORDCLOUD_SCHEDULE_PERMISSION: False,
+}
+_WORDCLOUD_PERMISSION_CHECKERS: dict[
+    str, Callable[[Event, Bot, Session], Awaitable[bool]]
+] = {
+    permission: require_permission(permission, default_available=default_available)
+    for permission, default_available in _WORDCLOUD_PERMISSION_DEFAULTS.items()
+}
+permission_system.pre_assign(
+    PERMISSION_SUPER_USER,
+    f"{WORDCLOUD_PERMISSION_PREFIX}.*",
+    CithunPermission("vma"),
+)
 
 
 def get_datetime_now_with_timezone() -> datetime:
@@ -193,8 +226,8 @@ def is_period_end(dt: datetime, schedule_type: ScheduleType) -> bool:
             return dt.month == 12 and dt.day == 31
 
 
-def admin_permission():
-    """构造管理词云命令所需的权限。
+def legacy_admin_permission() -> NBPermission:
+    """构造旧版管理词云命令所需的权限。
 
     Returns:
         超级用户权限，以及可用时的 OneBot V11 群主和管理员权限。
@@ -206,6 +239,70 @@ def admin_permission():
         permission = permission | GROUP_ADMIN | GROUP_OWNER
 
     return permission
+
+
+async def check_wordcloud_permission(
+    permission: str,
+    bot: Bot,
+    event: Event,
+    session: Session,
+    legacy_permission: NBPermission | None = None,
+) -> bool:
+    """检查词云权限插件权限，并兼容旧版 NoneBot 权限。
+
+    Args:
+        permission: nonebot-plugin-permission 中的词云权限资源名。
+        bot: 当前机器人实例。
+        event: 当前消息事件。
+        session: 当前统一会话信息。
+        legacy_permission: 需要兼容的旧版 NoneBot 权限。
+
+    Returns:
+        用户是否拥有对应词云权限。
+    """
+    if legacy_permission and await legacy_permission(bot, event):
+        return True
+    if not permission_system.loaded.is_set():
+        return _WORDCLOUD_PERMISSION_DEFAULTS[permission]
+    return await _WORDCLOUD_PERMISSION_CHECKERS[permission](event, bot, session)
+
+
+def wordcloud_permission(
+    permission: str,
+    legacy_permission: NBPermission | None = None,
+) -> NBPermission:
+    """构造可用于 matcher 的词云权限检查器。
+
+    Args:
+        permission: nonebot-plugin-permission 中的词云权限资源名。
+        legacy_permission: 需要兼容的旧版 NoneBot 权限。
+
+    Returns:
+        NoneBot matcher 可使用的权限对象。
+    """
+
+    async def _check(bot: Bot, event: Event, session: Uninfo) -> bool:
+        return await check_wordcloud_permission(
+            permission,
+            bot,
+            event,
+            session,
+            legacy_permission=legacy_permission,
+        )
+
+    return NBPermission(_check)
+
+
+def admin_permission(permission: str) -> NBPermission:
+    """构造管理词云命令所需的权限。
+
+    Args:
+        permission: nonebot-plugin-permission 中的词云权限资源名。
+
+    Returns:
+        权限插件授权，或旧版超级用户/OneBot V11 群主/管理员权限。
+    """
+    return wordcloud_permission(permission, legacy_admin_permission())
 
 
 def get_mask_key(session: Session | Target = UniSession()) -> str:
