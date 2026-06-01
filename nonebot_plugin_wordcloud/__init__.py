@@ -60,6 +60,15 @@ get_driver().on_startup(schedule_service.update)
 
 
 def _get_permission_required_message(permission: str, action: str) -> str:
+    """生成权限不足时的提示文本。
+
+    Args:
+        permission: 需要的权限名。
+        action: 当前尝试执行的操作。
+
+    Returns:
+        面向用户展示的权限不足提示。
+    """
     return f"仅拥有 {permission} 权限的用户可{action}"
 
 
@@ -236,13 +245,13 @@ wordcloud_cmd = on_alconna(
 )
 
 
-def wrapper(slot: int | str, content: str | None, context: dict[str, Any]) -> str:
+def wrapper(slot: int | str, content: str | None, _context: dict[str, Any]) -> str:
     """将快捷命令捕获的分组转换为真实命令参数。
 
     Args:
         slot: 当前处理的快捷命令槽位。
         content: 槽位捕获到的文本内容。
-        context: 快捷命令解析上下文。
+        _context: 快捷命令解析上下文，当前转换不需要读取。
 
     Returns:
         传递给 Alconna 的命令参数片段。
@@ -503,7 +512,6 @@ async def handle_save_mask(
     event: Event,
     img: bytes,
     default: Query[bool] = AlconnaQuery("default.value", default=False),
-    session: Session = UniSession(),
     mask_key: str = Depends(get_mask_key),
 ):
     """保存用户上传的词云 mask 图片。
@@ -566,7 +574,6 @@ async def _(
     bot: Bot,
     event: Event,
     default: Query[bool] = AlconnaQuery("default.value", default=False),
-    session: Session = UniSession(),
     mask_key: str = Depends(get_mask_key),
 ):
     """删除当前会话或全局默认的词云 mask 图片。
@@ -644,13 +651,15 @@ schedule_cmd = on_alconna(
 )
 
 
-def schedule_wrapper(slot: int | str, content: str | None, context: dict[str, Any]):
+def schedule_wrapper(
+    slot: int | str, content: str | None, _context: dict[str, Any]
+) -> str:
     """将定时发送快捷命令中的模式文本转换为选项参数。
 
     Args:
         slot: 当前处理的快捷命令槽位。
         content: 槽位捕获到的文本内容。
-        context: 快捷命令解析上下文。
+        _context: 快捷命令解析上下文，当前转换不需要读取。
 
     Returns:
         传递给 Alconna 的命令参数片段。
