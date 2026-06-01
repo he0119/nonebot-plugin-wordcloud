@@ -142,10 +142,12 @@ async def test_uninfo_admin_role_attach_restricted_permissions(app: App):
     from nonebot_plugin_wordcloud.permissions import (
         WORDCLOUD_ADMIN_ATTACH_PERMISSIONS,
         WORDCLOUD_DEFAULT_MASK_PERMISSION,
+        WORDCLOUD_QUERY_OTHER_PERMISSION,
         WORDCLOUD_QUERY_PERMISSION,
     )
 
     assert WORDCLOUD_QUERY_PERMISSION not in WORDCLOUD_ADMIN_ATTACH_PERMISSIONS
+    assert WORDCLOUD_QUERY_OTHER_PERMISSION not in WORDCLOUD_ADMIN_ATTACH_PERMISSIONS
     assert WORDCLOUD_DEFAULT_MASK_PERMISSION not in WORDCLOUD_ADMIN_ATTACH_PERMISSIONS
 
     async with app.test_api() as ctx:
@@ -166,6 +168,9 @@ async def test_uninfo_admin_role_attach_restricted_permissions(app: App):
             assert not await _has_available_permission(
                 bot, event, session, user_id, WORDCLOUD_DEFAULT_MASK_PERMISSION
             )
+            assert not await _has_available_permission(
+                bot, event, session, user_id, WORDCLOUD_QUERY_OTHER_PERMISSION
+            )
 
 
 async def test_uninfo_member_role_attach_does_not_grant_restricted_permissions(
@@ -173,6 +178,7 @@ async def test_uninfo_member_role_attach_does_not_grant_restricted_permissions(
 ):
     from nonebot_plugin_wordcloud.permissions import (
         WORDCLOUD_ADMIN_ATTACH_PERMISSIONS,
+        WORDCLOUD_QUERY_OTHER_PERMISSION,
         WORDCLOUD_QUERY_PERMISSION,
     )
 
@@ -190,6 +196,9 @@ async def test_uninfo_member_role_attach_does_not_grant_restricted_permissions(
 
         assert await _has_available_permission(
             bot, event, session, 32, WORDCLOUD_QUERY_PERMISSION
+        )
+        assert not await _has_available_permission(
+            bot, event, session, 32, WORDCLOUD_QUERY_OTHER_PERMISSION
         )
 
 
@@ -286,13 +295,14 @@ async def test_uninfo_admin_role_attach_overrides_explicit_deny(app: App):
         pytest.param("admin", 36, id="admin"),
     ],
 )
-async def test_query_other_permission_granted_to_uninfo_admin_role(
+async def test_query_other_permission_denied_to_uninfo_admin_role(
     app: App,
     mocker: MockerFixture,
     role: str,
     user_id: int,
 ):
     from nonebot_plugin_wordcloud import wordcloud_cmd
+    from nonebot_plugin_wordcloud.permissions import WORDCLOUD_QUERY_OTHER_PERMISSION
 
     cache_onebot11_session(user_id, role=role)
 
@@ -300,11 +310,7 @@ async def test_query_other_permission_granted_to_uninfo_admin_role(
         "nonebot_plugin_wordcloud.get_datetime_now_with_timezone",
         return_value=datetime(2022, 1, 2, 23, tzinfo=ZoneInfo("Asia/Shanghai")),
     )
-    mocked_get_messages = mocker.patch(
-        "nonebot_plugin_wordcloud.get_messages_plain_text",
-        return_value=["target-user-message"],
-    )
-    mocker.patch("nonebot_plugin_wordcloud.get_wordcloud", return_value=FAKE_IMAGE)
+    mocked_get_wordcloud = mocker.patch("nonebot_plugin_wordcloud.get_wordcloud")
 
     async with app.test_matcher(wordcloud_cmd) as ctx:
         adapter = get_adapter(Adapter)
@@ -316,10 +322,14 @@ async def test_query_other_permission_granted_to_uninfo_admin_role(
         )
 
         ctx.receive_event(bot, event)
-        should_send_image(ctx, bot, event, FAKE_IMAGE, name="wordcloud.png")
+        ctx.should_call_send(
+            event,
+            f"仅拥有 {WORDCLOUD_QUERY_OTHER_PERMISSION} 权限的用户可查看其他群友的词云",
+            True,
+        )
         ctx.should_finished(wordcloud_cmd)
 
-    assert mocked_get_messages.call_args.kwargs["user_ids"] == ["11"]
+    mocked_get_wordcloud.assert_not_called()
 
 
 async def test_query_other_permission_denied_to_uninfo_member_role(

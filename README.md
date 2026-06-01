@@ -80,18 +80,13 @@ nb plugin install nonebot-plugin-wordcloud
 本插件集成 [nonebot-plugin-permission](https://github.com/RF-Tar-Railt/nonebot-plugin-permission)，
 可通过权限插件管理以下资源：
 
-| 权限资源                         | 默认状态 | 说明                |
-| :------------------------------- | :------- | :------------------ |
-| `command.wordcloud.query`        | 开放     | 使用词云查询命令    |
-| `command.wordcloud.query_other`  | 关闭     | 通过 @ 查看他人词云 |
-| `command.wordcloud.mask`         | 关闭     | 设置或删除本群形状  |
-| `command.wordcloud.default_mask` | 关闭     | 设置或删除默认形状  |
-| `command.wordcloud.schedule`     | 关闭     | 管理定时发送        |
-
-可通过 `PERMISSION_SUPERUSERS` 配置权限插件超级用户；权限插件超级用户自动拥有 `command.wordcloud.*`。
-当 `nonebot-plugin-uninfo` 提供的成员角色等级达到管理员级别时，会通过权限插件 attach 机制动态获得
-`command.wordcloud.query_other`、`command.wordcloud.mask` 和 `command.wordcloud.schedule`
-的可用权限；该默认放行不写入 ACL，普通群成员仍需显式授权。
+| 权限资源                         | 默认拥有者                           | 说明                |
+| :------------------------------- | :----------------------------------- | :------------------ |
+| `command.wordcloud.query`        | 所有用户                             | 使用词云查询命令    |
+| `command.wordcloud.query_other`  | `PERMISSION_SUPERUSERS`              | 通过 @ 查看他人词云 |
+| `command.wordcloud.mask`         | `PERMISSION_SUPERUSERS`、群主/管理员 | 设置或删除本群形状  |
+| `command.wordcloud.default_mask` | `PERMISSION_SUPERUSERS`              | 设置或删除默认形状  |
+| `command.wordcloud.schedule`     | `PERMISSION_SUPERUSERS`、群主/管理员 | 管理定时发送        |
 
 - 管理词云
 
