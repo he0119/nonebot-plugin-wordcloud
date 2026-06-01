@@ -1,10 +1,8 @@
-from nonebot.adapters import Bot, Event
 from nonebot.permission import Permission as NBPermission
 from nonebot_plugin_permission import SUPER_USER as PERMISSION_SUPER_USER
 from nonebot_plugin_permission import Permission as CithunPermission
 from nonebot_plugin_permission import require_permission
 from nonebot_plugin_permission import system as permission_system
-from nonebot_plugin_uninfo import Uninfo
 
 WORDCLOUD_PERMISSION_PREFIX = "command.wordcloud"
 WORDCLOUD_QUERY_PERMISSION = f"{WORDCLOUD_PERMISSION_PREFIX}.query"
@@ -35,15 +33,8 @@ check_schedule_permission = require_permission(
 )
 
 query_permission = NBPermission(check_query_permission)
+query_other_permission = NBPermission(check_query_other_permission)
 mask_permission = NBPermission(check_mask_permission)
 default_mask_permission = NBPermission(check_default_mask_permission)
 schedule_permission = NBPermission(check_schedule_permission)
-
-
-async def check_mask_manage_permission(event: Event, bot: Bot, sess: Uninfo) -> bool:
-    return await check_mask_permission(
-        event, bot, sess
-    ) or await check_default_mask_permission(event, bot, sess)
-
-
-mask_manage_permission = NBPermission(check_mask_manage_permission)
+mask_manage_permission = mask_permission | default_mask_permission

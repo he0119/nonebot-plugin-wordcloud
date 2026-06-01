@@ -423,7 +423,7 @@ async def handle_wordcloud(
         at_sender = False
         if (
             user.result != session.user.id
-            and not await permissions.check_query_other_permission(event, bot, session)
+            and not await permissions.query_other_permission(bot, event)
         ):
             await wordcloud_cmd.finish(
                 _get_permission_required_message(
@@ -517,7 +517,7 @@ async def handle_save_mask(
     """
     mask = PIL.Image.open(BytesIO(img))
     if default.result:
-        if not await permissions.check_default_mask_permission(event, bot, session):
+        if not await permissions.default_mask_permission(bot, event):
             await set_mask_cmd.finish(
                 _get_permission_required_message(
                     permissions.WORDCLOUD_DEFAULT_MASK_PERMISSION,
@@ -527,7 +527,7 @@ async def handle_save_mask(
         mask.save(plugin_config.get_mask_path(), format="PNG")
         await set_mask_cmd.finish("词云默认形状设置成功")
     else:
-        if not await permissions.check_mask_permission(event, bot, session):
+        if not await permissions.mask_permission(bot, event):
             await set_mask_cmd.finish(
                 _get_permission_required_message(
                     permissions.WORDCLOUD_MASK_PERMISSION,
@@ -578,7 +578,7 @@ async def _(
         mask_key: 当前会话对应的 mask key。
     """
     if default.result:
-        if not await permissions.check_default_mask_permission(event, bot, session):
+        if not await permissions.default_mask_permission(bot, event):
             await remove_mask_cmd.finish(
                 _get_permission_required_message(
                     permissions.WORDCLOUD_DEFAULT_MASK_PERMISSION,
@@ -589,7 +589,7 @@ async def _(
         mask_path.unlink(missing_ok=True)
         await remove_mask_cmd.finish("词云默认形状已删除")
     else:
-        if not await permissions.check_mask_permission(event, bot, session):
+        if not await permissions.mask_permission(bot, event):
             await remove_mask_cmd.finish(
                 _get_permission_required_message(
                     permissions.WORDCLOUD_MASK_PERMISSION,
