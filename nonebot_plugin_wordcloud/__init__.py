@@ -245,13 +245,13 @@ wordcloud_cmd = on_alconna(
 )
 
 
-def wrapper(slot: int | str, content: str | None, _context: dict[str, Any]) -> str:
+def wrapper(slot: int | str, content: str | None, context: dict[str, Any]) -> str:
     """将快捷命令捕获的分组转换为真实命令参数。
 
     Args:
         slot: 当前处理的快捷命令槽位。
         content: 槽位捕获到的文本内容。
-        _context: 快捷命令解析上下文，当前转换不需要读取。
+        context: 快捷命令解析上下文，当前转换不需要读取。
 
     Returns:
         传递给 Alconna 的命令参数片段。
@@ -652,14 +652,14 @@ schedule_cmd = on_alconna(
 
 
 def schedule_wrapper(
-    slot: int | str, content: str | None, _context: dict[str, Any]
+    slot: int | str, content: str | None, context: dict[str, Any]
 ) -> str:
     """将定时发送快捷命令中的模式文本转换为选项参数。
 
     Args:
         slot: 当前处理的快捷命令槽位。
         content: 槽位捕获到的文本内容。
-        _context: 快捷命令解析上下文，当前转换不需要读取。
+        context: 快捷命令解析上下文，当前转换不需要读取。
 
     Returns:
         传递给 Alconna 的命令参数片段。

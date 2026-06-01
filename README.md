@@ -89,6 +89,9 @@ nb plugin install nonebot-plugin-wordcloud
 | `command.wordcloud.schedule`     | 关闭     | 管理定时发送        |
 
 可通过 `PERMISSION_SUPERUSERS` 配置权限插件超级用户；权限插件超级用户自动拥有 `command.wordcloud.*`。
+当 `nonebot-plugin-uninfo` 提供的成员角色等级达到管理员级别时，会通过权限插件 attach 机制动态获得
+`command.wordcloud.query_other`、`command.wordcloud.mask` 和 `command.wordcloud.schedule`
+的可用权限；该默认放行不写入 ACL，普通群成员仍需显式授权。
 
 - 管理词云
 

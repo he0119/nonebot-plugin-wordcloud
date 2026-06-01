@@ -11,10 +11,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 - 集成 `nonebot-plugin-permission`，支持用 `command.wordcloud.*` 权限资源管理词云命令。
 
-### Changed
-
-- 移除旧版 NoneBot 超级用户与 OneBot V11 群主/管理员权限兼容，管理能力统一交由 `nonebot-plugin-permission` 控制。
-
 ## [0.10.0] - 2026-05-25
 
 ### Added

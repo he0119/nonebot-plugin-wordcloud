@@ -142,9 +142,7 @@ async def test_set_mask_default(app: App, respx_mock: respx.MockRouter):
         message = Message("/设置词云默认形状") + MessageSegment(
             "image", {"url": "https://test", "file": ""}
         )
-        event = fake_group_message_event_v11(
-            user_id=20, message=message, sender={"role": "owner"}
-        )
+        event = fake_group_message_event_v11(user_id=20, message=message)
 
         ctx.receive_event(bot, event)
         ctx.should_call_send(
@@ -291,9 +289,7 @@ async def test_remove_default_mask(app: App):
         adapter = get_adapter(Adapter)
         bot = ctx.create_bot(base=Bot, adapter=adapter, auto_connect=False)
         message = Message("/删除词云默认形状")
-        event = fake_group_message_event_v11(
-            user_id=23, message=message, sender={"role": "owner"}
-        )
+        event = fake_group_message_event_v11(user_id=23, message=message)
 
         ctx.receive_event(bot, event)
         ctx.should_call_send(
