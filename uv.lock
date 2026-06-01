@@ -2120,7 +2120,7 @@ default = [
 
 [[package]]
 name = "nonebot-plugin-permission"
-version = "0.1.3"
+version = "0.1.4"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "arclet-cithun" },
@@ -2129,9 +2129,9 @@ dependencies = [
     { name = "nonebot-plugin-user" },
     { name = "nonebot2" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/13/53/b84197c14215aed15875e817c57b774cf4b483161c5fe981acadedf7e7a1/nonebot_plugin_permission-0.1.3.tar.gz", hash = "sha256:8d5150ddbc186924dead9b6e3644e37b224da9c664cab1ee1a6c39aa41127a99", size = 13677, upload-time = "2026-05-18T04:03:00.149Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/6b/2d/3e17452cdb601e28c6f032f4203d219f99cebd426f06138b5bc45950e364/nonebot_plugin_permission-0.1.4.tar.gz", hash = "sha256:286d65c6dbddc5653351b58b4ba8cdcd49107c44ae61819ccaf1a3e3ad93dda4", size = 13742, upload-time = "2026-06-01T01:19:37.83Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/0f/75/523156e019124b06a16cd8d3f3538662873aecda89246920af894ac0f853/nonebot_plugin_permission-0.1.3-py3-none-any.whl", hash = "sha256:d85b0dd2600608ba8c84c541eb8e083dbc72656c3bfea2d502fc10dc3df2ee87", size = 16876, upload-time = "2026-05-18T04:02:58.312Z" },
+    { url = "https://files.pythonhosted.org/packages/9c/6d/9d56f8822f99a2facb871490e76422c8e621ca62a15df2a260e7a0973d16/nonebot_plugin_permission-0.1.4-py3-none-any.whl", hash = "sha256:6e9a5f82ba7adaf6666fb1b51448790dc578c51ffc27cebae5d5f7bf767fefdb", size = 16928, upload-time = "2026-06-01T01:19:36.341Z" },
 ]
 
 [[package]]
@@ -2231,7 +2231,7 @@ requires-dist = [
     { name = "nonebot-plugin-datastore", marker = "extra == 'datastore'", specifier = ">=1.2.0" },
     { name = "nonebot-plugin-localstore", specifier = ">=0.7.1" },
     { name = "nonebot-plugin-orm", specifier = ">=0.8.3" },
-    { name = "nonebot-plugin-permission", specifier = ">=0.1.3" },
+    { name = "nonebot-plugin-permission", specifier = ">=0.1.4" },
     { name = "nonebot-plugin-uninfo", specifier = ">=0.11.0" },
     { name = "nonebot2", specifier = ">=2.5.0" },
     { name = "tzdata" },
