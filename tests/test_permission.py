@@ -76,6 +76,23 @@ async def _deny_available_permission(scope, user_id: int | str, resource):
     await system.suset(user, resource, Permission.AVAILABLE, deny=True)
 
 
+async def test_uninfo_admin_attach_returns_none_without_context():
+    from nonebot_plugin_permission import Permission
+
+    from nonebot_plugin_wordcloud.permissions import _attach_uninfo_admin_permission
+
+    assert (
+        await _attach_uninfo_admin_permission(
+            None,
+            "command.wordcloud.mask",
+            None,
+            Permission.NONE,
+            None,
+        )
+        == Permission.NONE
+    )
+
+
 async def test_schedule_permission_granted_by_permission_plugin(app: App):
     from nonebot_plugin_wordcloud import schedule_cmd
     from nonebot_plugin_wordcloud.permissions import WORDCLOUD_SCHEDULE_PERMISSION
