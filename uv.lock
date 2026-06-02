@@ -2121,17 +2121,13 @@ default = [
 [[package]]
 name = "nonebot-plugin-permission"
 version = "0.2.0"
-source = { registry = "https://pypi.org/simple" }
+source = { git = "https://github.com/RF-Tar-Railt/nonebot-plugin-permission.git#2adf237c925e6cdc3f69d9e64ba8d4c70e39c675" }
 dependencies = [
     { name = "arclet-cithun" },
     { name = "nonebot-plugin-alconna" },
     { name = "nonebot-plugin-orm" },
     { name = "nonebot-plugin-user" },
     { name = "nonebot2" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/d2/7d/734646da2c78b05ad8a115e03b3d4981dccb263947254f0170b1fd106b04/nonebot_plugin_permission-0.2.0.tar.gz", hash = "sha256:d0d75e6e5fa7dc3ff1848178256b80fcfb6dbd892443ba0c90b5af9252113345", size = 14374, upload-time = "2026-06-01T02:29:06.829Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/43/08/5fb328775031ea705d2cf450a7b3b09588e1f74f9b3e653f07da893da1a0/nonebot_plugin_permission-0.2.0-py3-none-any.whl", hash = "sha256:ba43b221e340e3a2ac322f39d337644e9b30c8a6fee0c35f738f20399fef6376", size = 17665, upload-time = "2026-06-01T02:29:05.303Z" },
 ]
 
 [[package]]
@@ -2231,7 +2227,7 @@ requires-dist = [
     { name = "nonebot-plugin-datastore", marker = "extra == 'datastore'", specifier = ">=1.2.0" },
     { name = "nonebot-plugin-localstore", specifier = ">=0.7.1" },
     { name = "nonebot-plugin-orm", specifier = ">=0.8.3" },
-    { name = "nonebot-plugin-permission", specifier = ">=0.2.0" },
+    { name = "nonebot-plugin-permission", git = "https://github.com/RF-Tar-Railt/nonebot-plugin-permission.git" },
     { name = "nonebot-plugin-uninfo", specifier = ">=0.11.0" },
     { name = "nonebot2", specifier = ">=2.5.0" },
     { name = "tzdata" },

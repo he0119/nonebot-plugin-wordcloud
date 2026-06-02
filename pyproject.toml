@@ -63,6 +63,9 @@ dev = [
 [tool.uv.pip]
 universal = true
 
+[tool.uv.sources]
+nonebot-plugin-permission = { git = "https://github.com/RF-Tar-Railt/nonebot-plugin-permission.git" }
+
 [tool.poe.tasks]
 test = "pytest --cov=nonebot_plugin_wordcloud --cov-report xml --junitxml=./junit.xml -n auto"
 "test:single" = "pytest --cov=nonebot_plugin_wordcloud --cov-report xml --junitxml=./junit.xml"
