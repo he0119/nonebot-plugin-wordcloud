@@ -258,6 +258,7 @@ async def test_set_mask_without_mask_permission(app: App, respx_mock: respx.Mock
 async def test_set_mask_rejects_when_image_fetch_returns_none(
     app: App, mocker: MockerFixture
 ):
+    """图片获取失败时，继续等待用户重新发送词云形状"""
     from nonebot_plugin_wordcloud import set_mask_cmd
     from nonebot_plugin_wordcloud.config import DATA_DIR
     from nonebot_plugin_wordcloud.permissions import WORDCLOUD_MASK_PERMISSION
@@ -300,6 +301,7 @@ async def test_set_mask_rejects_when_image_fetch_returns_none(
 async def test_set_default_mask_permission_rechecked_after_prompt(
     app: App, mocker: MockerFixture
 ):
+    """收到图片后再次检查默认词云形状权限"""
     from nonebot_plugin_wordcloud import set_mask_cmd
     from nonebot_plugin_wordcloud.permissions import (
         WORDCLOUD_DEFAULT_MASK_PERMISSION,
@@ -349,6 +351,7 @@ async def test_set_default_mask_permission_rechecked_after_prompt(
 async def test_set_mask_permission_rechecked_after_prompt(
     app: App, mocker: MockerFixture
 ):
+    """收到图片后再次检查当前会话词云形状权限"""
     from nonebot_plugin_wordcloud import set_mask_cmd
     from nonebot_plugin_wordcloud.permissions import WORDCLOUD_MASK_PERMISSION
 
@@ -534,6 +537,7 @@ async def test_remove_mask(app: App):
 
 
 async def test_remove_mask_without_mask_permission(app: App):
+    """仅有默认形状权限时不能删除当前会话词云形状"""
     from nonebot_plugin_wordcloud import remove_mask_cmd
     from nonebot_plugin_wordcloud.config import DATA_DIR
     from nonebot_plugin_wordcloud.permissions import (
