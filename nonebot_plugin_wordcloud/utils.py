@@ -1,9 +1,7 @@
-import contextlib
 from datetime import datetime, time, timedelta, tzinfo
 from zoneinfo import ZoneInfo
 
 from nonebot.matcher import Matcher
-from nonebot.permission import SUPERUSER
 from nonebot_plugin_alconna import Target
 from nonebot_plugin_apscheduler import scheduler
 from nonebot_plugin_uninfo import SceneType, Session, UniSession
@@ -191,21 +189,6 @@ def is_period_end(dt: datetime, schedule_type: ScheduleType) -> bool:
             return (current_day_start + timedelta(days=1)).day == 1
         case ScheduleType.YEAR:
             return dt.month == 12 and dt.day == 31
-
-
-def admin_permission():
-    """构造管理词云命令所需的权限。
-
-    Returns:
-        超级用户权限，以及可用时的 OneBot V11 群主和管理员权限。
-    """
-    permission = SUPERUSER
-    with contextlib.suppress(ImportError):
-        from nonebot.adapters.onebot.v11.permission import GROUP_ADMIN, GROUP_OWNER
-
-        permission = permission | GROUP_ADMIN | GROUP_OWNER
-
-    return permission
 
 
 def get_mask_key(session: Session | Target = UniSession()) -> str:

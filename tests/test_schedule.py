@@ -1,7 +1,7 @@
 from datetime import datetime, time
 from io import BytesIO
 
-from nonebot import get_adapter, get_driver
+from nonebot import get_adapter
 from nonebot.adapters.onebot.v11 import Adapter, Bot, Message
 from nonebot.adapters.onebot.v12 import Adapter as AdapterV12
 from nonebot.adapters.onebot.v12 import Bot as BotV12
@@ -115,7 +115,7 @@ async def test_enable_schedule(app: App):
             message=Message("/开启词云每日定时发送"), sender={"role": "admin"}
         )
         ctx.receive_event(bot, event)
-        ctx.should_pass_permission(schedule_cmd)
+        ctx.should_ignore_permission(schedule_cmd)
         ctx.should_call_send(
             event, "已开启词云每日定时发送，发送时间为：00:00:00+08:00", True
         )
@@ -131,7 +131,7 @@ async def test_enable_schedule(app: App):
         )
 
         ctx.receive_event(bot, event)
-        ctx.should_pass_permission(schedule_cmd)
+        ctx.should_ignore_permission(schedule_cmd)
         ctx.should_call_send(
             event, "已开启词云每日定时发送，发送时间为：10:00:00+08:00", True
         )
@@ -147,7 +147,7 @@ async def test_enable_schedule(app: App):
         )
 
         ctx.receive_event(bot, event)
-        ctx.should_pass_permission(schedule_cmd)
+        ctx.should_ignore_permission(schedule_cmd)
         ctx.should_call_send(event, "请输入正确的时间，不然我没法理解呢！", True)
         ctx.should_finished(schedule_cmd)
 
@@ -205,7 +205,7 @@ async def test_enable_periodic_schedule(app: App):
             )
 
             ctx.receive_event(bot, event)
-            ctx.should_pass_permission(schedule_cmd)
+            ctx.should_ignore_permission(schedule_cmd)
             ctx.should_call_send(
                 event,
                 f"已开启词云{schedule_type.value}定时发送，发送时间为：10:00:00+08:00",
@@ -240,7 +240,7 @@ async def test_enable_period_end_schedule(app: App):
         )
 
         ctx.receive_event(bot, event)
-        ctx.should_pass_permission(schedule_cmd)
+        ctx.should_ignore_permission(schedule_cmd)
         ctx.should_call_send(
             event,
             "已开启词云每周定时发送，发送时间为：10:00:00+08:00，发送模式为：周期末",
@@ -269,7 +269,7 @@ async def test_enable_complete_schedule(app: App):
         )
 
         ctx.receive_event(bot, event)
-        ctx.should_pass_permission(schedule_cmd)
+        ctx.should_ignore_permission(schedule_cmd)
         ctx.should_call_send(
             event,
             "已开启词云每周定时发送，发送时间为：10:00:00+08:00",
@@ -295,7 +295,7 @@ async def test_enable_schedule_conflicting_modes(app: App):
         )
 
         ctx.receive_event(bot, event)
-        ctx.should_pass_permission(schedule_cmd)
+        ctx.should_ignore_permission(schedule_cmd)
         ctx.should_call_send(
             event,
             "请选择一种发送模式，不要同时指定完整周期和周期末",
@@ -319,7 +319,7 @@ async def test_enable_period_end_schedule_default_time(app: App):
         )
 
         ctx.receive_event(bot, event)
-        ctx.should_pass_permission(schedule_cmd)
+        ctx.should_ignore_permission(schedule_cmd)
         ctx.should_call_send(
             event,
             "已开启词云每周定时发送，发送时间为：23:59:59+08:00，发送模式为：周期末",
@@ -333,20 +333,16 @@ async def test_enable_period_end_schedule_default_time(app: App):
         assert schedule.schedule_mode == ScheduleMode.PERIOD_END
 
 
-async def test_enable_schedule_private(app: App, mocker: MockerFixture):
+async def test_enable_schedule_private(app: App):
     """测试私聊开启词云每日定时发送"""
     from nonebot_plugin_wordcloud import schedule_cmd
-
-    config = get_driver().config
-
-    mocker.patch.object(config, "superusers", {"10"})
 
     async with app.test_matcher(schedule_cmd) as ctx:
         adapter = get_adapter(Adapter)
         bot = ctx.create_bot(base=Bot, adapter=adapter, auto_connect=False)
         event = fake_private_message_event_v11(message=Message("/开启词云每日定时发送"))
         ctx.receive_event(bot, event)
-        ctx.should_pass_permission(schedule_cmd)
+        ctx.should_ignore_permission(schedule_cmd)
         ctx.should_call_send(event, "请在群组中使用！", True)
         ctx.should_finished(schedule_cmd)
 
@@ -388,7 +384,7 @@ async def test_disable_schedule(app: App):
             message=Message("/关闭词云每日定时发送"), sender={"role": "admin"}
         )
         ctx.receive_event(bot, event)
-        ctx.should_pass_permission(schedule_cmd)
+        ctx.should_ignore_permission(schedule_cmd)
         ctx.should_call_send(event, "已关闭词云每日定时发送", True)
         ctx.should_finished(schedule_cmd)
 
@@ -498,7 +494,7 @@ async def test_schedule_status(app: App):
             message=Message("/词云每日定时发送状态"), sender={"role": "admin"}
         )
         ctx.receive_event(bot, event)
-        ctx.should_pass_permission(schedule_cmd)
+        ctx.should_ignore_permission(schedule_cmd)
         ctx.should_call_send(event, "词云每日定时发送未开启", True)
         ctx.should_finished(schedule_cmd)
 
@@ -511,7 +507,7 @@ async def test_schedule_status(app: App):
             message=Message("/词云每日定时发送状态"), sender={"role": "admin"}
         )
         ctx.receive_event(bot, event)
-        ctx.should_pass_permission(schedule_cmd)
+        ctx.should_ignore_permission(schedule_cmd)
         ctx.should_call_send(
             event,
             "词云每日定时发送已开启，发送时间为：00:00:00+08:00，发送模式为：完整周期",
@@ -532,7 +528,7 @@ async def test_schedule_status(app: App):
             message=Message("/词云每日定时发送状态"), sender={"role": "admin"}
         )
         ctx.receive_event(bot, event)
-        ctx.should_pass_permission(schedule_cmd)
+        ctx.should_ignore_permission(schedule_cmd)
         ctx.should_call_send(
             event,
             "词云每日定时发送已开启，发送时间为：23:00:00+08:00，发送模式为：完整周期",
@@ -547,7 +543,7 @@ async def test_schedule_status(app: App):
             message=Message("/词云每周定时发送状态"), sender={"role": "admin"}
         )
         ctx.receive_event(bot, event)
-        ctx.should_pass_permission(schedule_cmd)
+        ctx.should_ignore_permission(schedule_cmd)
         ctx.should_call_send(event, "词云每周定时发送未开启", True)
         ctx.should_finished(schedule_cmd)
 

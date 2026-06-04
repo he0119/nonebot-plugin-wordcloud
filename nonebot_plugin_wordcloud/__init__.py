@@ -12,12 +12,12 @@ require("nonebot_plugin_apscheduler")
 require("nonebot_plugin_alconna")
 require("nonebot_plugin_uninfo")
 require("nonebot_plugin_chatrecorder")
+require("nonebot_plugin_permission")
 from arclet.alconna import ArparmaBehavior
 from arclet.alconna.arparma import Arparma
 from nonebot import get_driver
 from nonebot.adapters import Bot, Event, Message
 from nonebot.params import Arg, Depends
-from nonebot.permission import SUPERUSER
 from nonebot.plugin import PluginMetadata, inherit_supported_adapters
 from nonebot.typing import T_State
 from nonebot_plugin_alconna import (
@@ -41,12 +41,12 @@ from nonebot_plugin_alconna import (
 from nonebot_plugin_chatrecorder import get_messages_plain_text
 from nonebot_plugin_uninfo import Session, UniSession
 
+from . import permissions
 from .config import Config, plugin_config
 from .data_source import get_wordcloud
 from .model import ScheduleMode, ScheduleType
 from .schedule import schedule_service
 from .utils import (
-    admin_permission,
     ensure_group,
     get_current_period_range,
     get_datetime_fromisoformat_with_timezone,
@@ -59,12 +59,28 @@ from .utils import (
 get_driver().on_startup(schedule_service.update)
 
 
+def _get_permission_required_message(permission: str, action: str) -> str:
+    """生成权限不足时的提示文本。
+
+    Args:
+        permission: 需要的权限名。
+        action: 当前尝试执行的操作。
+
+    Returns:
+        面向用户展示的权限不足提示。
+    """
+    return f"仅拥有 {permission} 权限的用户可{action}"
+
+
 def get_usage() -> str:
     """根据当前配置生成插件完整使用说明。
 
     Returns:
         面向用户展示的插件使用说明。
     """
+    query_other_permission = permissions.WORDCLOUD_QUERY_OTHER_PERMISSION
+    default_mask_permission = permissions.WORDCLOUD_DEFAULT_MASK_PERMISSION
+
     if plugin_config.wordcloud_default_personal:
         # 默认个人数据
         default_behavior = '- 默认获取个人数据，如需获取群组数据请添加前缀"本群"'
@@ -93,7 +109,7 @@ def get_usage() -> str:
 格式：/<时间段>词云
 时间段关键词有：今日，昨日，本周，上周，本月，上月，年度
 示例：/今日词云，/昨日词云
-超级用户可以通过 @群友 获取该群友的词云
+拥有 {query_other_permission} 权限的用户可以通过 @群友 获取该群友的词云
 示例：/今日词云 @群友
 
 - 提供日期与时间，以获取指定时间段内的词云
@@ -111,7 +127,7 @@ def get_usage() -> str:
 格式：/设置词云形状
 /设置词云形状
 
-- 设置默认词云形状（仅超级用户）
+- 设置默认词云形状（需要 {default_mask_permission} 权限）
 格式：/设置词云默认形状
 /删除词云默认形状
 
@@ -167,7 +183,10 @@ __plugin_meta__ = PluginMetadata(
     homepage="https://github.com/he0119/nonebot-plugin-wordcloud",
     type="application",
     supported_adapters=inherit_supported_adapters(
-        "nonebot_plugin_chatrecorder", "nonebot_plugin_uninfo", "nonebot_plugin_alconna"
+        "nonebot_plugin_chatrecorder",
+        "nonebot_plugin_uninfo",
+        "nonebot_plugin_alconna",
+        "nonebot_plugin_permission",
     ),
     config=Config,
 )
@@ -220,6 +239,7 @@ wordcloud_cmd = on_alconna(
             ),
         ),
     ),
+    permission=permissions.query_permission,
     use_cmd_start=True,
     block=True,
 )
@@ -231,7 +251,7 @@ def wrapper(slot: int | str, content: str | None, context: dict[str, Any]) -> st
     Args:
         slot: 当前处理的快捷命令槽位。
         content: 槽位捕获到的文本内容。
-        context: 快捷命令解析上下文。
+        context: 快捷命令解析上下文，当前转换不需要读取。
 
     Returns:
         传递给 Alconna 的命令参数片段。
@@ -410,8 +430,16 @@ async def handle_wordcloud(
         user_ids = [user.result]
         filter_user = False
         at_sender = False
-        if user.result != session.user.id and not await SUPERUSER(bot, event):
-            await wordcloud_cmd.finish("仅超级用户可查看其他群友的词云")
+        if (
+            user.result != session.user.id
+            and not await permissions.query_other_permission(bot, event)
+        ):
+            await wordcloud_cmd.finish(
+                _get_permission_required_message(
+                    permissions.WORDCLOUD_QUERY_OTHER_PERMISSION,
+                    "查看其他群友的词云",
+                )
+            )
 
     messages = await get_messages_plain_text(
         session=session,
@@ -449,7 +477,7 @@ set_mask_cmd = on_alconna(
             example="/设置词云形状\n/设置词云默认形状",
         ),
     ),
-    permission=admin_permission(),
+    permission=permissions.mask_manage_permission,
     use_cmd_start=True,
     block=True,
 )
@@ -465,24 +493,47 @@ set_mask_cmd.shortcut(
 
 @set_mask_cmd.handle(parameterless=[Depends(ensure_group)])
 async def _(
+    bot: Bot,
+    event: Event,
     matcher: AlconnaMatcher,
-    img: Match[bytes] = AlconnaMatch("img", image_fetch),
+    default: Query[bool] = AlconnaQuery("default.value", default=False),
+    img: Match[Image] = AlconnaMatch("img"),
 ):
     """接收可选图片参数并转交给后续路径参数。
 
     Args:
+        bot: 当前机器人实例。
+        event: 当前消息事件。
         matcher: 当前 Alconna matcher。
+        default: 是否设置为全局默认 mask。
         img: 命令中直接携带的图片匹配结果。
     """
+    if default.result:
+        if not await permissions.default_mask_permission(bot, event):
+            await set_mask_cmd.finish(
+                _get_permission_required_message(
+                    permissions.WORDCLOUD_DEFAULT_MASK_PERMISSION,
+                    "设置词云默认形状",
+                )
+            )
+    elif not await permissions.mask_permission(bot, event):
+        await set_mask_cmd.finish(
+            _get_permission_required_message(
+                permissions.WORDCLOUD_MASK_PERMISSION,
+                "设置词云形状",
+            )
+        )
+
     if img.available:
         matcher.set_path_arg("img", img.result)
 
 
-@set_mask_cmd.got_path("img", "请发送一张图片作为词云形状", image_fetch)
+@set_mask_cmd.got_path("img", "请发送一张图片作为词云形状")
 async def handle_save_mask(
     bot: Bot,
     event: Event,
-    img: bytes,
+    state: T_State,
+    img: Image,
     default: Query[bool] = AlconnaQuery("default.value", default=False),
     mask_key: str = Depends(get_mask_key),
 ):
@@ -491,17 +542,34 @@ async def handle_save_mask(
     Args:
         bot: 当前机器人实例。
         event: 当前消息事件。
-        img: 用户发送的图片原始字节。
+        state: NoneBot matcher state。
+        img: 用户发送的图片消息段。
         default: 是否设置为全局默认 mask。
         mask_key: 当前会话对应的 mask key。
     """
-    mask = PIL.Image.open(BytesIO(img))
+    image = await image_fetch(event, bot, state, img)
+    if image is None:
+        await set_mask_cmd.reject("请发送一张图片作为词云形状")
+
+    mask = PIL.Image.open(BytesIO(image))
     if default.result:
-        if not await SUPERUSER(bot, event):
-            await set_mask_cmd.finish("仅超级用户可设置词云默认形状")
+        if not await permissions.default_mask_permission(bot, event):
+            await set_mask_cmd.finish(
+                _get_permission_required_message(
+                    permissions.WORDCLOUD_DEFAULT_MASK_PERMISSION,
+                    "设置词云默认形状",
+                )
+            )
         mask.save(plugin_config.get_mask_path(), format="PNG")
         await set_mask_cmd.finish("词云默认形状设置成功")
     else:
+        if not await permissions.mask_permission(bot, event):
+            await set_mask_cmd.finish(
+                _get_permission_required_message(
+                    permissions.WORDCLOUD_MASK_PERMISSION,
+                    "设置词云形状",
+                )
+            )
         mask.save(plugin_config.get_mask_path(mask_key), format="PNG")
         await set_mask_cmd.finish("词云形状设置成功")
 
@@ -515,7 +583,7 @@ remove_mask_cmd = on_alconna(
             example="/删除词云形状\n/删除词云默认形状",
         ),
     ),
-    permission=admin_permission(),
+    permission=permissions.mask_manage_permission,
     use_cmd_start=True,
     block=True,
 )
@@ -545,12 +613,24 @@ async def _(
         mask_key: 当前会话对应的 mask key。
     """
     if default.result:
-        if not await SUPERUSER(bot, event):
-            await remove_mask_cmd.finish("仅超级用户可删除词云默认形状")
+        if not await permissions.default_mask_permission(bot, event):
+            await remove_mask_cmd.finish(
+                _get_permission_required_message(
+                    permissions.WORDCLOUD_DEFAULT_MASK_PERMISSION,
+                    "删除词云默认形状",
+                )
+            )
         mask_path = plugin_config.get_mask_path()
         mask_path.unlink(missing_ok=True)
         await remove_mask_cmd.finish("词云默认形状已删除")
     else:
+        if not await permissions.mask_permission(bot, event):
+            await remove_mask_cmd.finish(
+                _get_permission_required_message(
+                    permissions.WORDCLOUD_MASK_PERMISSION,
+                    "删除词云形状",
+                )
+            )
         mask_path = plugin_config.get_mask_path(mask_key)
         mask_path.unlink(missing_ok=True)
         await remove_mask_cmd.finish("词云形状已删除")
@@ -593,19 +673,21 @@ schedule_cmd = on_alconna(
             ),
         ),
     ),
-    permission=admin_permission(),
+    permission=permissions.schedule_permission,
     use_cmd_start=True,
     block=True,
 )
 
 
-def schedule_wrapper(slot: int | str, content: str | None, context: dict[str, Any]):
+def schedule_wrapper(
+    slot: int | str, content: str | None, context: dict[str, Any]
+) -> str:
     """将定时发送快捷命令中的模式文本转换为选项参数。
 
     Args:
         slot: 当前处理的快捷命令槽位。
         content: 槽位捕获到的文本内容。
-        context: 快捷命令解析上下文。
+        context: 快捷命令解析上下文，当前转换不需要读取。
 
     Returns:
         传递给 Alconna 的命令参数片段。

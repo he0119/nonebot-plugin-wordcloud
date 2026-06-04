@@ -8,7 +8,7 @@ from nonebot.adapters.onebot.v12 import Adapter as OnebotV12Adapter
 from nonebug import NONEBOT_INIT_KWARGS, NONEBOT_START_LIFESPAN, App
 from pytest_asyncio import is_async_test
 from pytest_mock import MockerFixture
-from sqlalchemy import delete
+from sqlalchemy import delete, text
 from sqlalchemy.pool import NullPool, StaticPool
 
 POOL_CLASSES = {
@@ -38,6 +38,7 @@ def pytest_configure(config: pytest.Config) -> None:
         "driver": "~fastapi+~httpx",
         "alembic_startup_check": False,
         "command_start": {"/", ""},
+        "permission_superusers": [],
     }
     config.stash[NONEBOT_START_LIFESPAN] = False
 
@@ -47,6 +48,85 @@ def pytest_collection_modifyitems(items: list[pytest.Item]):
     session_scope_marker = pytest.mark.asyncio(loop_scope="session")
     for async_test in pytest_asyncio_tests:
         async_test.add_marker(session_scope_marker, append=False)
+
+
+def reset_permission_system(permission_system):
+    from arclet.cithun import Role, User
+    from arclet.cithun.model import Track
+
+    roles = {
+        role_id: permission_system.roles.get(role_id) or Role(role_id, name)
+        for role_id, name in permission_system._predefine_roles
+    }
+    users = {
+        user_id: permission_system.users.get(user_id) or User(user_id, name)
+        for user_id, name in permission_system._predefine_users
+    }
+    tracks = {
+        track_id: permission_system.tracks.get(track_id)
+        or Track(track_id, name or track_id)
+        for track_id, name in permission_system._predefine_tracks
+    }
+
+    permission_system.loaded.clear()
+    permission_system.resources.clear()
+    permission_system.users.clear()
+    permission_system.users.update(users)
+    permission_system.roles.clear()
+    permission_system.roles.update(roles)
+    permission_system.acls.clear()
+    permission_system.tracks.clear()
+    permission_system.tracks.update(tracks)
+
+
+async def clear_database():
+    from nonebot_plugin_chatrecorder.model import MessageRecord
+    from nonebot_plugin_orm import get_session
+    from nonebot_plugin_permission.model import (
+        AclDependencyModel,
+        AclEntryModel,
+        ResourceModel,
+        RoleInheritsModel,
+        RoleModel,
+        TrackLevelModel,
+        TrackModel,
+        UserModel,
+        UserRolesModel,
+    )
+    from nonebot_plugin_uninfo.orm import SessionModel
+    from nonebot_plugin_user.models import Bind
+    from nonebot_plugin_user.models import User as UserModelByPluginUser
+
+    from nonebot_plugin_wordcloud.model import Schedule
+
+    async with get_session() as session, session.begin():
+        is_mysql = session.bind.dialect.name == "mysql"
+        if is_mysql:
+            # MySQL limits cascading paths for self-referential FK graphs. The
+            # permission resource tree is cleaned explicitly below, so disable
+            # FK checks only for this test database reset.
+            await session.execute(text("SET FOREIGN_KEY_CHECKS=0"))
+
+        try:
+            await session.execute(delete(MessageRecord))
+            await session.execute(delete(Schedule))
+            await session.execute(delete(SessionModel))
+
+            await session.execute(delete(AclDependencyModel))
+            await session.execute(delete(AclEntryModel))
+            await session.execute(delete(TrackLevelModel))
+            await session.execute(delete(TrackModel))
+            await session.execute(delete(UserRolesModel))
+            await session.execute(delete(RoleInheritsModel))
+            await session.execute(delete(ResourceModel))
+            await session.execute(delete(UserModel))
+            await session.execute(delete(RoleModel))
+
+            await session.execute(delete(Bind))
+            await session.execute(delete(UserModelByPluginUser))
+        finally:
+            if is_mysql:
+                await session.execute(text("SET FOREIGN_KEY_CHECKS=1"))
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -112,23 +192,22 @@ async def app(app: App, tmp_path: Path, mocker: MockerFixture):
     mocker.patch("nonebot_plugin_localstore.BASE_DATA_DIR", tmp_path / "data")
     mocker.patch("nonebot_plugin_wordcloud.config.DATA_DIR", wordcloud_dir)
     mocker.patch("nonebot_plugin_orm._data_dir", orm_dir)
-    from nonebot_plugin_orm import get_session, init_orm
+    from nonebot_plugin_orm import init_orm
 
     from nonebot_plugin_wordcloud.schedule import schedule_service
 
     await init_orm()
+
+    from nonebot_plugin_permission import system as permission_system
+
+    await clear_database()
+    reset_permission_system(permission_system)
+    await permission_system.load()
+
     yield app
 
-    from nonebot_plugin_chatrecorder.model import MessageRecord
-    from nonebot_plugin_uninfo.orm import SessionModel
-
-    from nonebot_plugin_wordcloud.model import Schedule
-
-    # 清理数据
-    async with get_session() as session, session.begin():
-        await session.execute(delete(MessageRecord))
-        await session.execute(delete(Schedule))
-        await session.execute(delete(SessionModel))
+    await clear_database()
+    reset_permission_system(permission_system)
 
     keys = [
         key

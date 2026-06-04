@@ -154,8 +154,11 @@ def make_group_session(
     self_id: str = "test",
     adapter=None,
     scope=None,
+    role: str | None = None,
 ):
     from nonebot_plugin_uninfo import (
+        Member,
+        Role,
         Scene,
         SceneType,
         Session,
@@ -164,13 +167,40 @@ def make_group_session(
         User,
     )
 
+    roles = {
+        "owner": Role("OWNER", 100, "owner"),
+        "admin": Role("ADMINISTRATOR", 10, "admin"),
+        "member": Role("MEMBER", 1, "member"),
+    }
+    user = User(str(user_id))
     return Session(
         self_id=self_id,
         adapter=adapter or SupportAdapter.onebot11,
         scope=scope or SupportScope.qq_client,
         scene=Scene(str(group_id), SceneType.GROUP),
-        user=User(str(user_id)),
+        user=user,
+        member=Member(user=user, roles=[roles[role]]) if role else None,
     )
+
+
+def cache_onebot11_session(user_id: int | str, *, role: str | None = None):
+    from nonebot_plugin_uninfo.adapters.onebot11.main import fetcher
+
+    session = make_group_session(user_id=user_id, role=role)
+    fetcher.session_cache[f"group_10000_{user_id}"] = session
+    return session
+
+
+async def grant_wordcloud_permission(scope, user_id: int | str, permission: str):
+    from nonebot_plugin_permission import Permission, system
+    from nonebot_plugin_user import get_user
+
+    if not system.loaded.is_set():
+        await system.load()
+
+    user_model = await get_user(scope, str(user_id))
+    owner = await system.get_or_create_user(f"user:{user_model.id}", user_model.name)
+    await system.suset(owner, permission, Permission("v-a"))
 
 
 def make_channel_session(
