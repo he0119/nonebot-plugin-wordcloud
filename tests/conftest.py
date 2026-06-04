@@ -8,7 +8,7 @@ from nonebot.adapters.onebot.v12 import Adapter as OnebotV12Adapter
 from nonebug import NONEBOT_INIT_KWARGS, NONEBOT_START_LIFESPAN, App
 from pytest_asyncio import is_async_test
 from pytest_mock import MockerFixture
-from sqlalchemy import delete
+from sqlalchemy import delete, text
 from sqlalchemy.pool import NullPool, StaticPool
 
 POOL_CLASSES = {
@@ -100,22 +100,33 @@ async def clear_database():
     from nonebot_plugin_wordcloud.model import Schedule
 
     async with get_session() as session, session.begin():
-        await session.execute(delete(MessageRecord))
-        await session.execute(delete(Schedule))
-        await session.execute(delete(SessionModel))
+        is_mysql = session.bind.dialect.name == "mysql"
+        if is_mysql:
+            # MySQL limits cascading paths for self-referential FK graphs. The
+            # permission resource tree is cleaned explicitly below, so disable
+            # FK checks only for this test database reset.
+            await session.execute(text("SET FOREIGN_KEY_CHECKS=0"))
 
-        await session.execute(delete(AclDependencyModel))
-        await session.execute(delete(AclEntryModel))
-        await session.execute(delete(TrackLevelModel))
-        await session.execute(delete(TrackModel))
-        await session.execute(delete(UserRolesModel))
-        await session.execute(delete(RoleInheritsModel))
-        await session.execute(delete(ResourceModel))
-        await session.execute(delete(UserModel))
-        await session.execute(delete(RoleModel))
+        try:
+            await session.execute(delete(MessageRecord))
+            await session.execute(delete(Schedule))
+            await session.execute(delete(SessionModel))
 
-        await session.execute(delete(Bind))
-        await session.execute(delete(UserModelByPluginUser))
+            await session.execute(delete(AclDependencyModel))
+            await session.execute(delete(AclEntryModel))
+            await session.execute(delete(TrackLevelModel))
+            await session.execute(delete(TrackModel))
+            await session.execute(delete(UserRolesModel))
+            await session.execute(delete(RoleInheritsModel))
+            await session.execute(delete(ResourceModel))
+            await session.execute(delete(UserModel))
+            await session.execute(delete(RoleModel))
+
+            await session.execute(delete(Bind))
+            await session.execute(delete(UserModelByPluginUser))
+        finally:
+            if is_mysql:
+                await session.execute(text("SET FOREIGN_KEY_CHECKS=1"))
 
 
 @pytest.fixture(scope="session", autouse=True)
