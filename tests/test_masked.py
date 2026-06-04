@@ -255,6 +255,142 @@ async def test_set_mask_without_mask_permission(app: App, respx_mock: respx.Mock
     assert not mask_path.exists()
 
 
+async def test_set_mask_rejects_when_image_fetch_returns_none(
+    app: App, mocker: MockerFixture
+):
+    from nonebot_plugin_wordcloud import set_mask_cmd
+    from nonebot_plugin_wordcloud.config import DATA_DIR
+    from nonebot_plugin_wordcloud.permissions import WORDCLOUD_MASK_PERMISSION
+
+    mask_image = (Path(__file__).parent / "mask.png").read_bytes()
+    mocked_image_fetch = mocker.patch(
+        "nonebot_plugin_wordcloud.image_fetch",
+        side_effect=[None, mask_image],
+    )
+
+    session = cache_onebot11_session(28)
+    await grant_wordcloud_permission(session.scope, 28, WORDCLOUD_MASK_PERMISSION)
+
+    async with app.test_matcher(set_mask_cmd) as ctx:
+        adapter = get_adapter(Adapter)
+        bot = ctx.create_bot(base=Bot, adapter=adapter, auto_connect=False)
+        image_message = Message("/设置词云形状") + MessageSegment(
+            "image", {"url": "https://test", "file": ""}
+        )
+        event = fake_group_message_event_v11(user_id=28, message=image_message)
+
+        ctx.receive_event(bot, event)
+        ctx.should_call_send(event, "请发送一张图片作为词云形状", True)
+        ctx.should_rejected()
+
+        retry_event = fake_group_message_event_v11(
+            user_id=28,
+            message=Message(
+                MessageSegment("image", {"url": "https://test", "file": ""})
+            ),
+        )
+        ctx.receive_event(bot, retry_event)
+        ctx.should_call_send(retry_event, "词云形状设置成功", True)
+        ctx.should_finished()
+
+    assert mocked_image_fetch.call_count == 2
+    assert (DATA_DIR / "mask-QQClient_10000.png").exists()
+
+
+async def test_set_default_mask_permission_rechecked_after_prompt(
+    app: App, mocker: MockerFixture
+):
+    from nonebot_plugin_wordcloud import set_mask_cmd
+    from nonebot_plugin_wordcloud.permissions import (
+        WORDCLOUD_DEFAULT_MASK_PERMISSION,
+    )
+
+    mask_image = (Path(__file__).parent / "mask.png").read_bytes()
+    mocker.patch("nonebot_plugin_wordcloud.image_fetch", return_value=mask_image)
+    mocked_permission = mocker.patch(
+        "nonebot_plugin_wordcloud.permissions.default_mask_permission",
+        new=mocker.AsyncMock(side_effect=[True, False]),
+    )
+
+    session = cache_onebot11_session(29)
+    await grant_wordcloud_permission(
+        session.scope, 29, WORDCLOUD_DEFAULT_MASK_PERMISSION
+    )
+
+    async with app.test_matcher(set_mask_cmd) as ctx:
+        adapter = get_adapter(Adapter)
+        bot = ctx.create_bot(base=Bot, adapter=adapter, auto_connect=False)
+        event = fake_group_message_event_v11(
+            user_id=29,
+            message=Message("/设置词云默认形状"),
+        )
+
+        ctx.receive_event(bot, event)
+        ctx.should_call_send(event, "请发送一张图片作为词云形状", True)
+        ctx.should_rejected()
+
+        image_event = fake_group_message_event_v11(
+            user_id=29,
+            message=Message(
+                MessageSegment("image", {"url": "https://test", "file": ""})
+            ),
+        )
+        ctx.receive_event(bot, image_event)
+        ctx.should_call_send(
+            image_event,
+            f"仅拥有 {WORDCLOUD_DEFAULT_MASK_PERMISSION} 权限的用户可设置词云默认形状",
+            True,
+        )
+        ctx.should_finished()
+
+    assert mocked_permission.call_count == 2
+
+
+async def test_set_mask_permission_rechecked_after_prompt(
+    app: App, mocker: MockerFixture
+):
+    from nonebot_plugin_wordcloud import set_mask_cmd
+    from nonebot_plugin_wordcloud.permissions import WORDCLOUD_MASK_PERMISSION
+
+    mask_image = (Path(__file__).parent / "mask.png").read_bytes()
+    mocker.patch("nonebot_plugin_wordcloud.image_fetch", return_value=mask_image)
+    mocked_permission = mocker.patch(
+        "nonebot_plugin_wordcloud.permissions.mask_permission",
+        new=mocker.AsyncMock(side_effect=[True, False]),
+    )
+
+    session = cache_onebot11_session(30)
+    await grant_wordcloud_permission(session.scope, 30, WORDCLOUD_MASK_PERMISSION)
+
+    async with app.test_matcher(set_mask_cmd) as ctx:
+        adapter = get_adapter(Adapter)
+        bot = ctx.create_bot(base=Bot, adapter=adapter, auto_connect=False)
+        event = fake_group_message_event_v11(
+            user_id=30,
+            message=Message("/设置词云形状"),
+        )
+
+        ctx.receive_event(bot, event)
+        ctx.should_call_send(event, "请发送一张图片作为词云形状", True)
+        ctx.should_rejected()
+
+        image_event = fake_group_message_event_v11(
+            user_id=30,
+            message=Message(
+                MessageSegment("image", {"url": "https://test", "file": ""})
+            ),
+        )
+        ctx.receive_event(bot, image_event)
+        ctx.should_call_send(
+            image_event,
+            f"仅拥有 {WORDCLOUD_MASK_PERMISSION} 权限的用户可设置词云形状",
+            True,
+        )
+        ctx.should_finished()
+
+    assert mocked_permission.call_count == 2
+
+
 @respx.mock(assert_all_called=True)
 async def test_set_mask_get_args(app: App, respx_mock: respx.MockRouter):
     """测试自定义图片形状，需要额外获取图片时的情况"""
@@ -395,6 +531,40 @@ async def test_remove_mask(app: App):
 
     assert mask_default_path.exists()
     assert not mask_group_path.exists()
+
+
+async def test_remove_mask_without_mask_permission(app: App):
+    from nonebot_plugin_wordcloud import remove_mask_cmd
+    from nonebot_plugin_wordcloud.config import DATA_DIR
+    from nonebot_plugin_wordcloud.permissions import (
+        WORDCLOUD_DEFAULT_MASK_PERMISSION,
+        WORDCLOUD_MASK_PERMISSION,
+    )
+
+    mask_group_path = DATA_DIR / "mask-QQClient_10000.png"
+    shutil.copy(Path(__file__).parent / "mask.png", mask_group_path)
+
+    session = cache_onebot11_session(31)
+    await grant_wordcloud_permission(
+        session.scope, 31, WORDCLOUD_DEFAULT_MASK_PERMISSION
+    )
+
+    async with app.test_matcher(remove_mask_cmd) as ctx:
+        adapter = get_adapter(Adapter)
+        bot = ctx.create_bot(base=Bot, adapter=adapter, auto_connect=False)
+        event = fake_group_message_event_v11(
+            user_id=31, message=Message("/删除词云形状")
+        )
+
+        ctx.receive_event(bot, event)
+        ctx.should_call_send(
+            event,
+            f"仅拥有 {WORDCLOUD_MASK_PERMISSION} 权限的用户可删除词云形状",
+            True,
+        )
+        ctx.should_finished()
+
+    assert mask_group_path.exists()
 
 
 async def test_set_mask_private(app: App):
