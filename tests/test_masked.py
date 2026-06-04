@@ -152,7 +152,7 @@ async def test_set_mask_default(app: App, respx_mock: respx.MockRouter):
         )
         ctx.should_finished()
 
-    assert image_url.call_count == 1
+    assert image_url.call_count == 0
 
     await grant_wordcloud_permission(
         session.scope, 20, WORDCLOUD_DEFAULT_MASK_PERMISSION
@@ -173,7 +173,7 @@ async def test_set_mask_default(app: App, respx_mock: respx.MockRouter):
         ctx.should_finished()
 
     assert (DATA_DIR / "mask.png").exists()
-    assert image_url.call_count == 2
+    assert image_url.call_count == 1
 
 
 @respx.mock(assert_all_called=True)
@@ -212,7 +212,7 @@ async def test_set_mask(app: App, respx_mock: respx.MockRouter):
     assert (DATA_DIR / "mask-QQClient_10000.png").exists()
 
 
-@respx.mock(assert_all_called=True)
+@respx.mock(assert_all_called=False)
 async def test_set_mask_without_mask_permission(app: App, respx_mock: respx.MockRouter):
     from nonebot_plugin_wordcloud import set_mask_cmd
     from nonebot_plugin_wordcloud.config import DATA_DIR
@@ -251,7 +251,7 @@ async def test_set_mask_without_mask_permission(app: App, respx_mock: respx.Mock
         )
         ctx.should_finished()
 
-    assert image_url.call_count == 1
+    assert image_url.call_count == 0
     assert not mask_path.exists()
 
 

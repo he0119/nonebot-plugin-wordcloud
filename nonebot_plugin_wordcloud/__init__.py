@@ -493,24 +493,47 @@ set_mask_cmd.shortcut(
 
 @set_mask_cmd.handle(parameterless=[Depends(ensure_group)])
 async def _(
+    bot: Bot,
+    event: Event,
     matcher: AlconnaMatcher,
-    img: Match[bytes] = AlconnaMatch("img", image_fetch),
+    default: Query[bool] = AlconnaQuery("default.value", default=False),
+    img: Match[Image] = AlconnaMatch("img"),
 ):
     """接收可选图片参数并转交给后续路径参数。
 
     Args:
+        bot: 当前机器人实例。
+        event: 当前消息事件。
         matcher: 当前 Alconna matcher。
+        default: 是否设置为全局默认 mask。
         img: 命令中直接携带的图片匹配结果。
     """
+    if default.result:
+        if not await permissions.default_mask_permission(bot, event):
+            await set_mask_cmd.finish(
+                _get_permission_required_message(
+                    permissions.WORDCLOUD_DEFAULT_MASK_PERMISSION,
+                    "设置词云默认形状",
+                )
+            )
+    elif not await permissions.mask_permission(bot, event):
+        await set_mask_cmd.finish(
+            _get_permission_required_message(
+                permissions.WORDCLOUD_MASK_PERMISSION,
+                "设置词云形状",
+            )
+        )
+
     if img.available:
         matcher.set_path_arg("img", img.result)
 
 
-@set_mask_cmd.got_path("img", "请发送一张图片作为词云形状", image_fetch)
+@set_mask_cmd.got_path("img", "请发送一张图片作为词云形状")
 async def handle_save_mask(
     bot: Bot,
     event: Event,
-    img: bytes,
+    state: T_State,
+    img: Image,
     default: Query[bool] = AlconnaQuery("default.value", default=False),
     mask_key: str = Depends(get_mask_key),
 ):
@@ -519,11 +542,16 @@ async def handle_save_mask(
     Args:
         bot: 当前机器人实例。
         event: 当前消息事件。
-        img: 用户发送的图片原始字节。
+        state: NoneBot matcher state。
+        img: 用户发送的图片消息段。
         default: 是否设置为全局默认 mask。
         mask_key: 当前会话对应的 mask key。
     """
-    mask = PIL.Image.open(BytesIO(img))
+    image = await image_fetch(event, bot, state, img)
+    if image is None:
+        await set_mask_cmd.reject("请发送一张图片作为词云形状")
+
+    mask = PIL.Image.open(BytesIO(image))
     if default.result:
         if not await permissions.default_mask_permission(bot, event):
             await set_mask_cmd.finish(
