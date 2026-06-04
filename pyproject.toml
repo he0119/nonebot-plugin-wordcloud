@@ -14,7 +14,7 @@ dependencies = [
   "nonebot-plugin-alconna>=0.62.0",
   "nonebot-plugin-uninfo>=0.11.0",
   "nonebot-plugin-chatrecorder>=0.7.0",
-  "nonebot-plugin-permission>=0.2.0",
+  "nonebot-plugin-permission>=0.2.1",
   "wordcloud>=1.9.2",
   "jieba>=0.42.1",
   "tzdata",
@@ -62,9 +62,6 @@ dev = [
 
 [tool.uv.pip]
 universal = true
-
-[tool.uv.sources]
-nonebot-plugin-permission = { git = "https://github.com/RF-Tar-Railt/nonebot-plugin-permission.git" }
 
 [tool.poe.tasks]
 test = "pytest --cov=nonebot_plugin_wordcloud --cov-report xml --junitxml=./junit.xml -n auto"
