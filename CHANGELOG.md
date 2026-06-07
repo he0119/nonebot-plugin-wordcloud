@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 ### Added
 
 - 集成 `nonebot-plugin-permission`，支持用 `command.wordcloud.*` 权限资源管理词云命令。
+- 添加可配置文本分析后端，支持可选使用 `rjieba` 与 `hanlp` 生成词云。
 
 ## [0.10.0] - 2026-05-25
 
