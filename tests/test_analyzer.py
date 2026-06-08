@@ -11,6 +11,12 @@ async def test_rjieba_analyzer(app: App, mocker: MockerFixture):
     from nonebot_plugin_wordcloud.config import plugin_config
     from nonebot_plugin_wordcloud.data_source import analyse_message
 
+    original_analyzer = plugin_config.wordcloud_analyzer
+    original_options = plugin_config.wordcloud_analyzer_options
+    original_min_word_length = plugin_config.wordcloud_min_word_length
+    original_stopwords_path = plugin_config.wordcloud_stopwords_path
+    original_userdict_path = plugin_config.wordcloud_userdict_path
+
     class FakeJieba:
         def cut_for_search(self, text: str, hmm: bool):
             assert text == "今天天气不错"
@@ -19,19 +25,22 @@ async def test_rjieba_analyzer(app: App, mocker: MockerFixture):
 
     fake_rjieba = SimpleNamespace(Jieba=FakeJieba)
     mocker.patch.dict(sys.modules, {"rjieba": fake_rjieba})
-    mocker.patch.object(plugin_config, "wordcloud_analyzer", "rjieba")
-    mocker.patch.object(
-        plugin_config,
-        "wordcloud_analyzer_options",
-        {"mode": "search", "hmm": False},
-    )
-    mocker.patch.object(plugin_config, "wordcloud_min_word_length", 2)
-    mocker.patch.object(plugin_config, "wordcloud_stopwords_path", None)
-    mocker.patch.object(plugin_config, "wordcloud_userdict_path", None)
+    try:
+        plugin_config.wordcloud_analyzer = "rjieba"
+        plugin_config.wordcloud_analyzer_options = {"mode": "search", "hmm": False}
+        plugin_config.wordcloud_min_word_length = 2
+        plugin_config.wordcloud_stopwords_path = None
+        plugin_config.wordcloud_userdict_path = None
 
-    frequency = analyse_message("今天天气不错")
+        frequency = analyse_message("今天天气不错")
 
-    assert frequency == {"今天": 1.0, "天气": 2.0, "不错": 1.0}
+        assert frequency == {"今天": 1.0, "天气": 2.0, "不错": 1.0}
+    finally:
+        plugin_config.wordcloud_analyzer = original_analyzer
+        plugin_config.wordcloud_analyzer_options = original_options
+        plugin_config.wordcloud_min_word_length = original_min_word_length
+        plugin_config.wordcloud_stopwords_path = original_stopwords_path
+        plugin_config.wordcloud_userdict_path = original_userdict_path
 
 
 async def test_rjieba_analyzer_missing_dependency(app: App, mocker: MockerFixture):
@@ -39,63 +48,22 @@ async def test_rjieba_analyzer_missing_dependency(app: App, mocker: MockerFixtur
     from nonebot_plugin_wordcloud.config import plugin_config
     from nonebot_plugin_wordcloud.data_source import analyse_message
 
+    original_analyzer = plugin_config.wordcloud_analyzer
+    original_options = plugin_config.wordcloud_analyzer_options
+    original_stopwords_path = plugin_config.wordcloud_stopwords_path
+    original_userdict_path = plugin_config.wordcloud_userdict_path
+
     mocker.patch.dict(sys.modules, {"rjieba": None})
-    mocker.patch.object(plugin_config, "wordcloud_analyzer", "rjieba")
-    mocker.patch.object(plugin_config, "wordcloud_analyzer_options", {})
-    mocker.patch.object(plugin_config, "wordcloud_stopwords_path", None)
-    mocker.patch.object(plugin_config, "wordcloud_userdict_path", None)
+    try:
+        plugin_config.wordcloud_analyzer = "rjieba"
+        plugin_config.wordcloud_analyzer_options = {}
+        plugin_config.wordcloud_stopwords_path = None
+        plugin_config.wordcloud_userdict_path = None
 
-    with pytest.raises(RuntimeError, match="nonebot-plugin-wordcloud\\[rjieba\\]"):
-        analyse_message("今天天气不错")
-
-
-async def test_hanlp_analyzer(app: App, mocker: MockerFixture, tmp_path):
-    """测试 hanlp 后端使用词频权重并加载停用词与用户词典"""
-    from nonebot_plugin_wordcloud.analyzer import clear_analyzer_cache
-    from nonebot_plugin_wordcloud.config import plugin_config
-    from nonebot_plugin_wordcloud.data_source import analyse_message
-
-    clear_analyzer_cache()
-
-    stopwords_path = tmp_path / "stopwords.txt"
-    stopwords_path.write_text("可爱\n", encoding="utf8")
-    userdict_path = tmp_path / "userdict.txt"
-    userdict_path.write_text("小脑芙 10 n\n", encoding="utf8")
-
-    class FakeTokenizer:
-        dict_force = None
-
-        def __call__(self, text: str):
-            assert text == "小脑芙真可爱小脑芙"
-            return ["小脑芙", "真", "可爱", "小脑芙", "。"]
-
-    fake_tokenizer = FakeTokenizer()
-
-    def fake_load(model: str, **kwargs):
-        assert model == "fake-model"
-        assert kwargs == {"devices": "cpu"}
-        return fake_tokenizer
-
-    fake_hanlp = SimpleNamespace(
-        load=fake_load,
-        pretrained=SimpleNamespace(
-            tok=SimpleNamespace(COARSE_ELECTRA_SMALL_ZH="fake-model")
-        ),
-    )
-    mocker.patch.dict(sys.modules, {"hanlp": fake_hanlp})
-    mocker.patch.object(plugin_config, "wordcloud_analyzer", "hanlp")
-    mocker.patch.object(
-        plugin_config,
-        "wordcloud_analyzer_options",
-        {"model": "COARSE_ELECTRA_SMALL_ZH", "load_kwargs": {"devices": "cpu"}},
-    )
-    mocker.patch.object(plugin_config, "wordcloud_min_word_length", 2)
-    mocker.patch.object(plugin_config, "wordcloud_stopwords_path", stopwords_path)
-    mocker.patch.object(plugin_config, "wordcloud_userdict_path", userdict_path)
-
-    frequency = analyse_message("小脑芙真可爱小脑芙")
-
-    assert fake_tokenizer.dict_force == {"小脑芙"}
-    assert frequency == {"小脑芙": 2.0}
-
-    clear_analyzer_cache()
+        with pytest.raises(RuntimeError, match="nonebot-plugin-wordcloud\\[rjieba\\]"):
+            analyse_message("今天天气不错")
+    finally:
+        plugin_config.wordcloud_analyzer = original_analyzer
+        plugin_config.wordcloud_analyzer_options = original_options
+        plugin_config.wordcloud_stopwords_path = original_stopwords_path
+        plugin_config.wordcloud_userdict_path = original_userdict_path

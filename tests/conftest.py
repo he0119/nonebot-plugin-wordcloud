@@ -39,6 +39,7 @@ def pytest_configure(config: pytest.Config) -> None:
         "alembic_startup_check": False,
         "command_start": {"/", ""},
         "permission_superusers": [],
+        "wordcloud_analyzer": "jieba",
     }
     config.stash[NONEBOT_START_LIFESPAN] = False
 

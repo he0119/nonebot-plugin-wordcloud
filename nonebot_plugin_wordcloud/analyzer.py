@@ -1,16 +1,14 @@
 from __future__ import annotations
 
-import json
 from collections import Counter
-from collections.abc import Iterable, Mapping
-from functools import lru_cache
-from typing import TYPE_CHECKING, Any, Protocol, cast
+from typing import TYPE_CHECKING, Any, Protocol
 
 from nonebot import logger
 
 from .config import plugin_config
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable, Mapping
     from pathlib import Path
 
 
@@ -86,32 +84,6 @@ class RjiebaAnalyzer:
         return _count_words(words, self.stopwords, self.min_word_length)
 
 
-class HanlpAnalyzer:
-    def __init__(
-        self,
-        options: Mapping[str, Any],
-        stopwords: set[str],
-        min_word_length: int,
-        userdict_path: Path | None,
-    ) -> None:
-        self.options = dict(options)
-        self.stopwords = stopwords
-        self.min_word_length = min_word_length
-        self.userdict_path = userdict_path
-        self.tokenizer = _load_hanlp_tokenizer(
-            _get_hanlp_model_name(self.options),
-            _dump_options(cast("dict[str, Any]", self.options.get("load_kwargs", {}))),
-        )
-
-    def analyse(self, text: str) -> dict[str, float]:
-        _set_hanlp_userdict(self.tokenizer, self.userdict_path)
-        tokens = _extract_hanlp_tokens(
-            self.tokenizer(text),
-            str(self.options.get("output_key", "")) or None,
-        )
-        return _count_words(tokens, self.stopwords, self.min_word_length)
-
-
 def get_word_analyzer() -> WordAnalyzer:
     analyzer = plugin_config.wordcloud_analyzer
     stopwords_path = plugin_config.wordcloud_stopwords_path
@@ -127,13 +99,6 @@ def get_word_analyzer() -> WordAnalyzer:
     min_word_length = plugin_config.wordcloud_min_word_length
     if analyzer == "rjieba":
         return RjiebaAnalyzer(
-            plugin_config.wordcloud_analyzer_options,
-            stopwords,
-            min_word_length,
-            userdict_path,
-        )
-    if analyzer == "hanlp":
-        return HanlpAnalyzer(
             plugin_config.wordcloud_analyzer_options,
             stopwords,
             min_word_length,
@@ -183,56 +148,3 @@ def _load_word_file(path: Path | None) -> set[str]:
             for line in f
             if line.strip() and not line.lstrip().startswith("#")
         }
-
-
-def _get_hanlp_model_name(options: Mapping[str, Any]) -> str:
-    return str(options.get("model", "COARSE_ELECTRA_SMALL_ZH"))
-
-
-@lru_cache
-def _load_hanlp_tokenizer(model_name: str, load_options: str):
-    try:
-        import hanlp
-    except ImportError as e:
-        raise RuntimeError(
-            "当前配置使用 hanlp 分析后端，但未安装 hanlp。"
-            "请安装 nonebot-plugin-wordcloud[hanlp]。"
-        ) from e
-
-    load_kwargs = json.loads(load_options)
-    model = getattr(hanlp.pretrained.tok, model_name, model_name)
-    return hanlp.load(model, **load_kwargs)
-
-
-def _set_hanlp_userdict(tokenizer, userdict_path: Path | None) -> None:
-    userdict = _load_word_file(userdict_path)
-    if hasattr(tokenizer, "dict_force"):
-        tokenizer.dict_force = userdict or None
-    elif userdict:
-        logger.warning("当前 hanlp 模型不支持 wordcloud_userdict_path，已忽略用户词典")
-
-
-def _extract_hanlp_tokens(result: Any, output_key: str | None) -> list[str]:
-    if isinstance(result, Mapping):
-        keys = [output_key] if output_key else []
-        keys.extend(["tok/coarse", "tok/fine", "tok"])
-        for key in keys:
-            if key and key in result:
-                return _extract_hanlp_tokens(result[key], None)
-        return []
-    if isinstance(result, str):
-        return [result]
-    if isinstance(result, Iterable):
-        tokens: list[str] = []
-        for item in result:
-            tokens.extend(_extract_hanlp_tokens(item, None))
-        return tokens
-    return []
-
-
-def _dump_options(options: Mapping[str, Any]) -> str:
-    return json.dumps(options, sort_keys=True)
-
-
-def clear_analyzer_cache() -> None:
-    _load_hanlp_tokenizer.cache_clear()

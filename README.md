@@ -34,11 +34,10 @@ _✨ NoneBot 词云插件 ✨_
 nb plugin install nonebot-plugin-wordcloud
 ```
 
-如需使用可选分词后端，可额外安装：
+如需使用可选文本分析后端，可额外安装：
 
 ```shell
 pip install "nonebot-plugin-wordcloud[rjieba]"
-pip install "nonebot-plugin-wordcloud[hanlp]"
 ```
 
 > **Note**
@@ -118,11 +117,11 @@ pip install "nonebot-plugin-wordcloud[hanlp]"
 | wordcloud_background_color      | str                   | `black`                | 生成图片的背景颜色                                                                                                                                                                                                                                                                  |
 | wordcloud_colormap              | Union[str, List[str]] | `viridis`              | 生成图片的字体 [色彩映射表](https://matplotlib.org/stable/tutorials/colors/colormaps.html)（当值为列表时会随机选择其中之一）                                                                                                                                                        |
 | wordcloud_font_path             | str                   | 自带的字体（思源黑体） | 生成图片的字体文件位置                                                                                                                                                                                                                                                              |
-| wordcloud_analyzer              | str                   | `jieba`                | 文本分析后端，可选 `jieba`、`rjieba`、`hanlp`。`jieba` 后端沿用 TF-IDF 关键词权重；`rjieba` 与 `hanlp` 后端使用词频权重                                                                                                                                                             |
-| wordcloud_analyzer_options      | Dict[str, Any]        | `{}`                   | 传递给文本分析后端的额外参数。`jieba` 支持传递给 `jieba.analyse.extract_tags` 的参数；`rjieba` 支持 `mode`（`default`、`search`、`all`）和 `hmm`；`hanlp` 支持 `model`、`load_kwargs`、`output_key`                                                                                 |
-| wordcloud_min_word_length       | int                   | `2`                    | `rjieba` 与 `hanlp` 后端统计词频时保留的最小词长                                                                                                                                                                                                                                    |
-| wordcloud_stopwords_path        | str                   | None                   | 停用词表位置，用来屏蔽某些词语。`jieba` 后端会传递给 `jieba.analyse.set_stop_words`；`rjieba` 与 `hanlp` 后端会按行读取词语并过滤                                                                                                                                                   |
-| wordcloud_userdict_path         | str                   | None                   | 自定义词典位置。`jieba` 后端会加载为结巴词典；`hanlp` 后端会读取每行第一个字段并设置为强制词典；`rjieba` 后端暂不支持该配置                                                                                                                                                         |
+| wordcloud_analyzer              | str                   | `jieba`                | 文本分析后端，可选 `jieba`、`rjieba`。`jieba` 后端沿用 TF-IDF 关键词权重；`rjieba` 后端使用词频权重                                                                                                                                                                                 |
+| wordcloud_analyzer_options      | Dict[str, Any]        | `{}`                   | 传递给文本分析后端的额外参数。`jieba` 支持传递给 `jieba.analyse.extract_tags` 的参数；`rjieba` 支持 `mode`（`default`、`search`、`all`）和 `hmm`                                                                                                                                    |
+| wordcloud_min_word_length       | int                   | `2`                    | `rjieba` 后端统计词频时保留的最小词长                                                                                                                                                                                                                                               |
+| wordcloud_stopwords_path        | str                   | None                   | 停用词表位置，用来屏蔽某些词语。`jieba` 后端会传递给 `jieba.analyse.set_stop_words`；`rjieba` 后端会按行读取词语并过滤                                                                                                                                                              |
+| wordcloud_userdict_path         | str                   | None                   | 自定义词典位置。`jieba` 后端会加载为结巴词典；`rjieba` 后端暂不支持该配置                                                                                                                                                                                                           |
 | wordcloud_timezone              | str                   | None                   | 用户自定义的 [时区](https://docs.python.org/zh-cn/3/library/zoneinfo.html)，<br />留空则使用系统时区，具体数值可参考：[时区列表](https://timezonedb.com/time-zones)，<br />例如：`Asia/Shanghai`                                                                                    |
 | wordcloud_default_schedule_mode | str                   | `完整周期`             | 默认定时发送模式，可选 `完整周期` 或 `周期末`                                                                                                                                                                                                                                       |
 | wordcloud_default_schedule_time | str                   | 根据发送模式决定       | 默认定时发送时间，当开启词云定时发送时没有提供具体时间，将会在这个时间发送词云。<br />未配置时，完整周期默认为 `00:00`，周期末默认为 `23:59:59`；配置后会覆盖所有默认发送模式的时间                                                                                                 |
@@ -130,6 +129,55 @@ pip install "nonebot-plugin-wordcloud[hanlp]"
 | wordcloud_exclude_user_ids      | `Set[str]`            | `set()`                | 排除的用户 ID 列表（全局，不区分平台），<br />例如：`["123456","456789"]`                                                                                                                                                                                                           |
 | wordcloud_reply_message         | bool                  | `False`                | 发送词云图片时是否回复触发它的消息                                                                                                                                                                                                                                                  |
 | wordcloud_default_personal      | bool                  | `False`                | 是否默认获取个人数据，设为 `True` 时默认生成个人词云，<br />设为 `False` 时默认生成群组词云                                                                                                                                                                                         |
+
+## 文本分析后端
+
+词云生成前会先把聊天文本分析为“词语 -> 权重”的映射，再交给 `wordcloud` 生成图片。不同后端的分词方式、权重算法和依赖体积不同，可以通过 `wordcloud_analyzer` 选择。
+
+| 后端     | 额外依赖                           | 权重算法 | 适合场景                              | 主要限制                                                           |
+| :------- | :--------------------------------- | :------- | :------------------------------------ | :----------------------------------------------------------------- |
+| `jieba`  | 默认安装                           | TF-IDF   | 默认选择，兼容旧版本生成效果          | `jieba` 本身维护较慢，但支持停用词和用户词典，行为与旧版本保持一致 |
+| `rjieba` | `nonebot-plugin-wordcloud[rjieba]` | 词频     | 希望使用更轻量、更快的 jieba 风格分词 | 暂不支持 `wordcloud_userdict_path`；没有 TF-IDF 关键词抽取         |
+
+### `jieba`
+
+`jieba` 是默认后端，不需要额外配置：
+
+```dotenv
+wordcloud_analyzer=jieba
+```
+
+它会继续使用 `jieba.analyse.extract_tags` 提取关键词，权重为 TF-IDF。`wordcloud_stopwords_path` 会传递给 `jieba.analyse.set_stop_words`，`wordcloud_userdict_path` 会传递给 `jieba.load_userdict`。
+
+`wordcloud_analyzer_options` 可传递给 `jieba.analyse.extract_tags`，例如：
+
+```json
+{
+  "topK": 200,
+  "allowPOS": ["n", "vn", "v"]
+}
+```
+
+### `rjieba`
+
+`rjieba` 使用 Rust 实现的 jieba 风格分词，适合想减少分词耗时、但不需要 TF-IDF 权重的场景：
+
+```dotenv
+wordcloud_analyzer=rjieba
+```
+
+它会按分词结果统计词频，并使用 `wordcloud_min_word_length` 和 `wordcloud_stopwords_path` 过滤词语。当前 `rjieba` Python 绑定没有暴露用户词典加载接口，因此会忽略 `wordcloud_userdict_path` 并记录警告。
+
+`wordcloud_analyzer_options` 支持：
+
+```json
+{
+  "mode": "search",
+  "hmm": true
+}
+```
+
+其中 `mode` 可选 `default`、`search`、`all`。
 
 ## 许可证
 
