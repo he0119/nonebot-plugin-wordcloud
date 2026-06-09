@@ -6,13 +6,12 @@ from functools import partial
 from io import BytesIO
 from random import choice
 
-import jieba
-import jieba.analyse
 import numpy as np
 from emoji import replace_emoji
 from PIL import Image
 from wordcloud import WordCloud
 
+from .analyzer import analyse_message
 from .config import global_config, plugin_config
 
 
@@ -41,27 +40,6 @@ def pre_precess(msg: str) -> str:
     msg = replace_emoji(msg)
 
     return msg
-
-
-def analyse_message(msg: str) -> dict[str, float]:
-    """分析消息文本并统计关键词权重。
-
-    Args:
-        msg: 需要分析的消息文本。
-
-    Returns:
-        关键词到 TF-IDF 权重的映射。
-    """
-    # 设置停用词表
-    if plugin_config.wordcloud_stopwords_path:
-        jieba.analyse.set_stop_words(plugin_config.wordcloud_stopwords_path)
-    # 加载用户词典
-    if plugin_config.wordcloud_userdict_path:
-        jieba.load_userdict(str(plugin_config.wordcloud_userdict_path))
-    # 基于 TF-IDF 算法的关键词抽取
-    # 返回所有关键词，因为设置了数量其实也只是 tags[:topK]，不如交给词云库处理
-    words = jieba.analyse.extract_tags(msg, topK=0, withWeight=True)
-    return dict(words)
 
 
 def get_mask(key: str):

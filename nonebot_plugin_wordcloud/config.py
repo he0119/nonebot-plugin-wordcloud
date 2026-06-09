@@ -1,6 +1,6 @@
 from datetime import datetime, time
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 from zoneinfo import ZoneInfo
 
 from nonebot import get_driver, get_plugin_config
@@ -68,6 +68,12 @@ class Config(BaseModel):
     wordcloud_background_color: str = "black"
     wordcloud_colormap: str | list[str] = "viridis"
     wordcloud_font_path: str
+    wordcloud_analyzer: Literal["jieba", "rjieba"] = "jieba"
+    """词云文本分析后端"""
+    wordcloud_analyzer_options: dict[str, Any] = {}
+    """传递给词云文本分析后端的额外参数"""
+    wordcloud_min_word_length: int = 2
+    """非 jieba 后端统计词频时保留的最小词长"""
     wordcloud_stopwords_path: Path | None = None
     wordcloud_userdict_path: Path | None = None
     wordcloud_timezone: str | None = None

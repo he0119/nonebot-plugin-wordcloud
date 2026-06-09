@@ -2205,6 +2205,9 @@ dependencies = [
 datastore = [
     { name = "nonebot-plugin-datastore" },
 ]
+rjieba = [
+    { name = "rjieba" },
+]
 
 [package.dev-dependencies]
 dev = [
@@ -2226,6 +2229,7 @@ dev = [
     { name = "pytest-mock" },
     { name = "pytest-xdist" },
     { name = "respx" },
+    { name = "rjieba" },
 ]
 
 [package.metadata]
@@ -2241,10 +2245,11 @@ requires-dist = [
     { name = "nonebot-plugin-permission", specifier = ">=0.2.1" },
     { name = "nonebot-plugin-uninfo", specifier = ">=0.11.0" },
     { name = "nonebot2", specifier = ">=2.5.0" },
+    { name = "rjieba", marker = "extra == 'rjieba'", specifier = ">=0.2.1" },
     { name = "tzdata" },
     { name = "wordcloud", specifier = ">=1.9.2" },
 ]
-provides-extras = ["datastore"]
+provides-extras = ["datastore", "rjieba"]
 
 [package.metadata.requires-dev]
 dev = [
@@ -2266,6 +2271,7 @@ dev = [
     { name = "pytest-mock", specifier = ">=3.15.1" },
     { name = "pytest-xdist", specifier = ">=3.8.0" },
     { name = "respx", specifier = ">=0.23.1" },
+    { name = "rjieba", specifier = ">=0.2.1" },
 ]
 
 [[package]]
@@ -3213,6 +3219,42 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/f7/ea/21e4867ea0ef881ffd4c0550fc21a061435e50d6324bcd034396633cbc18/rich_click-1.9.8.tar.gz", hash = "sha256:4008f921da88b5d91646c134ec881c1500e5a6b3f093e90e8f29400e09608371", size = 75363, upload-time = "2026-05-28T19:54:59.144Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/6d/97/a87901aef6b7e7e4a34c6dd6cc17dca8594a592ef9d9dd765fca2b7facf7/rich_click-1.9.8-py3-none-any.whl", hash = "sha256:12873865396e6927835d4eabb1cc3996edcd65b7ac9b2391a29eca4f335a2f93", size = 72189, upload-time = "2026-05-28T19:54:57.867Z" },
+]
+
+[[package]]
+name = "rjieba"
+version = "0.2.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/23/70/d8ccb424c7ecc2fb17c49fe7995087b7dc2c8cac3388773a8a690388f16b/rjieba-0.2.1.tar.gz", hash = "sha256:af96d4a14f24b68e053024ab993ec008c868d85598f8af928f2424ff4d86bc44", size = 11678, upload-time = "2026-04-25T10:57:53.982Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/6e/71/a56171bfe4e1d5f2cb1b1e3617624d48c8fbddebe703ac3fc577581bb349/rjieba-0.2.1-cp314-cp314t-macosx_10_12_x86_64.whl", hash = "sha256:371cc1ec930d3fce9e5db6636aeff7fd75cf3af70da3154732ccdd43ecc4ae83", size = 3412083, upload-time = "2026-04-25T10:57:35.642Z" },
+    { url = "https://files.pythonhosted.org/packages/54/c8/f97642b3f55a8e69a164e7ca5928a4513b75d1a8cdc15536b2538e7274bb/rjieba-0.2.1-cp314-cp314t-macosx_11_0_arm64.whl", hash = "sha256:ce64b2e7a631fd670a80d2d3d1ab38dc635cceffe3fa29066d3910a97fd0891b", size = 3362476, upload-time = "2026-04-25T10:57:31.952Z" },
+    { url = "https://files.pythonhosted.org/packages/75/3e/b2ced8a482ee53b4728f5a8dd98ab93935144b6ccd9afec923bbe8e7d87c/rjieba-0.2.1-cp314-cp314t-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:9f6848d58c9c7d7c0985b9f07bd2da41f4807e6759c018bec874e15cc18bfe8a", size = 3675553, upload-time = "2026-04-25T10:57:07.302Z" },
+    { url = "https://files.pythonhosted.org/packages/cf/b5/ad3fa730e883e6b0c0cea96cd448c1e71d5c8c8d263d79af56bd3751ee21/rjieba-0.2.1-cp314-cp314t-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:0f7fb0ba80a8fc39c7d97c774bfe0424916b2e04fe1fe857bbb8d363b3adb0e9", size = 3466596, upload-time = "2026-04-25T10:57:11.423Z" },
+    { url = "https://files.pythonhosted.org/packages/29/03/b27a6e33381b05b16431c355719c8c6150513774a30d5a14fea56dbf9196/rjieba-0.2.1-cp314-cp314t-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:70bfa9dea5d764da9e0419392cc4e3461b38a25aec8ea92164b57e254a3eee52", size = 3827026, upload-time = "2026-04-25T10:57:15.004Z" },
+    { url = "https://files.pythonhosted.org/packages/18/15/d2c71f85ee91568acbc67dcde0eaffcd2215b291811b87398d140b6397c6/rjieba-0.2.1-cp314-cp314t-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:d25ac59a0812ba8fe5b1ffa81dc7628b188cf5d4c91efbff9748631e9cbf69bc", size = 3765266, upload-time = "2026-04-25T10:57:19.38Z" },
+    { url = "https://files.pythonhosted.org/packages/98/5b/5eef6fd28bff6e621d4b40de5a1cf09da93754a047839fb252f5f2b91a00/rjieba-0.2.1-cp314-cp314t-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:1780ac6162c89921897010fe9ade975f4528533a2ae660d37a29bfbecd3be01e", size = 3634461, upload-time = "2026-04-25T10:57:27.525Z" },
+    { url = "https://files.pythonhosted.org/packages/0a/6e/28fca82d320e95af13b7f4fadc2e43b415a203d05c05da07c9e6864275df/rjieba-0.2.1-cp314-cp314t-manylinux_2_5_i686.manylinux1_i686.whl", hash = "sha256:988ba5db3e3ec746174753656c373ec54b4b7de5c02c3d6a52d525b7324d3a45", size = 3605134, upload-time = "2026-04-25T10:57:23.661Z" },
+    { url = "https://files.pythonhosted.org/packages/8d/3a/813c419cff1abbc5dfbc1b75d312610c8b315d585baddf4f843e7879b7b9/rjieba-0.2.1-cp314-cp314t-musllinux_1_2_aarch64.whl", hash = "sha256:6e0b61b2dbbfa63ea431a1e85de4bac98fe2ee924cc7aeb477340351ff0dcb16", size = 3881149, upload-time = "2026-04-25T10:57:39.185Z" },
+    { url = "https://files.pythonhosted.org/packages/68/d9/c716f084eb7ed680508faa1afcf19c380a5ac32bfa249ed2eea0badad869/rjieba-0.2.1-cp314-cp314t-musllinux_1_2_armv7l.whl", hash = "sha256:1641ae16cb34aac6d5adcf76df7414f77194e031a237fff906141f859c9701c2", size = 3753928, upload-time = "2026-04-25T10:57:43.172Z" },
+    { url = "https://files.pythonhosted.org/packages/12/82/3ab0ba78efab7ba32147ab4f8af15632925fca6120662f588347df7aa6dd/rjieba-0.2.1-cp314-cp314t-musllinux_1_2_i686.whl", hash = "sha256:fcd110f16438ca8f0e463af8c8bcf2e43f119a115e2df9921ca36eeaba1b2a19", size = 3787694, upload-time = "2026-04-25T10:57:47.003Z" },
+    { url = "https://files.pythonhosted.org/packages/c8/46/41e2fbb3c4415057faec6762a84f6d6eb26589566e2a4d9dd5042bbe6ed5/rjieba-0.2.1-cp314-cp314t-musllinux_1_2_x86_64.whl", hash = "sha256:6efef41ca71daadec12f9d30f733e5d5c0d2b356c389fb3944d8d623a5ccdfb4", size = 3951529, upload-time = "2026-04-25T10:57:50.764Z" },
+    { url = "https://files.pythonhosted.org/packages/44/de/0f75491c31311ad4816112debe968175456d8c51ab5121c6421d7398fc83/rjieba-0.2.1-cp314-cp314t-win32.whl", hash = "sha256:29bfbd20b0242fde74aae0c3b42bee2480172a361780a36673634a49a61bf1c3", size = 3180782, upload-time = "2026-04-25T10:57:58.881Z" },
+    { url = "https://files.pythonhosted.org/packages/75/8c/63781fece1870685c05d95687abe1cfa25bc26ea2ce013af02afd4156fc8/rjieba-0.2.1-cp314-cp314t-win_amd64.whl", hash = "sha256:ffd82197174241f12e31d315e67f2f2ff2c2dada6d10ca9b79fe6226196eb548", size = 3291067, upload-time = "2026-04-25T10:57:55.119Z" },
+    { url = "https://files.pythonhosted.org/packages/81/4e/d99838d8bcdff47c15146837c12fc6240f569a5c301eba6deae56b10bac3/rjieba-0.2.1-cp38-abi3-macosx_10_12_x86_64.whl", hash = "sha256:4949d7cc61462e580fdd33291fbd7d74e820e7e125620ac80e5f4ee05666083b", size = 3420730, upload-time = "2026-04-25T10:57:37.339Z" },
+    { url = "https://files.pythonhosted.org/packages/f0/d0/6bb83e7bf6d5a4a3cf107b6aac883c4455d0ee8daad0930b55bd200ab92d/rjieba-0.2.1-cp38-abi3-macosx_11_0_arm64.whl", hash = "sha256:8d9a7953c098459b0fd45f6bf1b437b2de137a8e6cd3ba358d1207b6cb25439c", size = 3371631, upload-time = "2026-04-25T10:57:33.723Z" },
+    { url = "https://files.pythonhosted.org/packages/22/e9/8cf5a6746376d6bacef7668e0d21cad9c0a6de0d0aa120e6c94fe9a14d8e/rjieba-0.2.1-cp38-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:36bca745ede5304a7fa245099fbaf1366793ac8a52cb5eec7670738697091b47", size = 3689248, upload-time = "2026-04-25T10:57:09.532Z" },
+    { url = "https://files.pythonhosted.org/packages/9f/f0/1899c7c6a5deeb7cd6ba920afec57b1d960c37b4f7491ba77c12a46db854/rjieba-0.2.1-cp38-abi3-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:ab63a6cb5ac4524b8c4eb1ac94d85a0aacef9105a2aa3ec23043fe65c341b5ef", size = 3476852, upload-time = "2026-04-25T10:57:13.119Z" },
+    { url = "https://files.pythonhosted.org/packages/a4/cb/93ea4882bb65465cc57b893c3baf7ee4d9603d5b0ebfd7c5011a78f641ef/rjieba-0.2.1-cp38-abi3-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:dc49062b3eab5ad5dd6f805e991690859c72bcfda0b5fb47eae13b2d3f3cb010", size = 3845193, upload-time = "2026-04-25T10:57:17.008Z" },
+    { url = "https://files.pythonhosted.org/packages/19/0f/57e686f3be888a911b4fa801d43f067bb98b13a62a2ce6f2954f3792745c/rjieba-0.2.1-cp38-abi3-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:c6e8048a2310dde0123398df86f7407b19c871e41a7465485901a19a9d37c409", size = 3780105, upload-time = "2026-04-25T10:57:21.754Z" },
+    { url = "https://files.pythonhosted.org/packages/36/44/5a64bc5c97060315696fa8203251f8af7b76dd2aae49ef55f0b286e78bd8/rjieba-0.2.1-cp38-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:e4be37db4a99162c99cc55b4e93e024c5041a65a6ab3b5fda0c58beb21eb234f", size = 3645129, upload-time = "2026-04-25T10:57:29.858Z" },
+    { url = "https://files.pythonhosted.org/packages/48/a8/405c385aad77203b573074ab2df78b4e0fa9ccd9dd16e79b24af38352450/rjieba-0.2.1-cp38-abi3-manylinux_2_5_i686.manylinux1_i686.whl", hash = "sha256:7259e29c834f4aec0a35509ee24586120fece2675072e8e572a35e490b5ab424", size = 3616763, upload-time = "2026-04-25T10:57:25.577Z" },
+    { url = "https://files.pythonhosted.org/packages/f9/a0/ae69305a203497340b8e69ecf03ecb2ea88cbf7eb349413a624a9e086796/rjieba-0.2.1-cp38-abi3-musllinux_1_2_aarch64.whl", hash = "sha256:017108a67754ff46dcfc957b9134cb1596655f7ee4e394e5ca1678b57f49337a", size = 3891773, upload-time = "2026-04-25T10:57:40.943Z" },
+    { url = "https://files.pythonhosted.org/packages/7f/70/9793ce14a603f92857cb09c2622557587f80bcca96ff8261fb77da962650/rjieba-0.2.1-cp38-abi3-musllinux_1_2_armv7l.whl", hash = "sha256:31c6a7ae0e7bb806038a2376c4157337d37439d3b110bd5951e912cacdb4c608", size = 3763486, upload-time = "2026-04-25T10:57:45.192Z" },
+    { url = "https://files.pythonhosted.org/packages/84/a9/a0e45897280da52d2dd4392e5b2f13e73da26e29dc57bfc02a496441552c/rjieba-0.2.1-cp38-abi3-musllinux_1_2_i686.whl", hash = "sha256:66961f245a96c88a3d197dbf1cdc9bb0ec5b9d3faebf333148e840576c59437f", size = 3798186, upload-time = "2026-04-25T10:57:48.867Z" },
+    { url = "https://files.pythonhosted.org/packages/df/4f/7665dcd690c9c5e8e224f10b8bf03d2aaa314d28e787a43048fec57c19f4/rjieba-0.2.1-cp38-abi3-musllinux_1_2_x86_64.whl", hash = "sha256:7dbe2ed3ad327311276975561dc2ae1ba7077485f253bf7935804bd11d42e9b3", size = 3965039, upload-time = "2026-04-25T10:57:52.704Z" },
+    { url = "https://files.pythonhosted.org/packages/72/62/22c211d9cf6f0968a5312983b36a83e96a42323b3d4fcb4f59581795d069/rjieba-0.2.1-cp38-abi3-win32.whl", hash = "sha256:d3a5c83a1665416e15ab8c1f837b9304a65697c7011c1fcd47d3f12ef7983f90", size = 3192452, upload-time = "2026-04-25T10:58:00.66Z" },
+    { url = "https://files.pythonhosted.org/packages/cc/c2/4ef775678ca9da0aa495bf81c8d90a4a8366fe321875bfb70ff9ac2aa58a/rjieba-0.2.1-cp38-abi3-win_amd64.whl", hash = "sha256:5e4796e43e9ff38f502b6d04195120777017dd7372493105132ec16ba2f6e785", size = 3299783, upload-time = "2026-04-25T10:57:57.036Z" },
 ]
 
 [[package]]
