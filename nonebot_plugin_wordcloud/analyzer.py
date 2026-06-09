@@ -50,12 +50,10 @@ class RjiebaAnalyzer:
         self,
         options: Mapping[str, Any],
         stopwords: set[str],
-        min_word_length: int,
         userdict_path: Path | None,
     ) -> None:
         self.options = dict(options)
         self.stopwords = stopwords
-        self.min_word_length = min_word_length
         self.userdict_path = userdict_path
 
     def analyse(self, text: str) -> dict[str, float]:
@@ -81,7 +79,7 @@ class RjiebaAnalyzer:
             words = segmenter.cut_for_search(text, hmm)
         else:
             words = segmenter.cut(text, hmm)
-        return _count_words(words, self.stopwords, self.min_word_length)
+        return _count_words(words, self.stopwords)
 
 
 def get_word_analyzer() -> WordAnalyzer:
@@ -96,12 +94,10 @@ def get_word_analyzer() -> WordAnalyzer:
         )
 
     stopwords = _load_word_file(stopwords_path)
-    min_word_length = plugin_config.wordcloud_min_word_length
     if analyzer == "rjieba":
         return RjiebaAnalyzer(
             plugin_config.wordcloud_analyzer_options,
             stopwords,
-            min_word_length,
             userdict_path,
         )
     raise ValueError(f"不支持的词云分析后端: {analyzer}")
@@ -115,24 +111,20 @@ def analyse_message(msg: str) -> dict[str, float]:
 def _count_words(
     words: Iterable[str],
     stopwords: set[str],
-    min_word_length: int,
 ) -> dict[str, float]:
-    counter = Counter(
-        word for word in _iter_valid_words(words, stopwords, min_word_length)
-    )
+    counter = Counter(word for word in _iter_valid_words(words, stopwords))
     return {word: float(count) for word, count in counter.items()}
 
 
 def _iter_valid_words(
     words: Iterable[str],
     stopwords: set[str],
-    min_word_length: int,
 ) -> Iterable[str]:
     for word in words:
         word = word.strip()
         if (
             word
-            and len(word) >= min_word_length
+            and len(word) >= plugin_config.wordcloud_min_word_length
             and word not in stopwords
             and any(char.isalnum() for char in word)
         ):

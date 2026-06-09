@@ -47,13 +47,28 @@ async def test_rjieba_analyzer_uses_real_segmentation(
 
     mocker.patch.object(plugin_config, "wordcloud_analyzer", "rjieba")
     mocker.patch.object(plugin_config, "wordcloud_analyzer_options", {"mode": mode})
-    mocker.patch.object(plugin_config, "wordcloud_min_word_length", 2)
     mocker.patch.object(plugin_config, "wordcloud_stopwords_path", None)
     mocker.patch.object(plugin_config, "wordcloud_userdict_path", None)
 
     frequency = analyse_message("今天天气不错，今天天气真不错。")
 
     assert frequency == expected
+
+
+async def test_rjieba_analyzer_filters_short_words(app: App, mocker: MockerFixture):
+    """测试 rjieba 后端会读取配置过滤过短词语"""
+    from nonebot_plugin_wordcloud.config import plugin_config
+    from nonebot_plugin_wordcloud.data_source import analyse_message
+
+    mocker.patch.object(plugin_config, "wordcloud_analyzer", "rjieba")
+    mocker.patch.object(plugin_config, "wordcloud_analyzer_options", {"mode": "search"})
+    mocker.patch.object(plugin_config, "wordcloud_min_word_length", 3)
+    mocker.patch.object(plugin_config, "wordcloud_stopwords_path", None)
+    mocker.patch.object(plugin_config, "wordcloud_userdict_path", None)
+
+    frequency = analyse_message("今天天气不错，今天天气真不错。")
+
+    assert frequency == {"今天天气": 2.0, "真不错": 1.0}
 
 
 async def test_rjieba_analyzer_filters_stopwords(app: App, mocker: MockerFixture):
@@ -68,7 +83,6 @@ async def test_rjieba_analyzer_filters_stopwords(app: App, mocker: MockerFixture
 
     mocker.patch.object(plugin_config, "wordcloud_analyzer", "rjieba")
     mocker.patch.object(plugin_config, "wordcloud_analyzer_options", {})
-    mocker.patch.object(plugin_config, "wordcloud_min_word_length", 2)
     mocker.patch.object(plugin_config, "wordcloud_stopwords_path", stopwords)
     mocker.patch.object(plugin_config, "wordcloud_userdict_path", None)
 
@@ -91,7 +105,6 @@ async def test_rjieba_analyzer_warns_unsupported_userdict(
     mocked_warning = mocker.patch("nonebot_plugin_wordcloud.analyzer.logger.warning")
     mocker.patch.object(plugin_config, "wordcloud_analyzer", "rjieba")
     mocker.patch.object(plugin_config, "wordcloud_analyzer_options", {})
-    mocker.patch.object(plugin_config, "wordcloud_min_word_length", 2)
     mocker.patch.object(plugin_config, "wordcloud_stopwords_path", None)
     mocker.patch.object(plugin_config, "wordcloud_userdict_path", userdict)
 
