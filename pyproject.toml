@@ -1,6 +1,6 @@
 [project]
 name = "nonebot-plugin-wordcloud"
-version = "0.11.0"
+version = "0.11.1"
 description = "适用于 NoneBot2 的词云插件"
 authors = [{ name = "uy_sun", email = "hmy0119@gmail.com" }]
 readme = "README.md"
@@ -143,7 +143,7 @@ asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "session"
 
 [tool.bumpversion]
-current_version = "0.11.0"
+current_version = "0.11.1"
 commit = true
 message = "chore(release): {new_version}"
 

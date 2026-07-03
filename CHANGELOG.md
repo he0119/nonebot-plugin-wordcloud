@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 ## [Unreleased]
 
+## [0.11.1] - 2026-07-03
+
 ### Fixed
 
 - 限制定时发送目标迁移中的 automap 反射范围，避免其他插件的自引用表导致迁移失败。
@@ -340,7 +342,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 - 可以使用的版本。
 
-[Unreleased]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.11.0...HEAD
+[Unreleased]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.11.1...HEAD
+[0.11.1]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.11.0...v0.11.1
 [0.11.0]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/he0119/nonebot-plugin-wordcloud/compare/v0.8.1...v0.9.0
