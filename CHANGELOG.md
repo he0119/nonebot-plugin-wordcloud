@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 ## [Unreleased]
 
+### Fixed
+
+- 限制定时发送目标迁移中的 automap 反射范围，避免其他插件的自引用表导致迁移失败。
+
 ## [0.11.0] - 2026-06-09
 
 ### Added

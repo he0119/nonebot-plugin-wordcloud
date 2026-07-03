@@ -27,6 +27,9 @@ down_revision: str | Sequence[str] | None = "557fef3a156f"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
+WORDCLOUD_ALEMBIC_VERSION_TABLE = "nonebot_plugin_wordcloud_alembic_version"
+WORDCLOUD_SCHEDULE_TABLE = "nonebot_plugin_wordcloud_schedule"
+
 
 def _has_table(conn: Connection, table_name: str) -> bool:
     insp = inspect(conn)
@@ -36,29 +39,38 @@ def _has_table(conn: Connection, table_name: str) -> bool:
 def _migrate_old_data(ds_conn: Connection):
     insp = inspect(ds_conn)
     if (
-        "nonebot_plugin_wordcloud_schedule" not in insp.get_table_names()
-        or "nonebot_plugin_wordcloud_alembic_version" not in insp.get_table_names()
+        WORDCLOUD_SCHEDULE_TABLE not in insp.get_table_names()
+        or WORDCLOUD_ALEMBIC_VERSION_TABLE not in insp.get_table_names()
     ):
         logger.info("wordcloud: 未发现来自 datastore 的数据")
         return
 
     DsBase = automap_base()
-    DsBase.prepare(autoload_with=ds_conn)
-    DsSchedule = DsBase.classes.nonebot_plugin_wordcloud_schedule
+    DsBase.prepare(
+        autoload_with=ds_conn,
+        reflection_options={
+            "only": [WORDCLOUD_SCHEDULE_TABLE, WORDCLOUD_ALEMBIC_VERSION_TABLE]
+        },
+    )
+    DsSchedule = getattr(DsBase.classes, WORDCLOUD_SCHEDULE_TABLE)
 
+    bind = op.get_bind()
     Base = automap_base()
-    Base.prepare(autoload_with=op.get_bind())
-    Schedule = Base.classes.nonebot_plugin_wordcloud_schedule
+    Base.prepare(
+        autoload_with=bind,
+        reflection_options={"only": [WORDCLOUD_SCHEDULE_TABLE]},
+    )
+    Schedule = getattr(Base.classes, WORDCLOUD_SCHEDULE_TABLE)
 
     ds_session = Session(ds_conn)
-    session = Session(op.get_bind())
+    session = Session(bind)
 
     count = ds_session.query(DsSchedule).count()
     if count == 0:
         logger.info("wordcloud: 未发现来自 datastore 的数据")
         return
 
-    AlembicVersion = DsBase.classes.nonebot_plugin_wordcloud_alembic_version
+    AlembicVersion = getattr(DsBase.classes, WORDCLOUD_ALEMBIC_VERSION_TABLE)
     version_num = ds_session.scalars(select(AlembicVersion.version_num)).one_or_none()
     if not version_num:
         return
