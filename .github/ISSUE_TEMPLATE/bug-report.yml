@@ -22,15 +22,6 @@ body:
       required: true
 
   - type: input
-    id: env-saa
-    attributes:
-      label: saa 版本
-      description: 填写 nonebot-plugin-send-anything-anywhere 版本
-      placeholder: e.g. 0.3.2
-    validations:
-      required: true
-
-  - type: input
     id: env-alconna
     attributes:
       label: alconna 版本
